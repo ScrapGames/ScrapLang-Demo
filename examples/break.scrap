@@ -1,0 +1,13 @@
+fn main() {
+  var num = 0
+
+  while (true) {
+    num++
+
+    // using the keyword `break`, we stop the iteration of the loop in the scope where break was used
+    if num == 10
+      break
+  }
+
+  console.log(num) // 10
+}

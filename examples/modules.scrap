@@ -1,0 +1,15 @@
+module Example {
+    var testInBruh = 20
+
+    fn logInBruh() {
+        console.log(testInBruh)
+    }
+}
+
+fn main() {
+    var testInBruh = 30
+
+    console.log(Example::testInBruh) // 20
+    Example::logInBruh() // 20
+    console.log(testInBruh) // 30
+}

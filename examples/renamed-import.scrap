@@ -1,0 +1,5 @@
+import { Albañil as al } from "./instanceof"
+
+fn main() {
+  var albañil = new al(40)
+}

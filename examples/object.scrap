@@ -1,0 +1,4 @@
+fn main() {
+  // this will create a empty object
+  const obj1 = new Object()
+}

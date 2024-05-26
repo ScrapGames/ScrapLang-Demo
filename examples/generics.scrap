@@ -1,0 +1,12 @@
+// Generics or type parameters
+
+fn logAnything<T>(someData: T) {
+  console.log(someData)
+}
+
+fn main() {
+  logAnything(4) // 4
+  logAnything(4.15) // 4.15
+  logAnything("Hola Mundo!") // "Hola Mundo!"
+  logAnything(true) // true 
+}

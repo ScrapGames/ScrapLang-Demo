@@ -1,0 +1,8 @@
+fn main() {
+  // Some functions are available by default
+  // in the `global scope`
+  // in this case `fetch`
+  const data = await fetch("http://localhost:5000/myapi")
+
+  console.log(await data.json())
+}

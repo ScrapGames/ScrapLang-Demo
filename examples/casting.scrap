@@ -1,0 +1,23 @@
+fn i32Receiver(num: i32) {
+  console.log(num + 20)
+}
+
+fn u32Receiver(num: u32) {
+  console.log(num + 20)
+}
+
+fn is90(num: u32) {
+  return num == 90
+}
+
+fn main() {
+  var num: u32 = 90
+  var signedNum: i32 = -50
+
+  i32Receiver(num as i32)
+
+  // error!
+  // here is trying to cast a signed num that doesnt fit
+  // in the `u32` values range
+  u32Receiver(signedNum as u32)
+}

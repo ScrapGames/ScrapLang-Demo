@@ -1,0 +1,12 @@
+fn main() {
+  const text = "Esto es un texto"
+
+  // On this way, the constant `text` will be printed in console except the letter 'u'
+  // because we had **skiped** a iteration of the loop
+  for charac of text {
+    if charac == 'u'
+      skip
+    
+    console.log(char)
+  }
+}

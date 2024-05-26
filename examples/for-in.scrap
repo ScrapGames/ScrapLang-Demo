@@ -1,0 +1,15 @@
+fn main() {
+  var num = 0
+
+  for i in 5..30 {
+    num += 1
+  }
+
+  var arr = [1, 2, 3, 4, 5]
+
+  for element of arr {
+    console.log(element)
+  }
+
+  console.log(num) // 5
+}

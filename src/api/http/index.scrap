@@ -1,0 +1,9 @@
+import { Server } from net
+
+module internal_http {
+    export class HttpServer extends Server {
+        
+    }
+}
+
+export * as http from internal_http
