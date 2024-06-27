@@ -1,0 +1,12 @@
+fn main() {
+  var num = 20;
+  var numRef = &num
+
+  console.log(num) // 20
+  console.log(numRef) // 20
+
+  numRef = 30
+
+  console.log(num) // 30
+  console.log(numRef) // 30
+}

@@ -1,0 +1,12 @@
+import { type Iterable } from "scrap:iter"
+
+class Alumno implements Iterable {
+  private:
+    nombre: string
+    edad: u8
+    profesion: string
+  
+  public override iter() {
+    
+  }
+}

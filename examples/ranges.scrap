@@ -1,0 +1,5 @@
+fn main() {
+    for i in 0..5 {
+        console.log(i) // will print from 0 to 5 (0, 1, 2, 3, 4, 5) which are 6 values
+    }
+}

@@ -1,0 +1,29 @@
+class Person {
+  name: string
+  edad: u16
+
+  public constructor(name: string, edad: u16) {
+    this.name = name
+    this.edad = edad
+  }
+}
+
+class Albañil extends Person {
+  construcciones: u16
+
+  public constructor(construcciones: u16) {
+    this.profesion = profesion
+  }
+
+  public get this.construcciones
+
+  public set this.construcciones(newVal: u16)
+}
+
+class Medico extends Person;
+
+class Fontanero extends Medico;
+
+class Tubusero extends Person;
+
+export { Albañil, Medico, Fontanero, Tubuero }

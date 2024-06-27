@@ -1,0 +1,8 @@
+import os
+
+module internal_net {
+    export class Server {
+    }
+}
+
+export * from internal_net

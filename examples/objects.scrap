@@ -1,0 +1,13 @@
+class MyClass {
+  public anIntegerValue: i32
+
+  public constructor(valueForIntegerVariable: i32) {
+    this.anIntegerValue = valueForIntegerVariable
+  }
+}
+
+fn main() {
+  var myObject = new MyClass(5)
+
+  console.log(myObject.anIntegerValue)
+}
