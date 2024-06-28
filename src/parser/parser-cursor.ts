@@ -1,13 +1,14 @@
-import { Cursorable } from "../utils/cursor.ts"
 import Lexer, { Token } from "../lexer/lexer.ts"
+import { Cursor } from "../utils.ts"
 
-export default class ParserCursor implements Cursorable<Token> {
+export default class ParserCursor extends Cursor<Token> {
 
   source: Token[]
   currentTok: Token
   pos: number
 
   public constructor(lexer: Lexer) {
+    super()
     this.source = lexer.tokens()
     this.currentTok = this.source.at(0)!
     this.pos = 0

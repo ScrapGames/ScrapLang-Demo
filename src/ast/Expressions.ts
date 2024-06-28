@@ -1,8 +1,27 @@
-import { ScrapClassMethod, ScrapClassProperty } from "../typings/Entities.ts"
+import { Scope, type ValidEntities } from "../lang/scope.ts"
+import { ScrapClassMethod, ScrapClassProperty, ScrapParam } from "../typings.ts"
 
-export class Expression {}
+export class ExpressionAST {}
 
-export class IntegerExpression extends Expression {
+/**
+ * Represents a code entity that can handle / contain blocks of code, it can be:
+ *  - Class
+ *  - Module
+ *  - Variable (or constant) declaration
+ */
+export class EntityAST {
+    protected name: string
+
+    public constructor(name: string) {
+        this.name = name
+    }
+
+    public get getName() { return this.name }
+}
+
+export class TernaryExpression extends ExpressionAST {}
+
+export class IntegerExpression extends ExpressionAST {
     private val: number
 
     public constructor(val: number) {
@@ -11,18 +30,7 @@ export class IntegerExpression extends Expression {
     }
 }
 
-export class TernaryExpression extends Expression {
-    private trulyExpression: Expression
-    private falsyExpression: Expression
-
-    public constructor(trulyExpression: Expression, falsyExpression: Expression) {
-        super()
-        this.trulyExpression = trulyExpression;
-        this.falsyExpression = falsyExpression;
-    }
-}
-
-export class FloatExpression extends Expression {
+export class FloatExpression extends ExpressionAST {
     private val: number
     
     public constructor(val: number) {
@@ -31,7 +39,7 @@ export class FloatExpression extends Expression {
     }
 }
 
-export class ReferenceExpression extends Expression {
+export class ReferenceExpression extends ExpressionAST {
     private referenceTo: string
 
     public constructor(referenceTo: string) {
@@ -40,16 +48,16 @@ export class ReferenceExpression extends Expression {
     }
 }
 
-export class ArrayExpression extends Expression {
-    private elements: Expression[]
+export class ArrayExpression extends ExpressionAST {
+    private elements: ExpressionAST[]
 
-    public constructor(elements: Expression[]) {
+    public constructor(elements: ExpressionAST[]) {
         super()
         this.elements = elements
     }
 }
 
-export class StringLiteralExpression extends Expression {
+export class StringLiteralExpression extends ExpressionAST {
     private readonly length: number
     private readonly size: number
     private data: string
@@ -62,7 +70,20 @@ export class StringLiteralExpression extends Expression {
     }
 }
 
-export class CharLiteralExpression extends Expression {
+export class BinaryExpression extends ExpressionAST {
+    private lhs: ExpressionAST
+    private rhs: ExpressionAST
+    private operator: string
+
+    public constructor(lhs: ExpressionAST, rhs: ExpressionAST, operator: string) {
+        super()
+        this.lhs = lhs
+        this.rhs = rhs
+        this.operator = operator
+    }
+}
+
+export class CharLiteralExpression extends ExpressionAST {
     private readonly length: number = 1
     private readonly size: number = 4
     private data: string 
@@ -73,79 +94,106 @@ export class CharLiteralExpression extends Expression {
     }
 }
 
-export class AssignmentExpression extends Expression {
-    private assignedValue: Expression
+export class AssignmentExpression extends ExpressionAST {
+    private assignedValue: ExpressionAST
 
-    public constructor(assignedValue: Expression) {
+    public constructor(assignedValue: ExpressionAST) {
         super()
         this.assignedValue = assignedValue
     }
 }
 
-export class CallExpression extends Expression {
-    private args: Expression[]
+export class CallExpression extends ExpressionAST {
+    private name: string
+    private args: ExpressionAST[]
 
-    public constructor(args: Expression[]) {
+    public constructor(name: string, args: ExpressionAST[]) {
         super()
+        this.name = name
         this.args = args
     }
 }
 
-export class LiteralObjectExpression extends Expression {
-    private keyValuePairs: [string, Expression][]
+export class LiteralObjectExpression extends ExpressionAST {
+    private keyValuePairs: [string, ExpressionAST ][]
 
-    public constructor(keyValuePairs: [string, Expression][]) {
+    public constructor(keyValuePairs: [string, ExpressionAST][]) {
         super()
         this.keyValuePairs = keyValuePairs
     }
+
+    public get getKeyValuePairs() { return this.keyValuePairs }
 }
 
-export class DeclarationAST {
-    private declarationType: "variable" | "constant"
-    private name: string
-    private assignedValue: Expression
+export class ObjectExpression extends ExpressionAST {
 
-    public constructor(declarationType: "variable" | "constant", name: string, assignedValue: Expression) {
+    public constructor() {
+        super()
+    }
+
+}
+
+export class UndefinedExpression extends ExpressionAST {}
+
+export class DeclarationAST extends EntityAST {
+    private declarationType: "variable" | "constant"
+    private assignedValue: ExpressionAST
+
+    public constructor(declarationType: "variable" | "constant", name: string, assignedValue: ExpressionAST) {
+        super(name)
         this.declarationType = declarationType
-        this.name = name
         this.assignedValue = assignedValue
     }
+
+    public get getAssignedValue() { return this.assignedValue }
 }
 
-export class ModuleAST {
-    private name: string
+export class ModuleAST extends EntityAST {
+    private scope: Scope
 
-    public constructor(name: string) {
-        this.name = name
+    public constructor(name: string, scope: Scope) {
+        super(name)
+        this.scope = scope
     }
 
-    public get getName() { return this.name }
+    public insert(name: string, value: ValidEntities) {
+        this.scope.addEntry(name, value)
+    }
+
+    public get getScope() { return this.scope }
 }
 
-export class FunctionAST {
+export class FunctionAST extends ExpressionAST {
     private name: string
-    private params: Expression[]
-    private returnValue: Expression
+    private params: ScrapParam[]
+    private scope: Scope
+    private returnExpression: ExpressionAST
 
-    public constructor(name: string, params: Expression[], returnValue: Expression) {
+    public constructor(name: string, params: ScrapParam[], scope: Scope, returnExpression: ExpressionAST) {
+        super()
         this.name = name
         this.params = params
-        this.returnValue = returnValue
+        this.scope = scope
+        this.returnExpression = returnExpression
     }
 
     public get getName() { return this.name }
     public get getParams() { return this.params }
+    public get getScope() { return this.scope }
+    public get getReturnType() { return this.returnExpression }
+
+    public set setReturnType(returnValue: ExpressionAST) { this.returnExpression = returnValue }
 }
 
-export class ClassAST extends Expression {
-    private className: string
+export class ClassAST extends EntityAST {
     private entities: (ScrapClassProperty | ScrapClassMethod)[]
+    private scope: Scope
     private hasConstructor: boolean
 
-    public constructor(className: string, entities: (ScrapClassProperty | ScrapClassMethod)[], hasConstructor: boolean) {
-        super()
-        this.className = className
+    public constructor(className: string, entities: (ScrapClassProperty | ScrapClassMethod)[], scope: Scope, hasConstructor: boolean) {
+        super(className)
         this.entities = entities
+        this.scope = scope
         this.hasConstructor = hasConstructor
     }
 }
