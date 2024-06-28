@@ -1,12 +1,12 @@
-import { Cursorable } from "../utils/cursor.ts"
+import { Cursor } from "../utils.ts"
 
-export default class LexerCursor implements Cursorable<string> {
-
+export default class LexerCursor extends Cursor<string> {
   source: string
   currentTok: string
   pos: number
 
   public constructor(file: string) {
+    super()
     this.source = file
     this.currentTok = this.source.at(0)!
     this.pos = 0

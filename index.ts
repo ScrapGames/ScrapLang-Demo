@@ -2,7 +2,7 @@
 
 import Lexer from "./src/lexer/lexer.ts"
 import Parser from "./src/parser/parser.ts"
-import CompilationError from "./src/lang/CompileError.ts"
+import CompilationError from "./src/lang/compile-error.ts"
 
 import { inArray } from "./src/utils.ts"
 import { repl } from "./src/repl.ts"
