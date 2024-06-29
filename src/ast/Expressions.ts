@@ -1,6 +1,23 @@
 import { Scope, type ValidEntities } from "../lang/scope.ts"
 import { ScrapClassMethod, ScrapClassProperty, ScrapParam } from "../typings.ts"
 
+export const BINARY_OPERATORS_PRECEDENCE = {
+    '*': 4,
+    '/': 4,
+    '%': 4,
+
+    '+': 3,
+    '-': 3,
+
+
+    '<': 2,
+    '>': 2,
+    "<=": 2,
+    ">=": 2,
+    "instanceof": 2,
+    "in": 2
+}
+
 export class ExpressionAST {}
 
 /**
