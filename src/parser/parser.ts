@@ -15,7 +15,11 @@ import type { ScrapClassMethod, ScrapClassProperty, ScrapParam, AccessorModifier
 
 import ParsingError from "./parser-error.ts"
 import ParserCursor from "./parser-cursor.ts"
+import * as pUtils from "./parser-utils.ts"
 import { Type } from "./type-parser.ts"
+import AST from "../ast/ast.ts"
+import { inArray } from "../utils.ts"
+import { BINARY_OPERATORS_PRECEDENCE } from "../ast/Expressions.ts";
 
 /**
  * TODO: parse identifiers expressions: 
@@ -46,6 +50,21 @@ export enum PrimitiveTypes {
   boolean = "boolean"
 }
 
+const RESERVERD_VAR_NAMES = [
+  "this",
+  "super"
+]
+
+const ONLY_PRIMARY_STATEMENTS = [
+  'const',
+  'class',
+  'module',
+  'interface',
+  'enum',
+  'import',
+  'export'
+]
+
 export default class Parser {
   lexer: Lexer
   cursor: ParserCursor
@@ -53,6 +72,7 @@ export default class Parser {
   functions: exp.FunctionAST[]
   typeRegistry: Type[]
   globalScope: Scope
+  ast: AST
 
   public constructor(lexer: Lexer) {
     this.lexer = lexer
@@ -61,6 +81,7 @@ export default class Parser {
     this.typeRegistry = []
     this.functions = []
     this.globalScope = createEmptyScope(null, "MainModule")
+    this.ast = new AST()
 
     this.cursor.currentTok = this.cursor.consume() // gives an initial value to the parser
   }
@@ -73,11 +94,11 @@ export default class Parser {
     this.cursor.currentTok = this.cursor.consume() // gives an initial value to the parser
   }
 
-  private scrapParseError(message: string, wrognToken: Token): never {
-    throw new ParsingError(message, wrognToken)
+  public scrapParseError(message: string): never {
+    throw new ParsingError(message, this.cursor.currentTok)
   }
 
-  private scrapGenerateWarn(message: string) {
+  private scrapGenerateWarn(message: string): void {
     this.warnings.push(message)
   }
 
@@ -88,52 +109,34 @@ export default class Parser {
   public addToGlobalScope(key: string, value: ValidEntities) {
     const globalScp = this.globalScope
     if (!globalScp.addEntry(key, value)) // safety non-null assert: first node which is the global scope is always availabe
-      this.scrapParseError("Duplicate identifier '" + key + "' at '" + globalScp.getOwner + "'", this.cursor.currentTok)
+      this.scrapParseError("Duplicate identifier '" + key + "' at '" + globalScp.getOwner + "'")
   }
 
   public addToScope(scope: Scope, key: string, value: ValidEntities) {
     if (!scope.addEntry(key, value)) {
-      this.scrapParseError("Duplicate identifier '" + key + "' at '" + scope.getOwner + "'", this.cursor.currentTok)
+      this.scrapParseError("Duplicate identifier '" + key + "' at '" + scope.getOwner + "'")
     }
   }
 
   private consume() { return this.cursor.consume() }
 
-  private nextToken() { return this.cursor.currentTok = this.consume() }
+  public nextToken() { return this.cursor.currentTok = this.consume() }
 
-  private _parseBinaryExpression() {}
+  private getTokPrecedence() {
+    const tokPrec = BINARY_OPERATORS_PRECEDENCE[this.cursor.currentTok.content as keyof typeof BINARY_OPERATORS_PRECEDENCE]
 
-  private literalParsers = {
-    parseString: function parseString(this: Parser) {
-      const stringExpr = new exp.StringLiteralExpression(this.cursor.currentTok.content)
+    if (tokPrec <= 0)
+        return -1;
+    
+    return tokPrec;
+  }
 
-      this.nextToken()
-      return stringExpr
-    },
-  
-    parseChar: function parseChar(this: Parser) {
-      if (this.cursor.currentTok.content.length > 1)
-        this.scrapParseError("Character content overflows the size of this type, only a character allowed", this.cursor.currentTok)
-  
-      const charExpr = new exp.CharLiteralExpression(this.cursor.currentTok.content)
+  private parseBinaryExpression(exprPrec: number, lhs: exp.ExpressionAST, scope: Scope): exp.BinaryExpression {
+    let tokPrec: number
+    let binOp: Token
+    let rsh: exp.ExpressionAST
 
-      this.nextToken()
-      return charExpr
-    },
-  
-    parseNumber: function parseNumber(this: Parser) {
-      const numExpr = new exp.IntegerExpression(parseInt(this.cursor.currentTok.content))
-
-      this.nextToken()
-      return numExpr
-    },
-  
-    parseFloatNumber: function parseFloatNumber(this: Parser) {
-      const floatExpr = new exp.FloatExpression(parseFloat(this.cursor.currentTok.content))
-
-      this.nextToken()
-      return floatExpr
-    }
+    return new exp.BinaryExpression(1, 0, '+')
   }
 
   /**
@@ -153,12 +156,12 @@ export default class Parser {
     if (this.cursor.currentTok.content !== Tokens.RSQRBR) {
       do {
         if (this.cursor.currentTok.type !== "IdentifierName")
-          this.scrapParseError("Expecting variable identifier", this.cursor.currentTok)
+          this.scrapParseError("Expecting variable identifier")
 
         this.nextToken() // eat the identifier (variable)
         if (this.cursor.currentTok.content === Tokens.COMMA)
           if (this.cursor.next().type !== "IdentifierName")
-            this.scrapParseError("Expected identifier name after comma", this.cursor.currentTok)
+            this.scrapParseError("Expected identifier name after comma")
           else
             this.nextToken() // eats the comma, then in the next iteration the currentTok should be an identifier
       } while (this.cursor.currentTok.content !== Tokens.RSQRBR)
@@ -170,17 +173,18 @@ export default class Parser {
 
   /**
    * Parses the literal form of create an array
-   * @returns 
+   * @param scope Scope where the elements of the array may be found
+   * @returns A new ArrayExpression
    */
   private parseLiteralArray(scope: Scope) {
     this.nextToken() // eat '['
     const elements: exp.ExpressionAST[] = []
 
     while (this.cursor.currentTok.content !== Tokens.RSQRBR) {
-      elements.push(this.parse(scope))
+      elements.push(this.parseExpr(scope))
       if (this.cursor.currentTok.content !== Tokens.RSQRBR) {
         if (this.cursor.currentTok.content !== Tokens.COMMA) {
-          this.scrapParseError("Expected comma after item", this.cursor.currentTok)
+          this.scrapParseError("Expected comma after item")
         } else this.nextToken() // consume the comma
       }
     }
@@ -190,6 +194,11 @@ export default class Parser {
     return new exp.ArrayExpression(elements)
   }
 
+  /**
+   * Parses a literal object
+   * @param scope Scope where the values of the object may be found
+   * @returns A new `LiteralObjectExpression`
+   */
   private parseLiteralObject(scope: Scope) {
     this.nextToken() // eat '{'
     let keyName = ""
@@ -201,19 +210,19 @@ export default class Parser {
         this.cursor.currentTok.type !== "IdentifierName" &&
         this.cursor.currentTok.type !== "StringLiteral"
       ) {
-        this.scrapParseError("object key from a key-value pair must be an identifier or a string", this.cursor.currentTok)
+        this.scrapParseError("object key from a key-value pair must be an identifier or a string")
       }
       keyName = this.cursor.currentTok.content
 
       if (this.nextToken().content !== Tokens.COLON)
-        this.scrapParseError("Missing colon ':'", this.cursor.currentTok)
+        this.scrapParseError("Missing colon ':'")
 
       this.nextToken() // eat the colon ':'
-      valueExpression = this.parse(scope)
+      valueExpression = this.parseExpr(scope)
       
       if (this.cursor.currentTok.content !== Tokens.RBRACE) {
         if (this.cursor.currentTok.content !== Tokens.COMMA) {
-          this.scrapParseError("Missing comma after key-value", this.cursor.currentTok)
+          this.scrapParseError("Missing comma after key-value")
         } else this.nextToken() // eat the comma
       }
 
@@ -235,11 +244,11 @@ export default class Parser {
     while (this.cursor.currentTok.content !== Tokens.RBRACE) {
       if (this.cursor.currentTok.content === Keywords.RETURN)
         if (isMethod)
-          this.scrapParseError("A constructor can not have a return statement", this.cursor.currentTok)
+          this.scrapParseError("A constructor can not have a return statement")
         else
           returnExpression = this.parseReturn(scope)
       else {
-        const parsedObj = this.parse(scope)
+        const parsedObj = this.parseStatement(scope, false)
 
         if (parsedObj instanceof exp.EntityAST || parsedObj instanceof exp.FunctionAST) {
           this.addToScope(scope, parsedObj.getName, parsedObj)
@@ -271,11 +280,11 @@ export default class Parser {
         // we admit that the name can be only 2 keywords
         // allowing be possible make constructor and destructor function for objects          
       )
-      this.scrapParseError("Function name expected", this.cursor.currentTok)
+      this.scrapParseError("Function name expected")
     const fName = this.cursor.currentTok.content
 
     if (this.nextToken().content !== Tokens.LPAREN)
-      this.scrapParseError("Missing function parameters", this.cursor.currentTok)
+      this.scrapParseError("Missing function parameters")
 
     if (isMethod && isStatic)
       params.push({ pName: "this", pType: "this" })
@@ -290,7 +299,7 @@ export default class Parser {
     }
 
     if (this.nextToken().content !== Tokens.LBRACE)
-      this.scrapParseError("Missing function body open", this.cursor.currentTok)
+      this.scrapParseError("Missing function body open")
     
     this.nextToken() // eat '{'
     
@@ -312,7 +321,7 @@ export default class Parser {
         let name = ""
         this.nextToken() // eat 'const' keyword
         if (this.cursor.currentTok.type !== "IdentifierName")
-          this.scrapParseError("Invalid class property declaration, expected an identifier", this.cursor.currentTok)
+          this.scrapParseError("Invalid class property declaration, expected an identifier")
 
           name = this.cursor.currentTok.content
           this.nextToken() // eats identifier variable name
@@ -320,17 +329,17 @@ export default class Parser {
         //@ts-ignore: ???
         if (this.cursor.currentTok.content === Tokens.COLON) {
           if (this.nextToken().type !== "IdentifierName")
-            this.scrapParseError("Missing data type after colon ':'", this.cursor.currentTok)
+            this.scrapParseError("Missing data type after colon ':'")
           else this.nextToken() // consume the data type
         }
 
         //@ts-ignore: ???
         if (this.cursor.currentTok.content !== Tokens.EQUAL)
-          this.scrapParseError("Missing assignment operator '=' after const declaration. A constant must be initialized since his value can not change", this.cursor.currentTok)
+          this.scrapParseError("Missing assignment operator '=' after const declaration. A constant must be initialized since his value can not change")
 
         this.nextToken() // eat '='
 
-        return new exp.DeclarationAST("constant", name, this.parse(scope))
+        return new exp.DeclarationAST("constant", name, this.parseExpr(scope))
       }
 
       case Keywords.VAR: {
@@ -339,7 +348,7 @@ export default class Parser {
 
         this.nextToken() // eat 'var' keyword
         if (this.cursor.currentTok.type !== "IdentifierName")
-          this.scrapParseError("Invalid variable declaration, expected an identifier, '[' or '{'", this.cursor.currentTok)
+          this.scrapParseError("Invalid variable declaration, expected an identifier, '[' or '{'")
 
           name = this.cursor.currentTok.content
           this.cursor.currentTok
@@ -348,7 +357,7 @@ export default class Parser {
         //@ts-ignore: ???
         if (this.cursor.currentTok.content === Tokens.COLON) {
           if (this.nextToken().type !== "IdentifierName") {
-            this.scrapParseError("Missing data type after colon ':'", this.cursor.currentTok)
+            this.scrapParseError("Missing data type after colon ':'")
           } else this.nextToken() // consume the data type
         }
 
@@ -356,13 +365,13 @@ export default class Parser {
         if (this.cursor.currentTok.content === Tokens.EQUAL) {
           this.nextToken() // eat '='
       
-          variableExpression = this.parse(scope)
+          variableExpression = this.parseExpr(scope)
         }
 
         return new exp.DeclarationAST("variable", name, variableExpression)
       }
 
-      default: this.scrapParseError("Unknown class entity", this.cursor.currentTok)
+      default: this.scrapParseError("Unknown class entity")
     }
   }
 
@@ -387,16 +396,16 @@ export default class Parser {
 
     do {
       if (this.cursor.currentTok.type !== "IdentifierName")
-        this.scrapParseError("Missing parameter name", this.cursor.currentTok)
+        this.scrapParseError("Missing parameter name")
       pName = this.cursor.currentTok.content
 
       if (this.nextToken().content !== Tokens.COLON)
-        this.scrapParseError("Missing colon ':' after parameter name indicating data type", this.cursor.currentTok)
+        this.scrapParseError("Missing colon ':' after parameter name indicating data type")
 
       this.nextToken()
       if (this.cursor.currentTok.content === "...") {
         if (this.nextToken().type !== "IdentifierName") {
-          this.scrapParseError("Missing parameter data type", this.cursor.currentTok)
+          this.scrapParseError("Missing parameter data type")
         } else {
           // Variable args is taked as an array by the compiler and must be managed in the same way by the user in the function body
           pType = this.cursor.currentTok.content + "[]"
@@ -404,11 +413,11 @@ export default class Parser {
         }
 
         if (this.cursor.next().content === Tokens.COMMA) {
-          this.scrapParseError("Variable arguments using elipsis \"...\" must be the last parameter in the list", this.cursor.currentTok)
+          this.scrapParseError("Variable arguments using elipsis \"...\" must be the last parameter in the list")
         }
       } else
         if (this.cursor.currentTok.type !== "IdentifierName")
-          this.scrapParseError("Missing parameter data type", this.cursor.currentTok)
+          this.scrapParseError("Missing parameter data type")
         else {
           pType = this.cursor.currentTok.content
           params.push({ pName, pType })
@@ -433,7 +442,7 @@ export default class Parser {
     this.nextToken() // eat 'module' keyword
 
     if (this.cursor.currentTok.type !== "IdentifierName")
-      this.scrapParseError("Missing module name", this.cursor.currentTok)
+      this.scrapParseError("Missing module name")
 
     const moduleName = this.cursor.currentTok.content
     const firstModuleNameLetter = moduleName.charAt(0)
@@ -441,7 +450,7 @@ export default class Parser {
       this.scrapGenerateWarn(`A module name should have a Pascal-Case format. '${firstModuleNameLetter.toUpperCase() + moduleName.substring(1)}' in this case.`)
 
     if (this.nextToken().content !== Tokens.LBRACE)
-      this.scrapParseError("Missing module body opening '{'", this.cursor.currentTok)
+      this.scrapParseError("Missing module body opening '{'")
 
     this.nextToken() // eat '{'
 
@@ -499,7 +508,7 @@ export default class Parser {
           nextToken.content === Keywords.CONST ||
           nextToken.content === Keywords.VAR
         ) {
-          this.scrapParseError("'override' keyword must be preceeded only by a function or variable declaration", this.cursor.currentTok)          
+          this.scrapParseError("'override' keyword must be preceeded only by a function or variable declaration")          
         }
       }
 
@@ -522,27 +531,27 @@ export default class Parser {
     const classEntities: (ScrapClassProperty | ScrapClassMethod)[] = []
 
     if (this.cursor.currentTok.type !== "IdentifierName")
-      this.scrapParseError("Expected a class name", this.cursor.currentTok)
+      this.scrapParseError("Expected a class name")
     const className = this.cursor.currentTok.content
     
     this.nextToken() // eat class name (identifier)
     if (this.cursor.currentTok.content === Keywords.EXTENDS || this.cursor.currentTok.content === Keywords.IMPLEMENTS) {
       if (this.cursor.currentTok.content === Keywords.EXTENDS) {
         if (this.nextToken().type !== "IdentifierName")
-          this.scrapParseError("Expected an identifier", this.cursor.currentTok)
+          this.scrapParseError("Expected an identifier")
 
         if (this.cursor.next().content === Keywords.IMPLEMENTS) {
           this.nextToken() // now currentTok is "implements"
 
           if (this.nextToken().type !== "IdentifierName") {
-            this.scrapParseError("Expected an identifier", this.cursor.currentTok)
+            this.scrapParseError("Expected an identifier")
           }
         }
       }
 
       if (this.cursor.currentTok.content === Keywords.IMPLEMENTS) {
         if (this.nextToken().type !== "IdentifierName")
-          this.scrapParseError("Expected an identifier", this.cursor.currentTok)
+          this.scrapParseError("Expected an identifier")
       }
     }
 
@@ -590,7 +599,7 @@ export default class Parser {
     let name = ""
     this.nextToken() // eat 'const' keyword
     if (this.cursor.currentTok.type !== "IdentifierName" && (this.cursor.currentTok.content !== Tokens.LSQRBR && this.cursor.currentTok.content !== Tokens.LBRACE)) {
-      this.scrapParseError("Invalid variable declaration, expected an identifier, '[' or '{'", this.cursor.currentTok)
+      this.scrapParseError("Invalid variable declaration, expected an identifier, '[' or '{'")
     }
 
     if (this.cursor.currentTok.content === Tokens.LSQRBR)
@@ -599,22 +608,24 @@ export default class Parser {
       this.parseLiteralObject(scope) // TODO: make a 'parseObjectDestructing' function
     else {
       name = this.cursor.currentTok.content
+      if (inArray(name, RESERVERD_VAR_NAMES))
+        this.scrapParseError(`'${name}' is not allowed as a variable declaration name.`)
       this.nextToken() // eats identifier variable name
     }
 
 
     if (this.cursor.currentTok.content === Tokens.COLON) {
       if (this.nextToken().type !== "IdentifierName") {
-        this.scrapParseError("Missing data type after colon ':'", this.cursor.currentTok)
+        this.scrapParseError("Missing data type after colon ':'")
       } else this.nextToken() // consume the data type
     }
 
     if (this.cursor.currentTok.content !== Tokens.EQUAL)
-      this.scrapParseError("Missing assignment operator '=' after const declaration. A constant must be initialized since his value can not change", this.cursor.currentTok)
+      this.scrapParseError("Missing assignment operator '=' after const declaration. A constant must be initialized since his value can not change")
 
     this.nextToken() // eat '='
 
-    const constantExpression = this.parse(scope)
+    const constantExpression = this.parseExpr(scope)
 
     return new exp.DeclarationAST("constant", name, constantExpression)
   }
@@ -631,7 +642,7 @@ export default class Parser {
 
     this.nextToken() // eat 'var' keyword
     if (this.cursor.currentTok.type !== "IdentifierName" && (this.cursor.currentTok.content !== Tokens.LSQRBR && this.cursor.currentTok.content !== Tokens.LBRACE))
-      this.scrapParseError("Invalid variable declaration, expected an identifier, '[' or '{'", this.cursor.currentTok)
+      this.scrapParseError("Invalid variable declaration, expected an identifier, '[' or '{'")
 
     if (this.cursor.currentTok.content === Tokens.LSQRBR)
       this.parseArrayDestructing()
@@ -639,20 +650,22 @@ export default class Parser {
       this.parseLiteralObject(scope)
     else {
       name = this.cursor.currentTok.content
-      this.cursor.currentTok
+      if (inArray(name, RESERVERD_VAR_NAMES))
+        this.scrapParseError(`'${name}' is not allowed as a variable declaration name.`)
+
       this.nextToken() // eats identifier variable name
     }
 
     if (this.cursor.currentTok.content === Tokens.COLON) {
       if (this.nextToken().type !== "IdentifierName") {
-        this.scrapParseError("Missing data type after colon ':'", this.cursor.currentTok)
+        this.scrapParseError("Missing data type after colon ':'")
       } else this.nextToken() // consume the data type
     }
 
     if (this.cursor.currentTok.content === Tokens.EQUAL) {
       this.nextToken() // eat '='
   
-      variableExpression = this.parse(scope)
+      variableExpression = this.parseExpr(scope)
     }
 
     return new exp.DeclarationAST("variable", name, variableExpression)
@@ -669,7 +682,7 @@ export default class Parser {
     this.nextToken() // eat '&'
     const referenceTo = this.cursor.currentTok
     if (referenceTo.type !== "IdentifierName")
-      this.scrapParseError("A reference cant only points to an already existent variable", this.cursor.currentTok)
+      this.scrapParseError("A reference cant only points to an already existent variable")
 
     this.parseIdentifier(scope)
 
@@ -687,7 +700,7 @@ export default class Parser {
    */
   private parseReturn(scope: Scope) {
     this.nextToken() // eat 'return' keyword
-    return this.parse(scope)
+    return this.parseExpr(scope)
   }
 
   /**
@@ -713,7 +726,7 @@ export default class Parser {
    * Parse an accessor token, either module or object accessor ( :: ) ( . ) respectively
    * @returns 
    */
-  private parseAccessor(scope: Scope) {
+  private parseAccessor(_scope: Scope) {
 
     if (this.cursor.currentTok.content === Tokens.MODULE_ACCESSOR) {
       // TODO: parses as a module accessor token ( :: )
@@ -726,56 +739,71 @@ export default class Parser {
     return new exp.ExpressionAST()
   }
 
+  private parseToken(scope: Scope) {
+    switch (this.cursor.currentTok.content) {
+      case Tokens.LBRACE: return this.parseLiteralObject(scope)
+      case Tokens.LSQRBR: return this.parseLiteralArray(scope)
+      case Tokens.AMPER: return this.parseReference(scope)
+      case Tokens.DOT: return this.parseAccessor(scope)
+      case Tokens.COLON: return this.parseAccessor(scope)
+      case Tokens.PLUS:
+      case Tokens.MINUS:
+      case Tokens.STAR:
+      case Tokens.SLASH: return this.parseBinaryExpression(0, this.parseExpr(scope), scope)
+      default: this.scrapParseError("Token does not implemented yet")
+    }
+  }
+
   /**
    * Parse the different type of expressions and entities of ScrapLang* 
    * @param scope Scope where the parsed expression or declaration belongs to
    * @returns A parsed expression or a variable declaration
    */
-  private parse(scope: Scope): exp.ExpressionAST | exp.EntityAST {
+  private parseExpr(scope: Scope): exp.ExpressionAST {
+
+    // 
+    if (this.cursor.currentTok.content === Keywords.FN)
+      return this.parseFunction(false, false, scope)
+
     switch (this.cursor.currentTok.type) {
       case "IdentifierName": return this.parseIdentifier(scope)
-      case "NumericLiteral": return this.literalParsers.parseNumber.call(this)
-      case "FloatLiteral": return this.literalParsers.parseFloatNumber.call(this)
-      case "CharLiteral": return this.literalParsers.parseChar.call(this)
-      case "StringLiteral": return this.literalParsers.parseString.call(this)
-      case "TemplateString": return this.literalParsers.parseString.call(this) // TODO: Make a parseTemplateString function
-      case "Operator": return new exp.BinaryExpression({}, {}, '+')
-      case "Keyword": { // ignores no-fallthrough is safety use in this case statement since once reached the keywords class, module, interface, enum, export, import the program will crash throwing an error
-        switch (this.cursor.currentTok.content) {
-          case Keywords.FN: return this.parseFunction(false, false, scope) // here we suppose that the parsed function is not inside a class scope, so is not a method
-          case Keywords.CONST: return this.parseConst(scope)
-          case Keywords.VAR: return this.parseVar(scope)
-          case Keywords.RETURN: return this.parseReturn(scope)
-          
-          case Keywords.CLASS:
-          case Keywords.MODULE:
-          case Keywords.INTERFACE:
-          case Keywords.ENUM:
-          case Keywords.EXPORT:
-          case Keywords.IMPORT: {
-            this.scrapParseError(
-              "The keywords class, module, interface, enum, export, import. Are only permitted to be declared at the MainModule. Place them at the 'root' of the file",
-              this.cursor.currentTok
-            )
-          }
+      case "NumericLiteral": return pUtils.parseNumber.call(this)
+      case "FloatLiteral": return pUtils.parseFloatNumber.call(this)
+      case "CharLiteral": return pUtils.parseChar.call(this)
+      case "StringLiteral": return pUtils.parseString.call(this)
+      case "TemplateString": return pUtils.parseString.call(this) // TODO: Make a parseTemplateString function
+      case "Operator": return new exp.BinaryExpression(20, 30, '+')
+      case "Token": return this.parseToken(scope)
+
+      case "Unknown": return this.scrapParseError("Unkown Token")
+
+      default: this.scrapParseError("Unexpected token while parsing. Maybe it is not an expression")
+    }
+  }
+
+  private parseStatement(scope: Scope, isPrimary: boolean): exp.EntityAST | exp.FunctionAST {
+    if (isPrimary) {
+      switch (this.cursor.currentTok.content) {
+        case Keywords.FN: return this.parseFunction(false, false, scope)
+        case Keywords.CONST: return this.parseConst(scope)
+        case Keywords.CLASS: return this.parseClass(scope)
+  
+        default: this.scrapParseError(`'${this.cursor.currentTok.content}' does not appear to be a statement`)
+      }
+    } else {
+      switch (this.cursor.currentTok.content) {
+        case Keywords.FN: return this.parseFunction(false, false, scope)
+        case Keywords.CONST: return this.parseConst(scope)
+        case Keywords.VAR: return this.parseVar(scope)
+  
+        default: {
+          const message = this.cursor.currentTok.type === "Statement" ?
+            `'${this.cursor.currentTok.content}' is a primary statement and is not allowed here
+            Learn more at: https://lang.scrapgames.com/tutorial/primary_statements` :
+            `'${this.cursor.currentTok.content}' does not appear to be a statement`
+            this.scrapParseError(message)
         }
       }
-
-      // deno-lint-ignore no-fallthrough
-      case "Token": {
-        if (this.cursor.currentTok.content === Tokens.LBRACE)
-          return this.parseLiteralObject(scope)
-        else if (this.cursor.currentTok.content === Tokens.LSQRBR)
-          return this.parseLiteralArray(scope)
-        else if (this.cursor.currentTok.content === Tokens.AMPER)
-          return this.parseReference(scope)
-        else if (this.cursor.currentTok.content === Tokens.DOT || this.cursor.currentTok.content === Tokens.COLON)
-          return this.parseAccessor(scope)
-      }
-
-      case "Unknown": return this.scrapParseError("Unkown Token", this.cursor.currentTok)
-
-      default: this.scrapParseError("Unexpected token while parsing", this.cursor.currentTok)
     }
   }
 
@@ -791,43 +819,23 @@ export default class Parser {
    */
   public parsePrimary(): exp.EntityAST | exp.FunctionAST {
     switch (this.cursor.currentTok.content) {
-      case Keywords.FN: {
-        const functionDeclaration = this.parseFunction(false, false, this.globalScope)
-        this.addToGlobalScope(functionDeclaration.getName, functionDeclaration)
-
-
-        return functionDeclaration
-      }
-      case Keywords.CONST: {
-        const constantDeclaration = this.parseConst(this.globalScope)
-        this.addToGlobalScope(constantDeclaration.getName, constantDeclaration)
-
-        return constantDeclaration
-      }
-      case Keywords.CLASS: {
-        const classDeclaration = this.parseClass(this.globalScope)
-        this.addToGlobalScope(classDeclaration.getName, classDeclaration)
-
-        return classDeclaration
-      }
+      case Keywords.FN:
+      case Keywords.CONST:
+      case Keywords.CLASS:
       case Keywords.MODULE: {
-        const moduleDeclaration = this.parseModule(this.globalScope)
-        this.addToGlobalScope(moduleDeclaration.getName, moduleDeclaration)
+        const parsedStatement = this.parseStatement(this.globalScope, true)
+        this.addToGlobalScope(parsedStatement.getName, parsedStatement)
 
-        return moduleDeclaration
+        return parsedStatement
       }
 
       default: {
-        const invalidTokenHereErrorStringMessage = `The token '${this.cursor.currentTok.content}' after '${this.cursor.previous().content}', is not allowed here`
+        const invalidTokenHereErrorStringMessage = `The token '${this.cursor.currentTok.content}' is not allowed here`
 
         this.scrapParseError(
-          `${invalidTokenHereErrorStringMessage}. Only keywords: 'fn', 'const', 'class', 'module', 'interface', 'enum', 'import' and 'export' keywords are allowed as primary statements.
-            Learn more at: https://lang.scrapgames.com/tutorial/primary_statements`, this.cursor.currentTok)
+          `${invalidTokenHereErrorStringMessage}. Only: 'fn', 'const', 'class', 'module', 'interface', 'enum', 'import' and 'export' keywords are allowed as primary statements.
+            Learn more at: https://lang.scrapgames.com/tutorial/primary_statements`)
       }
-      //case "interface"
-      //case "enum"
-      //case "export":
-      //case import
-      }
+    }
   }
 }
