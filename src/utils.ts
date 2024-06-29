@@ -19,6 +19,25 @@ export function isNumeric(token: string) {
     return numericRegex.test(token)
 }
 
+export function isOctalLiteral(token: string) {
+    const numericRegex = /0o[0-9]/
+
+    return numericRegex.test(token)
+
+}
+
+export function isBinaryLiteral(token: string) {
+    const numericRegex = /0b[0-9]/
+
+    return numericRegex.test(token)
+}
+
+export function isHexaLiteral(token: string) {
+    const numericRegex = /0x[0-9]/
+
+    return numericRegex.test(token)
+}
+
 /// Detects whitespaces characters
 export function isSpace(token: string) {
     return token === ' '
@@ -31,7 +50,7 @@ export function isSpace(token: string) {
  * @returns true, if `item` exists, false in other case
  */
 export function inArray(item: unknown, array: unknown[]): boolean {
-    return array.find(e => e === item) === undefined
+    return array.find(e => e === item) !== undefined
 }
 
 export abstract class Cursor<T> {
