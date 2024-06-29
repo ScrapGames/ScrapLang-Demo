@@ -16,7 +16,6 @@ import type { ScrapClassMethod, ScrapClassProperty, ScrapParam, AccessorModifier
 import ParsingError from "./parser-error.ts"
 import ParserCursor from "./parser-cursor.ts"
 import * as pUtils from "./parser-utils.ts"
-import { Type } from "./type-parser.ts"
 import AST from "../ast/ast.ts"
 import { inArray } from "../utils.ts"
 import { BINARY_OPERATORS_PRECEDENCE } from "../ast/Expressions.ts";
@@ -55,22 +54,11 @@ const RESERVERD_VAR_NAMES = [
   "super"
 ]
 
-const ONLY_PRIMARY_STATEMENTS = [
-  'const',
-  'class',
-  'module',
-  'interface',
-  'enum',
-  'import',
-  'export'
-]
-
 export default class Parser {
   lexer: Lexer
   cursor: ParserCursor
   warnings: string[]
   functions: exp.FunctionAST[]
-  typeRegistry: Type[]
   globalScope: Scope
   ast: AST
 
@@ -78,7 +66,6 @@ export default class Parser {
     this.lexer = lexer
     this.cursor = new ParserCursor(lexer)
     this.warnings = []
-    this.typeRegistry = []
     this.functions = []
     this.globalScope = createEmptyScope(null, "MainModule")
     this.ast = new AST()
