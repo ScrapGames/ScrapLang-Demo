@@ -23,7 +23,6 @@ export function isOctalLiteral(token: string) {
     const numericRegex = /0o[0-9]/
 
     return numericRegex.test(token)
-
 }
 
 export function isBinaryLiteral(token: string) {
