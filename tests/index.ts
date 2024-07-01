@@ -11,7 +11,7 @@ const file = await Deno.readTextFile(fileName)
 const lex = new Lexer(file, fileName)
 
 const parser = new Parser(lex)
-const globalScope = parser.globalScope
+const mainModule = parser.mainModule
 
 const args = Deno.args
 
@@ -19,7 +19,7 @@ if (inArray("--repl", args)) {
     repl()
 } else {
     do {
-        parser.parsePrimary(parser.globalScope)
+        parser.parsePrimary(parser.mainModule.getScope)
     } while (!parser.cursor.isEOF())
     
     console.log("\n")
@@ -29,7 +29,7 @@ if (inArray("--repl", args)) {
     if (!mainFunction)
         throw new CompilationError("Missing program entrypoint (main function)")
     
-    console.log(globalScope)
+    console.log(mainModule)
     parser.warnings.forEach(warning => console.warn("Warning: %s", warning))
     //console.log("Main function scope\n", parser.functions[parser.functions.length - 1].getScope)
 }
