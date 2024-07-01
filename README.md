@@ -2,6 +2,9 @@
 
 ## A toy programming language borned to learn how to parse contents in a file
 
+Inspired on JavaScript / TypeScript and another programming languages. The objective of ScrapLang is not innovate the way to write code or something similar
+ut rather to provide a very simple API where there aren't hundreds of functions and classes that do the same thing or very similar things, and apply these API the to a syntax already familiar for the most of programmers.
+
 ## Specs
 
 - Functions are first-class citizens ✅
