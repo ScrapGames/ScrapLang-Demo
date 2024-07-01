@@ -31,5 +31,5 @@ if (inArray("--repl", args)) {
     
     console.log(mainModule)
     parser.warnings.forEach(warning => console.warn("Warning: %s", warning))
-    //console.log("Main function scope\n", parser.functions[parser.functions.length - 1].getScope)
+    //console.log("Main function scope\n", mainFunction.getScope)
 }
