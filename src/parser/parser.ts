@@ -723,7 +723,7 @@ export default class Parser {
       case Tokens.LBRACE: return this.parseLiteralObject(scope)
       case Tokens.LSQRBR: return this.parseLiteralArray(scope)
       case Tokens.AMPER: return this.parseReference(scope)
-      case Tokens.DOT: return this.parseAccessor(scope)
+      case Tokens.DOT:
       case Tokens.COLON: return this.parseAccessor(scope)
       case Tokens.PLUS:
       case Tokens.MINUS:
