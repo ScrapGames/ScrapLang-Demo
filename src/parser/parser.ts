@@ -224,9 +224,10 @@ export default class Parser {
         else
           returnExpression = this.parseReturn(scope)
       else {
-        const parsedObj = this.parseStatement(scope, false)
-
-        if (parsedObj instanceof exp.EntityAST || parsedObj instanceof exp.FunctionAST) {
+        if (this.cursor.currentTok.type === "IdentifierName")
+          this.parseIdentifier(scope)
+        else {
+          const parsedObj = this.parseStatement(scope, false)
           this.addToScope(scope, parsedObj.getName, parsedObj)
         }
       }
@@ -696,6 +697,7 @@ export default class Parser {
       this.scrapReferenceError(this.cursor.currentTok)
 
     this.nextToken() // eat the identifier
+
     return new exp.ExpressionAST()
   }
 
@@ -766,21 +768,21 @@ export default class Parser {
         case Keywords.CLASS: return this.parseClass(scope)
         case Keywords.MODULE: return this.parseModule(scope)
   
-        default: this.scrapParseError(`'${this.cursor.currentTok.content}' does not appear to be a statement`)
+        default: this.scrapParseError(`'${this.cursor.currentTok.content}' does not appear to be a valid primary statement`)
       }
     } else {
-      switch (this.cursor.currentTok.content) {
-        case Keywords.FN: return this.parseFunction(false, false, scope)
-        case Keywords.CONST: return this.parseConst(scope)
-        case Keywords.VAR: return this.parseVar(scope)
-  
-        default: {
-          const message = this.cursor.currentTok.type === "Statement" ?
-            `'${this.cursor.currentTok.content}' is a primary statement and is not allowed here
-            Learn more at: https://lang.scrapgames.com/tutorial/primary_statements` :
-            `'${this.cursor.currentTok.content}' does not appear to be a statement`
-            this.scrapParseError(message)
+      switch (this.cursor.currentTok.type) {
+        case "Statement": {
+          switch (this.cursor.currentTok.content) {
+            case Keywords.FN: return this.parseFunction(false, false, scope)
+            case Keywords.CONST: return this.parseConst(scope)
+            case Keywords.VAR: return this.parseVar(scope)
+
+            default: return this.scrapParseError(`'${this.cursor.currentTok.content}' is not allowed here`)
+          }
         }
+
+        default: this.scrapParseError(`The ${this.cursor.currentTok.type} '${this.cursor.currentTok.content}' is not allowed here, only statements and identifiers are permitted`)
       }
     }
   }
