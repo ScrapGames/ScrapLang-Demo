@@ -1,0 +1,39 @@
+import { Fontanero } from "./instanceof"
+
+fn main() {
+    var font = null
+    var tubusero = null
+
+    var someBooleanCondition = true
+
+    if (someBooleanCondition) {
+        font = new Fontanero()
+        tubusero = new Tubusero()
+    }
+
+    // inline if with not logical operator
+    font.edad = 30 if font not null
+
+    // inline if with non-equal operator
+    font.edad = 30 if font != null
+
+    // normal if with not logical operator
+    if (font not null) {
+        font.edad = 30
+    }
+
+    if (font != null) {
+        font.edad = 30
+    }
+
+    // Same value assertion
+    // both objects beign compared must share the same data type
+    // in this case after the value assignment, the variable data type
+    // is inferred as an union of the type of his class and null
+    // e.g: for `tubusero` the variable data type will be "Tubusero | null"
+    // the same for `font`.
+    // If this condition doesnt fulfill, the compilation will crash
+    if (font and tubusero != null) {
+        
+    }
+}

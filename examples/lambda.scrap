@@ -1,0 +1,15 @@
+import { Date } from "scrap:time"
+import Date from scrap.time
+
+const func = (name: string) -> {
+    console.log("Hello " + name + " today is " + (new Date().pretty()))
+}
+
+fn greet(name: string, greeter: ((name: string) -> void)) {
+    greeter(name)
+}
+
+fn main() {
+    // supposing today is 22/02/2024
+    greet("Pedro", func) // "Hello Pedro today is 22/02/2024"
+}

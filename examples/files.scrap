@@ -1,0 +1,10 @@
+fn main() {
+    // open function read relatively to the file where is executed
+    const file = open("class.scrap", "r")
+
+    console.log(file.readAll())
+    console.log(file.readLine()) // returns a line in every execution until returns null as the eof (end of file)
+    console.log(file.readChar()) // returns a character in every execution until returns null as the eof (end of file)
+    
+    file.close() // close the opened stream. Its very important due to possibles data loss or data corruption
+}

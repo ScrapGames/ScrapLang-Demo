@@ -1,0 +1,11 @@
+import { fetch } from "scrap:net"
+
+async fn asyncTest() {
+  var conexionRemota = await fetch("http://carlos.huevos/largos")
+
+  console.log(conexionRemota.json())
+}
+
+async fn main() {
+  await asyncTest()
+}

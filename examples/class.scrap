@@ -1,0 +1,48 @@
+class Person {
+  name: String
+  age: u8
+
+  public fn constructor(name: String, age: u8) {
+    this.name = name
+    this.age = age
+  }
+
+  public fn greet(name: String) {
+    return `Hello ${name}!, my name is ${this.name}`
+  }
+
+  public fn destructor() {
+    console.log(`${this.name} has gone to sleep. Tomorrow enter to his job at 6am`)
+  }
+}
+
+class Conexion {
+  ip: String
+
+  public fn constructor() {
+    //! inicia la conexion al servidor remoto
+  }
+
+  public fn destructor() {
+    //! cierra la conexion al servidor remoto
+  }
+}
+
+fn crearConexion(usuario: Person) {
+  const con = new Conexion()
+
+  if (algo que explota) {
+    throw new Exception() after {
+      
+    }
+  }
+}
+
+fn main() {
+  const juan = new Person("Juan", 30)
+
+  console.log(juan.age)
+  console.log(juan.greet("Enrique"))
+
+  crearConexion(juan)
+}

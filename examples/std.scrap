@@ -1,0 +1,10 @@
+/**
+ * `std` is an module which is loaded by default in all the scrap programs
+ * in std we've multiple object, class and other variables that are commonly used
+ *
+ */
+
+fn main() {
+    
+    console.log()
+}

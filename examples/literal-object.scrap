@@ -1,0 +1,9 @@
+fn main() {
+  const juan = {
+    nombre: "Juan"
+    edad: 30
+  }
+
+  console.log(juan.nombre) // "Juan"
+  console.log(juan["nombre"]) // "Juan"
+}

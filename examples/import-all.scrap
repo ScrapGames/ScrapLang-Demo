@@ -1,0 +1,7 @@
+import * as PersonsTypes from "./instanceof"
+
+fn main() {
+  var enrique = new PersonsTypes.Albañil(20)
+
+  console.log(enrique.construcciones)
+}

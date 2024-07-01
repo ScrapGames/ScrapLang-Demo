@@ -1,0 +1,157 @@
+import { Fontanero } from "../examples/instanceof"
+
+module ArgsDemostration {
+  fn variableArgs(args: ...string) {
+    std::console.log("BRUH " + args.length)
+  }
+
+  fn bruh(args: ...String) {
+    const date = Date.currentDate() - Date.from("14/03/2024")
+  }
+
+  fn returnMultiple() {
+    return { num: 1, currentDate: Date.currentDate() }
+  }
+
+  fn getFromMultipleReturn() {
+    const { num, currentDate } = returnMultiple()
+
+    console.log(num) // prints 1
+    console.log(currentDate) // prints a date object
+  }
+}
+
+fn main() {
+
+  const lambda = (name: String) -> {
+    console.log(`Hello ${name}`)
+  }
+
+  const aCharacter = 'a'
+
+  const multilineString =
+"Hello, my name is SuspiciousScapper1, official and unique developer of ScrapLang at the moment.
+The history of this project s a little large, you can visit it at: (possible URL to our page)"
+
+  ArgsDemostration::variable_args("bruh", "moment", "this are variable args", "tafaaaaak!")
+  var num = 30
+  "bestial and sexy programming language"
+  'G'
+}
+
+/**
+ * // BRUH
+ * ! danger!
+ * ? a query!!
+ * * Viva la libertad carajooo
+ * TODO: TODO comment in ScrapLang using "BetterComments"
+ */
+
+/* const sexyArray = [1, 2, 3, 4, 5]
+
+const bruhFloat = 10.200
+
+const version: string = "1.0.0"
+
+const aChar = '2'
+
+const STATUS_CODES = { "OK": 200, "I'm a teapot": 306 }
+
+const BRUH = "a"
+
+const aFunctionInConstant = fn constant() {}
+
+const arr1 = [fn bruh(){}, fn test1(){}]
+
+fn test(num: i32, num2: u32) {}
+
+const test = "LOL"
+
+const PRECIO = "BRUTAL price" */
+
+/* fn printNumber(num: i32, num2: i32) {
+  //const lol = "LOL"
+} */
+
+/*
+module Test {
+  module InnerTest {
+    const moreInnerConst = 20
+  }
+
+  const innerConst = 10
+}
+
+const obj = { a: 1 }
+
+fn aNormalFunction() {
+
+  var aVariable = 10
+
+  const aConstant = 10
+
+  fn innerFunction() {
+    const innerestCostant = 20
+  }
+
+  return { a: "b", b: { c: "d" } }
+}
+
+fn rawFn() {}
+
+class Person extends Bruh {
+  public const PRICE = 10.40
+  private var name
+
+  private fn constructor() {}
+
+  public fn destructor() {}
+}
+
+const VERSION = 20
+
+fn lol() {}
+
+const num = 1_000_000
+
+const lambda = fn aLambdaFunction() {
+  return "A string returned from a lambda!"
+}
+
+const bruh = &VERSION
+
+fn bruh() {
+  const aString = "I'm a string!"
+}
+
+const sexyArray = [1, 2, 3, 4, 5]
+
+const bruhFloat = 10.200
+
+const version: string = "1.0.0"
+
+const aChar = '2'
+
+const STATUS_CODES = { "OK": 200, "I'm a teapot": 418 }
+
+const BRUH = "a"
+
+const aFunctionInConstant = fn constant() {}
+
+const arr1 = [fn bruh(){}, fn test1(){}]
+
+fn test(num: i32, num2: u32) {}
+
+const test = "LOL"
+
+const PRECIO = "BRUTAL price"
+
+fn main() {
+
+  const multilineString =
+"Hello, my name is SuspiciousScapper1, official and unique developer of ScrapLang at the moment.
+The history of this project s a little large, you can visit it at: (possible URL to our page)"
+
+  //"Hello World!"
+}
+*/
