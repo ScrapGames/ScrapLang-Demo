@@ -54,7 +54,7 @@ export default class Parser {
   cursor: ParserCursor
   warnings: string[]
   functions: exp.FunctionAST[]
-  globalScope: Scope
+  mainModule: exp.ModuleAST
   ast: AST
 
   public constructor(lexer: Lexer) {
@@ -62,7 +62,7 @@ export default class Parser {
     this.cursor = new ParserCursor(lexer)
     this.warnings = []
     this.functions = []
-    this.globalScope = createEmptyScope(null, "MainModule")
+    this.mainModule = new exp.ModuleAST("MainModule", createEmptyScope(null, "MainModule"))
     this.ast = new AST()
 
     this.cursor.currentTok = this.cursor.consume() // gives an initial value to the parser
