@@ -1,17 +1,5 @@
-module Mod {
-  const modConstant = "I'm a constant inside a module called 'Mod'"
-
-  fn modFunction() {
-  }
-}
-
-fn log(message: String, args: ...any) {}
-
-const console = { log: log }
-
 fn main() {
-  const myConstant = 10
-  console
-  console
-  log
+  const myConstant = 0b1011
+
+  const sum = 0x100
 }
