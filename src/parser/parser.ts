@@ -747,6 +747,9 @@ export default class Parser {
     switch (this.cursor.currentTok.type) {
       case "IdentifierName": return this.parseIdentifier(scope)
       case "NumericLiteral": return pUtils.parseNumber.call(this)
+      case "BinaryLiteral": return pUtils.parseBinary.call(this)
+      case "OctalLiteral": return pUtils.parseOctal.call(this)
+      case "HexaLiteral": return pUtils.parseHexa.call(this)
       case "FloatLiteral": return pUtils.parseFloatNumber.call(this)
       case "CharLiteral": return pUtils.parseChar.call(this)
       case "StringLiteral": return pUtils.parseString.call(this)

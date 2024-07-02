@@ -5,6 +5,12 @@ export function isAlpha(token: string) {
     return alphaRegex.test(token)
 }
 
+export function isHexadecimal(token: string) {
+    const numericValue = /[0-9a-fA-F]/
+
+    return numericValue.test(token)
+}
+
 /// Detects alphanumeric characters
 export function isAlphaNum(token: string) {
     const alphaNum = /[0-9a-zA-Z_]/
@@ -14,25 +20,7 @@ export function isAlphaNum(token: string) {
 
 /// Detects numeric characters, including decimals
 export function isNumeric(token: string) {
-    const numericRegex = /[0-9]/
-
-    return numericRegex.test(token)
-}
-
-export function isOctalLiteral(token: string) {
-    const numericRegex = /0o[0-9]/
-
-    return numericRegex.test(token)
-}
-
-export function isBinaryLiteral(token: string) {
-    const numericRegex = /0b[0-9]/
-
-    return numericRegex.test(token)
-}
-
-export function isHexaLiteral(token: string) {
-    const numericRegex = /0x[0-9]/
+    const numericRegex = /[0-9._]/
 
     return numericRegex.test(token)
 }
@@ -49,7 +37,7 @@ export function isSpace(token: string) {
  * @returns true, if `item` exists, false in other case
  */
 export function inArray(item: unknown, array: unknown[]): boolean {
-    return array.find(e => e === item) !== undefined
+    return array.some(e => e === item)
 }
 
 export abstract class Cursor<T> {

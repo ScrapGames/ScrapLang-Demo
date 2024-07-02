@@ -34,21 +34,21 @@ export function parseFloatNumber(this: Parser) {
 
   // TODO: still needs to be good
 export function parseBinary(this: Parser) {
-    const binaryLiteralExp = new exp.IntegerExpression(parseFloat(this.cursor.currentTok.content))
+    const binaryLiteralExp = new exp.IntegerExpression(parseInt(this.cursor.currentTok.content, 2))
 
     this.nextToken()
     return binaryLiteralExp
 }
 
 export function parseOctal(this: Parser) {
-    const octalLiteralExp = new exp.IntegerExpression(parseFloat(this.cursor.currentTok.content))
+    const octalLiteralExp = new exp.IntegerExpression(parseInt(this.cursor.currentTok.content, 8))
 
     this.nextToken()
     return octalLiteralExp
 }
 
 export function parseHexa(this: Parser) {
-    const hexaLiteralExp = new exp.IntegerExpression(parseFloat(this.cursor.currentTok.content))
+    const hexaLiteralExp = new exp.IntegerExpression(parseInt(this.cursor.currentTok.content, 16))
 
     this.nextToken()
     return hexaLiteralExp
