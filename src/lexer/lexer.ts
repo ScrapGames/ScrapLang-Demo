@@ -225,71 +225,75 @@ export default class Lexer {
     }
   }
 
+  /**
+   * Checks if a numeric separator exists in the current position of the cursor (_)
+   */
+  private checkNumericSeparators() {
+    if (this.cursor.currentTok === Tokens.UNDERSCORE) {
+      if (this.checkNext(Tokens.UNDERSCORE))
+        throw new LexingError(this, "Multiple consecutive numeric separators are not permitted")
+      
+      /**
+       * Using `isHexadecimal` because include all the possibles characters after a numeric separator
+       * 
+       * TODO: refactor functions name at `src/utils.ts`
+       */
+      if (!isHexadecimal(this.cursor.previous()) || !isHexadecimal(this.cursor.next()))
+        throw new LexingError(this, "Numeric separators are now allowed here")
+
+      this.nextToken()
+    }
+  }
+
   private scanBinary() {
     let binaryNum = ""
-    let nextTok = this.cursor.currentTok
     do {
       this.checkNumericSeparators()
 
-      if (/[0-1]/.test(nextTok))
-        binaryNum += nextTok
+      if (/[0-1]/.test(this.cursor.currentTok))
+        binaryNum += this.cursor.currentTok
       else
         throw new LexingError(this, "Invalid binary literal. Binary literals may only contains 0 and 1 digits")
 
-      nextTok = this.nextToken()
-
-    } while (!this.cursor.isEOF() && isNumeric(nextTok))
+      this.nextToken()
+    } while (!this.cursor.isEOF() && (isNumeric(this.cursor.currentTok) || isAlpha(this.cursor.currentTok)))
 
     return binaryNum
   }
 
   private scanOctal() {
     let octalNum = ""
-    let nextTok = this.cursor.currentTok
 
     do {
       this.checkNumericSeparators()
 
-      if (/[0-7]/.test(nextTok))
-        octalNum += nextTok
+      if (/[0-7]/.test(this.cursor.currentTok))
+        octalNum += this.cursor.currentTok
       else
         throw new LexingError(this, "Invalid octal literal. Octal literals may only contains digits from 0 to 7")
 
-      nextTok = this.nextToken()
-    } while (!this.cursor.isEOF() && isNumeric(nextTok))
+      this.nextToken()
+    } while (!this.cursor.isEOF() && (isNumeric(this.cursor.currentTok) || isAlpha(this.cursor.currentTok)))
     
     return octalNum
   }
 
   private scanHexadecimal() {
     let hexaNum = ""
-    let nextTok = this.cursor.currentTok
-
     do {
       this.checkNumericSeparators()
 
-      if (isHexadecimal(nextTok))
-        hexaNum += nextTok
-      else
-        throw new LexingError(this, "Invalid hexadecimal literal. Exadecimal literals may only contains: numeric range from 0 to 9 and letter ranger from 'A' to 'F'")
-
-      nextTok = this.nextToken()
-    } while (!this.cursor.isEOF() && isHexadecimal(nextTok))
-
-    return hexaNum
-  }
-
-  private checkNumericSeparators() {
-    const numRange = /[0-9]/
-    if (this.cursor.currentTok === Tokens.UNDERSCORE) {
-      if (this.checkNext(Tokens.UNDERSCORE))
-        throw new LexingError(this, "Multiple consecutive numeric separators are not permitted")
-
-      if (!numRange.test(this.cursor.previous()) || !numRange.test(this.cursor.next()))
-        throw new LexingError(this, "Numeric separators are now allowed here")
+      if (isHexadecimal(this.cursor.currentTok)) {
+        hexaNum += this.cursor.currentTok
+      }
+      else {
+        throw new LexingError(this, "Invalid hexadecimal literal. Hexadecimal literals may only contains: numeric range from 0 to 9 and characters ranges from 'A' to 'F'")
+      }
 
       this.nextToken()
-    }
+    } while (!this.cursor.isEOF() && isNumeric(this.cursor.currentTok) || isAlpha(this.cursor.currentTok))
+
+    return hexaNum
   }
 
   public tokens(): Token[] {
@@ -328,7 +332,7 @@ export default class Lexer {
   
       if (isNumeric(this.cursor.currentTok)) {
         numericIdentifier = ""
-        let isFloat = false, isHexadecimal = false, isOctal = false, isBinary = false
+        let isFloat = false, isHexadecimalVal = false, isOctal = false, isBinary = false
   
         do {
           this.checkNumericSeparators()
@@ -338,7 +342,7 @@ export default class Lexer {
             if (isFloat) // if the current lexed number, was already marked as a float
               throw new LexingError(this, `Invalid float literal. Only a dot is permitted to separate the tens from the decimals`)
 
-            if (isBinary || isOctal || isHexadecimal)
+            if (isBinary || isOctal || isHexadecimalVal)
               throw new LexingError(this, `Numeric literal can not be a float value since the number was leading with an ${numericIdentifier.substring(0, 2)}.
             It is considered an integer, not a float`)
 
@@ -349,46 +353,59 @@ export default class Lexer {
           // Example: if you want write a octal literal integer, then you must writes: 0o44. Then ScrapLang will convert the value to an integer with decimal base (10)
           if (this.cursor.currentTok === '0' && numericIdentifier.length === 0) {
             numericIdentifier += this.cursor.currentTok
-            switch (this.cursor.next()) {
-              case 'b': case 'B': isBinary = true; break
-              case 'o': case 'O': isOctal = true; break
-              case 'x': case 'X': isHexadecimal = true; break
+            const nextTok = this.cursor.next()
 
-              default: throw new LexingError(
-                this,
-            `Invalid literal, place 'b', 'o' or 'x' after the 0.
+            if (isAlpha(nextTok) || isNumeric(nextTok)) {
+              switch (nextTok) {
+                case 'b': case 'B': isBinary = true; break
+                case 'o': case 'O': isOctal = true; break
+                case 'x': case 'X': isHexadecimalVal = true; break
+  
+                default: {
+                  throw new LexingError(
+                    this,
+                  `Invalid literal, place 'b', 'o' or 'x' after 0.
             Learn more at: https://lang.scrapgames.com/tutorial/numeric_literals`
-              )
-            }
+                  );
+                }
+              }
 
-            this.nextToken()            
+              this.nextToken()
+            }
           }
+
+          
           switch (numericIdentifier.substring(0, 2)) {
             // If the number is a literal integer with base not 10 (binary, octal or hexadecimal)
             case "0b": case "0B": numericIdentifier = this.scanBinary(); break
             case "0o": case "0O": numericIdentifier = this.scanOctal(); break
-            case "0x": case "0X": numericIdentifier = this.scanHexadecimal(); break
+            case "0x": case "0X": {
+              numericIdentifier = this.scanHexadecimal()
+            } break
 
             // else, then the parsed number its a number with base 10 or a float (floast is base 10 too)
             default: numericIdentifier += this.cursor.currentTok
           }
-        } while (!this.cursor.isEOF() && isNumeric(this.nextToken()))
+        } while (!this.cursor.isEOF() && isNumeric(this.nextToken()) || isAlpha(this.cursor.currentTok))
 
         // after the while, lets make another tests
         const lastNumericIdChar = numericIdentifier.charAt(numericIdentifier.length - 1)
-        if (isHexadecimal) {
-          if (!isNumeric(lastNumericIdChar) && !inArray(lastNumericIdChar.toUpperCase(), VALID_HEXADECIMAL_END))
-            throw new LexingError(this, `Wrong hexadecimal character, only allowed: 0-9, ${VALID_HEXADECIMAL_END.join(", ")}. (too valid as lowercase characters)`)
+        if (isHexadecimalVal) {
+          if (!isNumeric(lastNumericIdChar) && !inArray(lastNumericIdChar.toUpperCase(), VALID_HEXADECIMAL_END)) {
+            throw new LexingError(this, `Wrong hexadecimal character, only allowed: 0-9, ${VALID_HEXADECIMAL_END.join(", ")}. (is also valid as lowercase characters)`)
+          }
         }
 
-        if (!isNumeric(lastNumericIdChar) && !isHexadecimal)
-          throw new LexingError(this, "A number must ends with numeric character")
+        if (!isNumeric(lastNumericIdChar)) {
+          if (!isHexadecimalVal)
+            throw new LexingError(this, "A number must ends with numeric character")
+        }
 
         if (isBinary)
           tokens.push({ type: "BinaryLiteral", content: numericIdentifier, line: this.line, pos: this.cursor.pos })
         else if (isOctal)
           tokens.push({ type: "OctalLiteral", content: numericIdentifier, line: this.line, pos: this.cursor.pos })
-        else if (isHexadecimal)
+        else if (isHexadecimalVal)
           tokens.push({ type: "HexaLiteral", content: numericIdentifier, line: this.line, pos: this.cursor.pos })
         else if (isFloat)
           tokens.push({ type: "FloatLiteral", content: numericIdentifier, line: this.line, pos: this.cursor.pos })
