@@ -686,11 +686,32 @@ export default class Parser {
    *
    * @returns must be still resolved
    */
-  private parseIdentifier(scope: Scope) {
+  private parseIdentifier(scope: Scope): exp.ExpressionAST {
+    if (this.cursor.next().content === Tokens.LPAREN) {
+      const functionName = this.cursor.currentTok.content
+      this.nextToken() // eat the function name
 
-    // TODO: parse a function call
-    //
-    // function call: IdentifierName
+      if (!scope.searchReference(functionName))
+        this.scrapReferenceError(this.cursor.currentTok)
+      else {
+        const calledFunction = scope.getReference(functionName)
+        if (!(calledFunction instanceof exp.FunctionAST))
+          this.scrapParseError(`'${(calledFunction as exp.EntityAST).getName}' is not callable since is not a function`)
+
+        this.nextToken() // eat '('
+        const args: exp.ExpressionAST[] = []
+
+        if (this.cursor.currentTok.content !== Tokens.RPAREN) {
+          do {
+            args.push(this.parseExpr(scope))
+          } while (this.cursor.currentTok.content !== Tokens.RPAREN)
+        }
+
+        this.nextToken() // eat ')'
+
+        return new exp.CallExpression(functionName, args)
+      }
+    }
 
     // a variable ref
     if (!scope.searchReference(this.cursor.currentTok.content))
@@ -729,18 +750,16 @@ export default class Parser {
       case Tokens.MINUS:
       case Tokens.STAR:
       case Tokens.SLASH: return this.parseBinaryExpression(0, this.parseExpr(scope), scope)
-      default: this.scrapParseError("Token does not implemented yet")
+      default: this.scrapParseError("Token is not implemented yet")
     }
   }
 
   /**
-   * Parse the different type of expressions and entities of ScrapLang* 
+   * Parse the different type of expressions of ScrapLang
    * @param scope Scope where the parsed expression or declaration belongs to
-   * @returns A parsed expression or a variable declaration
+   * @returns A parsed expression
    */
   private parseExpr(scope: Scope): exp.ExpressionAST {
-
-    // 
     if (this.cursor.currentTok.content === Keywords.FN)
       return this.parseFunction(false, false, scope)
 
@@ -774,18 +793,12 @@ export default class Parser {
         default: this.scrapParseError(`'${this.cursor.currentTok.content}' does not appear to be a valid primary statement`)
       }
     } else {
-      switch (this.cursor.currentTok.type) {
-        case "Statement": {
-          switch (this.cursor.currentTok.content) {
-            case Keywords.FN: return this.parseFunction(false, false, scope)
-            case Keywords.CONST: return this.parseConst(scope)
-            case Keywords.VAR: return this.parseVar(scope)
+      switch (this.cursor.currentTok.content) {
+        case Keywords.FN: return this.parseFunction(false, false, scope)
+        case Keywords.CONST: return this.parseConst(scope)
+        case Keywords.VAR: return this.parseVar(scope)
 
-            default: return this.scrapParseError(`'${this.cursor.currentTok.content}' is not allowed here`)
-          }
-        }
-
-        default: this.scrapParseError(`The ${this.cursor.currentTok.type} '${this.cursor.currentTok.content}' is not allowed here, only statements and identifiers are permitted`)
+        default: this.scrapParseError(`The ${this.cursor.currentTok.type} '${this.cursor.currentTok.content}' is not allowed in '${scope.getOwner}'`)
       }
     }
   }

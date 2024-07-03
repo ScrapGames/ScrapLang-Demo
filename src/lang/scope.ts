@@ -32,6 +32,20 @@ export class Scope {
     }
 
     /**
+     * Gets the value stored in `this` scope or parents scopes of `this`
+     * @param name Name of the variable (or entity)
+     * @returns The variable, if has been stored using `addEntry`, undefined otherwise
+     */
+    public getReference(name: string): ValidEntities | undefined {
+        if (this.scopedEntities.get(name) !== undefined)
+            return this.scopedEntities.get(name)
+        else if (this.parentScope !== null)
+            return this.parentScope.getReference(name)
+        else
+            return undefined
+    }
+
+    /**
      * Adds an entry to the current scope object
      * @param name Name of the entry
      * @param value Value of the entry

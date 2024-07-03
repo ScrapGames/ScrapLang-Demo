@@ -21,7 +21,7 @@ if (inArray("--repl", args)) {
     do {
         parser.parsePrimary(parser.mainModule.getScope)
     } while (!parser.cursor.isEOF())
-    
+
     console.log("\n")
     
     const mainFunction = parser.functions.find(func => func.getName === "main")
@@ -29,7 +29,7 @@ if (inArray("--repl", args)) {
     if (!mainFunction)
         throw new CompilationError("Missing program entrypoint (main function)")
     
-    console.log(mainModule)
+    //console.log(mainModule)
     parser.warnings.forEach(warning => console.warn("Warning: %s", warning))
-    //console.log("Main function scope\n", mainFunction.getScope)
+    console.log("Main function scope:\n", mainFunction.getScope.getScopedEntities)
 }

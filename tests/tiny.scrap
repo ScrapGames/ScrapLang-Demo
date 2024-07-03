@@ -1,8 +1,7 @@
+fn aFunction(param1: String) {}
+
 fn main() {
   const myConstant1 = 0xb
-  const myConstant2 = 0xb_bbb_ff100
-  
-  const myConstant3 = 0b1011
-  const myConstant4 = 0b10_1110011
-  const myConstant5 = 0o7771_77
+
+  const myReturn = aFunction("argument")
 }
