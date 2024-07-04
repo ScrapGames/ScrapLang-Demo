@@ -163,6 +163,7 @@ export class DeclarationAST extends EntityAST {
     }
 
     public get getAssignedValue() { return this.assignedValue }
+    public set setAssignedValue(newValue: ExpressionAST) { this.assignedValue = newValue }
 }
 
 export class ModuleAST extends EntityAST {

@@ -1,5 +1,7 @@
 fn aFunction(param1: String) {}
 
+const mySum = 0b10
+
 fn main() {
   const myConstant1 = 0xb
 
