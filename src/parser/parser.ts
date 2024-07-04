@@ -16,7 +16,7 @@ import type { ScrapClassMethod, ScrapClassProperty, ScrapParam, AccessorModifier
 import ParsingError from "./parser-error.ts"
 import ParserCursor from "./parser-cursor.ts"
 import * as pUtils from "./parser-utils.ts"
-import AST from "../ast/ast.ts"
+//import AST from "../ast/ast.ts"
 import { inArray } from "../utils.ts"
 import { BINARY_OPERATORS_PRECEDENCE } from "../ast/Expressions.ts"
 
@@ -55,7 +55,7 @@ export default class Parser {
   warnings: string[]
   functions: exp.FunctionAST[]
   mainModule: exp.ModuleAST
-  ast: AST
+  //ast: AST
 
   public constructor(lexer: Lexer) {
     this.lexer = lexer
@@ -63,7 +63,7 @@ export default class Parser {
     this.warnings = []
     this.functions = []
     this.mainModule = new exp.ModuleAST("MainModule", createEmptyScope(null, "MainModule"))
-    this.ast = new AST()
+    //this.ast = new AST(this)
 
     this.cursor.currentTok = this.cursor.consume() // gives an initial value to the parser
   }
