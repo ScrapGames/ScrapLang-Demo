@@ -573,40 +573,6 @@ export default class Parser {
    * A constant must be initialized always, since the value where points cant change. In few words, can be reassigned.
    * @returns A VariableDeclaration AST
    */
-  private parseConst(scope: Scope): exp.DeclarationAST {
-    let name = ""
-    this.nextToken() // eat 'const' keyword
-    if (this.cursor.currentTok.type !== "IdentifierName" && (this.cursor.currentTok.content !== Tokens.LSQRBR && this.cursor.currentTok.content !== Tokens.LBRACE)) {
-      this.scrapParseError("Invalid variable declaration, expected an identifier, '[' or '{'")
-    }
-
-    if (this.cursor.currentTok.content === Tokens.LSQRBR)
-      this.parseArrayDestructing()
-    else if (this.cursor.currentTok.content === Tokens.LBRACE)
-      this.parseLiteralObject(scope) // TODO: make a 'parseObjectDestructing' function
-    else {
-      name = this.cursor.currentTok.content
-      if (inArray(name, RESERVERD_VAR_NAMES))
-        this.scrapParseError(`'${name}' is not allowed as a variable declaration name.`)
-      this.nextToken() // eats identifier variable name
-    }
-
-
-    if (this.cursor.currentTok.content === Tokens.COLON) {
-      if (this.nextToken().type !== "IdentifierName") {
-        this.scrapParseError("Missing data type after colon ':'")
-      } else this.nextToken() // consume the data type
-    }
-
-    if (this.cursor.currentTok.content !== Tokens.EQUAL)
-      this.scrapParseError("Missing assignment operator '=' after const declaration. A constant must be initialized since his value can not change")
-
-    this.nextToken() // eat '='
-
-    const constantExpression = this.parseExpr(scope)
-
-    return new exp.DeclarationAST("constant", name, constantExpression)
-  }
 
   /**
    * Parse a variable declaration
@@ -617,8 +583,10 @@ export default class Parser {
   private parseVar(scope: Scope): exp.DeclarationAST {
     let name = ""
     let variableExpression: exp.ExpressionAST = new exp.UndefinedExpression()
+    let isConst = false
 
-    this.nextToken() // eat 'var' keyword
+    isConst = this.cursor.currentTok.content === Keywords.CONST
+    this.nextToken() // eat 'var' or 'const' keyword
     if (this.cursor.currentTok.type !== "IdentifierName" && (this.cursor.currentTok.content !== Tokens.LSQRBR && this.cursor.currentTok.content !== Tokens.LBRACE))
       this.scrapParseError("Invalid variable declaration, expected an identifier, '[' or '{'")
 
@@ -633,17 +601,20 @@ export default class Parser {
 
       this.nextToken() // eats identifier variable name
     }
-
     if (this.cursor.currentTok.content === Tokens.COLON) {
       if (this.nextToken().type !== "IdentifierName") {
         this.scrapParseError("Missing data type after colon ':'")
       } else this.nextToken() // consume the data type
     }
+    if (isConst) {
+      if (this.cursor.currentTok.content !== Tokens.EQUAL) {
+        this.scrapParseError("A constant must have a assigned value")
+      }
 
-    if (this.cursor.currentTok.content === Tokens.EQUAL) {
-      this.nextToken() // eat '='
-  
+      this.nextToken() /* eat '=' */
       variableExpression = this.parseExpr(scope)
+
+      return new exp.DeclarationAST("constant", name, variableExpression)
     }
 
     return new exp.DeclarationAST("variable", name, variableExpression)
@@ -786,7 +757,7 @@ export default class Parser {
     if (isPrimary) {
       switch (this.cursor.currentTok.content) {
         case Keywords.FN: return this.parseFunction(false, false, scope)
-        case Keywords.CONST: return this.parseConst(scope)
+        case Keywords.CONST: return this.parseVar(scope)
         case Keywords.CLASS: return this.parseClass(scope)
         case Keywords.MODULE: return this.parseModule(scope)
   
@@ -795,7 +766,7 @@ export default class Parser {
     } else {
       switch (this.cursor.currentTok.content) {
         case Keywords.FN: return this.parseFunction(false, false, scope)
-        case Keywords.CONST: return this.parseConst(scope)
+        case Keywords.CONST:
         case Keywords.VAR: return this.parseVar(scope)
 
         default: this.scrapParseError(`The ${this.cursor.currentTok.type} '${this.cursor.currentTok.content}' is not allowed in '${scope.getOwner}'`)
