@@ -247,7 +247,7 @@ export default class Parser {
    * 
    * @returns A new function statement
    */
-  private parseFunction(isMethod: boolean, isStatic: boolean, scope: Scope) {
+  private parseFunction(_mustAwait: boolean, isMethod: boolean, isStatic: boolean, scope: Scope) {
     this.nextToken() // eat 'fn' keyword
     const params: ScrapParam[] = []
 
@@ -293,7 +293,13 @@ export default class Parser {
 
   private parseClassEntity(isStatic: boolean, scope: Scope): exp.DeclarationAST | exp.FunctionAST {
     switch (this.cursor.currentTok.content) {
-      case Keywords.FN: return this.parseFunction(true, isStatic, scope)
+      case Keywords.ASYNC: {
+        if (this.nextToken().content !== Keywords.FN)
+          this.scrapParseError("'async' keywords is only applicable to functions")
+
+        return this.parseFunction(true, false, false, scope)
+      }
+      case Keywords.FN: return this.parseFunction(false, true, isStatic, scope)
       case Keywords.CONST: {
         let name = ""
         this.nextToken() // eat 'const' keyword
@@ -732,7 +738,14 @@ export default class Parser {
    */
   private parseExpr(scope: Scope): exp.ExpressionAST {
     if (this.cursor.currentTok.content === Keywords.FN)
-      return this.parseFunction(false, false, scope)
+      return this.parseFunction(false, false, false, scope)
+
+    if (this.cursor.currentTok.content === Keywords.ASYNC) {
+      if (this.nextToken().content !== Keywords.FN)
+        this.scrapParseError("'async' keywords is only applicable to functions")
+
+      return this.parseFunction(true, false, false, scope)
+    }
 
     switch (this.cursor.currentTok.type) {
       case "IdentifierName": return this.parseIdentifier(scope)
@@ -756,7 +769,13 @@ export default class Parser {
   private parseStatement(scope: Scope, isPrimary: boolean): exp.EntityAST | exp.FunctionAST {
     if (isPrimary) {
       switch (this.cursor.currentTok.content) {
-        case Keywords.FN: return this.parseFunction(false, false, scope)
+        case Keywords.ASYNC: {
+          if (this.nextToken().content !== Keywords.FN)
+            this.scrapParseError("'async' keywords is only applicable to functions")
+
+          return this.parseFunction(true, false, false, scope)
+        }
+        case Keywords.FN: return this.parseFunction(false, false, false, scope)
         case Keywords.CONST: return this.parseVar(scope)
         case Keywords.CLASS: return this.parseClass(scope)
         case Keywords.MODULE: return this.parseModule(scope)
@@ -765,7 +784,13 @@ export default class Parser {
       }
     } else {
       switch (this.cursor.currentTok.content) {
-        case Keywords.FN: return this.parseFunction(false, false, scope)
+        case Keywords.ASYNC: {
+          if (this.nextToken().content !== Keywords.FN)
+            this.scrapParseError("'async' keywords is only applicable to functions")
+
+          return this.parseFunction(true, false, false, scope)
+        }
+        case Keywords.FN: return this.parseFunction(false, false, false, scope)
         case Keywords.CONST:
         case Keywords.VAR: return this.parseVar(scope)
 
@@ -786,6 +811,7 @@ export default class Parser {
    */
   public parsePrimary(scope: Scope): exp.EntityAST | exp.FunctionAST {
     switch (this.cursor.currentTok.content) {
+      case Keywords.ASYNC:
       case Keywords.FN:
       case Keywords.CONST:
       case Keywords.CLASS:
