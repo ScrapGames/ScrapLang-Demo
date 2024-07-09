@@ -1,0 +1,21 @@
+/**
+ * To execute the file that contains the entry point code of your program without declare a main function
+ * must call the interpreter as `scrap --anonymous fileName.scrap`
+ *
+ * The entry point code can be e.g: power on a server and listen for requests, print something at stdout, etc...
+ */
+
+import { Server } from http
+
+const httpServer = new Server({ host: 0.0.0.0 })
+
+httpServer.listen(5000, (req, res) -> {
+    res.send("<h1>Hello World!</h1>")
+})
+
+/**
+ * Supossing that this file (anonymous_main.scrap) will be the executed file then:
+ *
+ * The interpreter invokation will be the next: `scrap --anonymous anonymous_main.scrap`
+ * Another options is use the synonymous of the param `anonymous` like this: `scrap -a anonymous_main.scrap`
+ */
