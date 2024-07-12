@@ -20,7 +20,7 @@ export function isAlphaNum(token: string) {
 
 /// Detects numeric characters, including decimals
 export function isNumeric(token: string) {
-    const numericRegex = /[0-9._]/
+    const numericRegex = /[0-9_]/
 
     return numericRegex.test(token)
 }

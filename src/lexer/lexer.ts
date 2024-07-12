@@ -386,7 +386,7 @@ export default class Lexer {
             // else, then the parsed number its a number with base 10 or a float (floast is base 10 too)
             default: numericIdentifier += this.cursor.currentTok
           }
-        } while (!this.cursor.isEOF() && isNumeric(this.nextToken()) || isAlpha(this.cursor.currentTok))
+        } while (!this.cursor.isEOF() && isNumeric(this.nextToken()) || this.cursor.currentTok === Tokens.DOT || isAlpha(this.cursor.currentTok))
 
         // after the while, lets make another tests
         const lastNumericIdChar = numericIdentifier.charAt(numericIdentifier.length - 1)
