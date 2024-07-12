@@ -11,7 +11,7 @@ import * as exp from "../ast/Expressions.ts"
 import { UndefinedReferenceError, Scope, createEmptyScope, type ValidEntities } from "../lang/scope.ts"
 
 import Lexer, { Keywords, Token, Tokens } from "../lexer/lexer.ts"
-import type { ScrapClassMethod, ScrapClassProperty, ScrapParam, AccessorModifiers } from "../typings.ts"
+import type { ScrapClassMethod, ScrapClassProperty, ScrapParam, AccessorModifiers, ScrapClassEntity } from "../typings.ts"
 
 import ParsingError from "./parser-error.ts"
 import ParserCursor from "./parser-cursor.ts"
@@ -247,7 +247,7 @@ export default class Parser {
    * 
    * @returns A new function statement
    */
-  private parseFunction(_mustAwait: boolean, isMethod: boolean, isStatic: boolean, scope: Scope) {
+  private parseFunction(_mustAwait: boolean, isMethod: boolean, isStatic: boolean, scope: Scope): exp.FunctionAST {
     this.nextToken() // eat 'fn' keyword
     const params: ScrapParam[] = []
 
@@ -419,7 +419,7 @@ export default class Parser {
    * A Module is a block of code that recursively can contains other modules or other statements, like function, constants, etc.
    * @returns A Module declaration for the AST
    */
-  private parseModule(scope: Scope) {
+  private parseModule(scope: Scope): exp.ModuleAST {
     this.nextToken() // eat 'module' keyword
 
     if (this.cursor.currentTok.type !== "IdentifierName")
@@ -447,7 +447,9 @@ export default class Parser {
    * Same as `parseBody`, but since there are specific keywords inside a class body
    * like: public, private, protected or static. Parsing the content is different
    */
-  private parseClassBody(classEntities: (ScrapClassProperty | ScrapClassMethod)[], scope: Scope) {
+  private parseClassBody(
+    classEntities: (ScrapClassProperty | ScrapClassMethod)[], scope: Scope
+  ): (ScrapClassEntity | ScrapClassMethod)[] {
     this.nextToken() // eat '{'
     // unlike `parseFunction`, a class could not contains a body
     // so this method is only called when a class have one
@@ -507,7 +509,7 @@ export default class Parser {
     return classEntities
   }
 
-  private parseClass(scope: Scope) {
+  private parseClass(scope: Scope): exp.ClassAST {
     this.nextToken() // eat class keyword
     const classEntities: (ScrapClassProperty | ScrapClassMethod)[] = []
 
@@ -653,7 +655,7 @@ export default class Parser {
    *
    * @returns An `Expression`
    */
-  private parseReturn(scope: Scope) {
+  private parseReturn(scope: Scope): exp.ExpressionAST {
     this.nextToken() // eat 'return' keyword
     return this.parseExpr(scope)
   }
@@ -716,7 +718,7 @@ export default class Parser {
     return new exp.ExpressionAST()
   }
 
-  private parseToken(scope: Scope) {
+  private parseToken(scope: Scope): exp.ExpressionAST {
     switch (this.cursor.currentTok.content) {
       case Tokens.LBRACE: return this.parseLiteralObject(scope)
       case Tokens.LSQRBR: return this.parseLiteralArray(scope)
