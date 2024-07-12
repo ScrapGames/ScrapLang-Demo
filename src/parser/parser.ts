@@ -667,13 +667,13 @@ export default class Parser {
    */
   private parseIdentifier(scope: Scope): exp.ExpressionAST {
     if (this.cursor.next().content === Tokens.LPAREN) {
-      const functionName = this.cursor.currentTok.content
+      const functionName = this.cursor.currentTok
       this.nextToken() // eat the function name
 
-      if (!scope.searchReference(functionName))
-        this.scrapReferenceError(this.cursor.currentTok)
-      else {
-        const calledFunction = scope.getReference(functionName)
+      if (!scope.searchReference(functionName.content)) {
+        this.scrapReferenceError(functionName)
+      } else {
+        const calledFunction = scope.getReference(functionName.content)
         if (!(calledFunction instanceof exp.FunctionAST))
           this.scrapParseError(`'${(calledFunction as exp.EntityAST).getName}' is not callable since is not a function`)
 
@@ -688,7 +688,7 @@ export default class Parser {
 
         this.nextToken() // eat ')'
 
-        return new exp.CallExpression(functionName, args)
+        return new exp.CallExpression(functionName.content, args)
       }
     }
 
@@ -696,24 +696,19 @@ export default class Parser {
     if (!scope.searchReference(this.cursor.currentTok.content))
       this.scrapReferenceError(this.cursor.currentTok)
 
+    const accessedRefName = this.cursor.currentTok.content
     this.nextToken() // eat the identifier
 
-    return new exp.ExpressionAST()
-  }
-
-  /**
-   * Parse an accessor token, either module or object accessor ( :: ) ( . ) respectively
-   * @returns 
-   */
-  private parseAccessor(_scope: Scope) {
-
     if (this.cursor.currentTok.content === Tokens.MODULE_ACCESSOR) {
-      // TODO: parses as a module accessor token ( :: )
-    }
+      const accessedModule = scope.getReference(accessedRefName)
 
-    // else: suppose that is a object accessor ( . )
-    
-    this.nextToken()
+      if (!(accessedModule instanceof exp.ModuleAST))
+        this.scrapParseError("The token '::' is reserved for modules")
+
+      this.nextToken() // eat module accessor ( :: )
+      this.parseIdentifier(accessedModule.getScope)
+      
+    }
 
     return new exp.ExpressionAST()
   }
@@ -724,7 +719,6 @@ export default class Parser {
       case Tokens.LSQRBR: return this.parseLiteralArray(scope)
       case Tokens.AMPER: return this.parseReference(scope)
       case Tokens.DOT:
-      case Tokens.COLON: return this.parseAccessor(scope)
       case Tokens.PLUS:
       case Tokens.MINUS:
       case Tokens.STAR:
