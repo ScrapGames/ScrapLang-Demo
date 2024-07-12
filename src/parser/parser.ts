@@ -15,10 +15,10 @@ import Lexer from "../lexer/lexer.ts"
 import { Keywords, Token, Tokens } from "../lexer/lexer.ts"
 import type { ScrapClassMethod, ScrapClassProperty, ScrapParam, AccessorModifiers, ScrapClassEntity } from "../typings.ts"
 
+import * as pUtils from "./parser-utils.ts"
 import ParsingError from "./parser-error.ts"
 import ParserCursor from "./parser-cursor.ts"
-import * as pUtils from "./parser-utils.ts"
-//import AST from "../ast/ast.ts"
+
 import { inArray } from "../utils.ts"
 
 export enum PrimitiveTypes {
@@ -54,15 +54,15 @@ export default class Parser {
   lexer: Lexer
   cursor: ParserCursor
   warnings: string[]
-  functions: exp.FunctionAST[]
-  mainModule: exp.ModuleAST
+  functions: exp.Function[]
+  mainModule: exp.Module
 
   public constructor(lexer: Lexer) {
     this.lexer = lexer
     this.cursor = new ParserCursor(lexer)
     this.warnings = []
     this.functions = []
-    this.mainModule = new exp.ModuleAST("MainModule", createEmptyScope(null, "MainModule"))
+    this.mainModule = new exp.Module("MainModule", createEmptyScope(null, "MainModule"))
     //this.ast = new AST(this)
 
     this.cursor.currentTok = this.cursor.consume() // gives an initial value to the parser
@@ -259,7 +259,7 @@ export default class Parser {
    * 
    * @returns A new function statement
    */
-  private parseFunction(_mustAwait: boolean, isMethod: boolean, isStatic: boolean, scope: Scope): exp.FunctionAST {
+  private parseFunction(_mustAwait: boolean, isMethod: boolean, isStatic: boolean, scope: Scope): exp.Function {
     this.nextToken() // eat 'fn' keyword
     const params: ScrapParam[] = []
 
@@ -298,12 +298,12 @@ export default class Parser {
     this.nextToken() // eat '}'
 
 
-    const newFunction = new exp.FunctionAST(fName, params, fScope, returnExpression)
+    const newFunction = new exp.Function(fName, params, fScope, returnExpression)
     this.functions.push(newFunction)
     return newFunction
   }
 
-  private parseClassEntity(isStatic: boolean, scope: Scope): exp.DeclarationAST | exp.FunctionAST {
+  private parseClassEntity(isStatic: boolean, scope: Scope): exp.DeclarationAST | exp.Function {
     switch (this.cursor.currentTok.content) {
       case Keywords.ASYNC: {
         if (this.nextToken().content !== Keywords.FN)
@@ -431,7 +431,7 @@ export default class Parser {
    * A Module is a block of code that recursively can contains other modules or other statements, like function, constants, etc.
    * @returns A Module declaration for the AST
    */
-  private parseModule(scope: Scope): exp.ModuleAST {
+  private parseModule(scope: Scope): exp.Module {
     this.nextToken() // eat 'module' keyword
 
     if (this.cursor.currentTok.type !== "IdentifierName")
@@ -452,7 +452,7 @@ export default class Parser {
 
     this.nextToken() // eat '}'
 
-    return new exp.ModuleAST(moduleName, mScope)
+    return new exp.Module(moduleName, mScope)
   }
 
   /**
@@ -521,7 +521,7 @@ export default class Parser {
     return classEntities
   }
 
-  private parseClass(scope: Scope): exp.ClassAST {
+  private parseClass(scope: Scope): exp.Class {
     this.nextToken() // eat class keyword
     const classEntities: (ScrapClassProperty | ScrapClassMethod)[] = []
 
@@ -558,12 +558,12 @@ export default class Parser {
       this.parseClassBody(classEntities, cScope)
     }
 
-    const constructor = classEntities.find(entity => entity.nodeType instanceof exp.FunctionAST && entity.nodeType.getName === "constructor")
+    const constructor = classEntities.find(entity => entity.nodeType instanceof exp.Function && entity.nodeType.getName === "constructor")
 
     if (constructor)
-      (constructor.nodeType as exp.FunctionAST).setReturnType = className
+      (constructor.nodeType as exp.Function).setReturnType = className
 
-    return new exp.ClassAST(className, classEntities, cScope, constructor !== undefined)
+    return new exp.Class(className, classEntities, cScope, constructor !== undefined)
   }
 
   /**
@@ -683,7 +683,7 @@ export default class Parser {
         this.scrapReferenceError(functionName)
       } else {
         const calledFunction = scope.getReference(functionName.content)
-        if (!(calledFunction instanceof exp.FunctionAST))
+        if (!(calledFunction instanceof exp.Function))
           this.scrapParseError(`'${(calledFunction as exp.EntityAST).getName}' is not callable since is not a function`)
 
         this.nextToken() // eat '('
@@ -716,7 +716,7 @@ export default class Parser {
     if (this.cursor.currentTok.content === Tokens.MODULE_ACCESSOR) {
       const accessedModule = scope.getReference(accessedRefName)
 
-      if (!(accessedModule instanceof exp.ModuleAST))
+      if (!(accessedModule instanceof exp.Module))
         this.scrapParseError("The token '::' is reserved for modules")
 
       this.nextToken() // eat module accessor ( :: )
@@ -775,7 +775,7 @@ export default class Parser {
     }
   }
 
-  private parseStatement(scope: Scope, isPrimary: boolean): exp.EntityAST | exp.FunctionAST {
+  private parseStatement(scope: Scope, isPrimary: boolean): exp.EntityAST | exp.Function {
     if (isPrimary) {
       switch (this.cursor.currentTok.content) {
         case Keywords.ASYNC: {
@@ -818,7 +818,7 @@ export default class Parser {
    * We reach this goal simply dont parsing the keywords in `parse` method
    * @returns 
    */
-  public parsePrimary(scope: Scope): exp.EntityAST | exp.FunctionAST {
+  public parsePrimary(scope: Scope): exp.EntityAST | exp.Function {
     switch (this.cursor.currentTok.content) {
       case Keywords.ASYNC:
       case Keywords.FN:

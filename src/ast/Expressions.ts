@@ -166,7 +166,7 @@ export class DeclarationAST extends EntityAST {
     public set setAssignedValue(newValue: ExpressionAST) { this.assignedValue = newValue }
 }
 
-export class ModuleAST extends EntityAST {
+export class Module extends EntityAST {
     private scope: Scope
 
     public constructor(name: string, scope: Scope) {
@@ -181,7 +181,7 @@ export class ModuleAST extends EntityAST {
     public get getScope() { return this.scope }
 }
 
-export class FunctionAST extends ExpressionAST {
+export class Function extends ExpressionAST {
     private name: string
     private params: ScrapParam[]
     private scope: Scope
@@ -203,7 +203,7 @@ export class FunctionAST extends ExpressionAST {
     public set setReturnType(returnValue: ExpressionAST) { this.returnExpression = returnValue }
 }
 
-export class ClassAST extends EntityAST {
+export class Class extends EntityAST {
     private entities: (ScrapClassProperty | ScrapClassMethod)[]
     private scope: Scope
     private hasConstructor: boolean
