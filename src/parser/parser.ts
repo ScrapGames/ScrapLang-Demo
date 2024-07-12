@@ -615,17 +615,14 @@ export default class Parser {
       } else this.nextToken() // consume the data type
     }
     if (isConst) {
-      if (this.cursor.currentTok.content !== Tokens.EQUAL) {
+      if (this.cursor.currentTok.content !== Tokens.EQUAL)
         this.scrapParseError("A constant must have a assigned value")
-      }
-
-      this.nextToken() /* eat '=' */
-      variableExpression = this.parseExpr(scope)
-
-      return new exp.DeclarationAST("constant", name, variableExpression)
     }
 
-    return new exp.DeclarationAST("variable", name, variableExpression)
+    this.nextToken() /* eat '=' */
+    variableExpression = this.parseExpr(scope)
+
+    return new exp.DeclarationAST(isConst ? "constant" : "variable", name, variableExpression)
   }
 
   /**
