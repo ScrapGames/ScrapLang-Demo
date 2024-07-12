@@ -40,6 +40,11 @@ export function inArray(item: unknown, array: unknown[]): boolean {
     return array.some(e => e === item)
 }
 
+/**
+ * `Cursor` is the base class that a Data Structure can inherit to iterate in a defined way the elements of the class that inherit.
+ * 
+ * The iterated data type will be specified via a generic data type
+ */
 export abstract class Cursor<T> {
     abstract source: T | T[]
     abstract pos: number
