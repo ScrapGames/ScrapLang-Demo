@@ -5,6 +5,7 @@ import CompilationError from "../src/lang/compile-error.ts"
 import { inArray } from "../src/utils.ts"
 import { repl } from "../src/repl.ts"
 import AST from "../src/ast/ast.ts"
+import STD from "../src/lang/std.ts"
 
 const args = Deno.args
 
@@ -21,6 +22,7 @@ async function main() {
             console.warn(`Empty file, nothing to parse in ${lex.cursor.source}`)
         } else {
             const parser = new Parser(lex)
+            parser.addToScope(parser.mainModule.getScope, "std", STD)
             const ast = AST.from(parser)
         
             const mainFunction = parser.functions.find(func => func.getName === "main")
