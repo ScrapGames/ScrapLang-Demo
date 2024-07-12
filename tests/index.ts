@@ -8,22 +8,30 @@ import AST from "../src/ast/ast.ts"
 
 const args = Deno.args
 
-if (inArray("--repl", args)) {
-    repl()
-} else {
-
-    const fileName = "./tests/tiny.scrap"
-    const file = await Deno.readTextFile(fileName)
-
-    const lex = new Lexer(file, fileName)
-    const parser = new Parser(lex)
-    const ast = AST.from(parser)
-
-    const mainFunction = parser.functions.find(func => func.getName === "main")
+async function main() {
+    if (inArray("--repl", args)) {
+        repl()
+    } else {
     
-    if (!mainFunction)
-        throw new CompilationError("Missing program entrypoint (main function)")
+        const fileName = "./tests/tiny.scrap"
+        const file = await Deno.readTextFile(fileName)
     
-    console.log(ast)
-    parser.warnings.forEach(warning => console.warn("Warning: %s", warning))
+        const lex = new Lexer(file, fileName)
+        if (lex.cursor.isEOF()) {
+            console.warn(`Empty file, nothing to parse in ${lex.cursor.source}`)
+        } else {
+            const parser = new Parser(lex)
+            const ast = AST.from(parser)
+        
+            const mainFunction = parser.functions.find(func => func.getName === "main")
+            
+            if (!mainFunction)
+                throw new CompilationError("Missing program entrypoint (main function)")
+            
+            console.log(ast)
+            parser.warnings.forEach(warning => console.warn("Warning: %s", warning))
+        }
+    }
 }
+
+main()
