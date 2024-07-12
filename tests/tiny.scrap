@@ -2,6 +2,10 @@ fn aFunction(param1: String) {}
 
 const mySum = 0b10
 
+async fn awaitResult() {
+
+}
+
 fn main() {
   const myConstant1 = 0xb
 
