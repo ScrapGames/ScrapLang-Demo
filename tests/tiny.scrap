@@ -1,13 +1,11 @@
-fn aFunction(param1: String) {}
-
-const mySum = 0b10
-
-async fn awaitResult() {
-
-}
+fn myFunction(arg1: String, arg2: String, arg3: u8) {}
 
 fn main() {
   const myConstant1 = 0xb
 
-  const myReturn = aFunction("argument")
+  var bruh = 10
+
+  myFunction("BRUH", "BRAH")
+
+  //std::log("BRUH")
 }

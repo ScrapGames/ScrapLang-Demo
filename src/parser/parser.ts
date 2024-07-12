@@ -8,9 +8,11 @@
  */
 
 import * as exp from "../ast/Expressions.ts"
+
 import { UndefinedReferenceError, Scope, createEmptyScope, type ValidEntities } from "../lang/scope.ts"
 
-import Lexer, { Keywords, Token, Tokens } from "../lexer/lexer.ts"
+import Lexer from "../lexer/lexer.ts"
+import { Keywords, Token, Tokens } from "../lexer/lexer.ts"
 import type { ScrapClassMethod, ScrapClassProperty, ScrapParam, AccessorModifiers, ScrapClassEntity } from "../typings.ts"
 
 import ParsingError from "./parser-error.ts"
@@ -18,7 +20,6 @@ import ParserCursor from "./parser-cursor.ts"
 import * as pUtils from "./parser-utils.ts"
 //import AST from "../ast/ast.ts"
 import { inArray } from "../utils.ts"
-import { BINARY_OPERATORS_PRECEDENCE } from "../ast/Expressions.ts"
 
 export enum PrimitiveTypes {
   u8      = "u8",
@@ -55,7 +56,6 @@ export default class Parser {
   warnings: string[]
   functions: exp.FunctionAST[]
   mainModule: exp.ModuleAST
-  //ast: AST
 
   public constructor(lexer: Lexer) {
     this.lexer = lexer
@@ -99,7 +99,7 @@ export default class Parser {
   public nextToken() { return this.cursor.currentTok = this.consume() }
 
   private getTokPrecedence() {
-    const tokPrec = BINARY_OPERATORS_PRECEDENCE[this.cursor.currentTok.content as keyof typeof BINARY_OPERATORS_PRECEDENCE]
+    const tokPrec = exp.BINARY_OPERATORS_PRECEDENCE[this.cursor.currentTok.content as keyof typeof exp.BINARY_OPERATORS_PRECEDENCE]
 
     if (tokPrec <= 0)
         return -1;
@@ -680,8 +680,13 @@ export default class Parser {
         if (this.cursor.currentTok.content !== Tokens.RPAREN) {
           do {
             args.push(this.parseExpr(scope))
+            if (this.cursor.currentTok.content === Tokens.COMMA)
+              this.nextToken()
           } while (this.cursor.currentTok.content !== Tokens.RPAREN)
         }
+
+        if (calledFunction.getParams.length !== args.length)
+          this.scrapParseError(`'${calledFunction.getName}' expects ${calledFunction.getParams.length} parameters. Only ${args.length} was supplied.`)
 
         this.nextToken() // eat ')'
 
@@ -715,7 +720,6 @@ export default class Parser {
       case Tokens.LBRACE: return this.parseLiteralObject(scope)
       case Tokens.LSQRBR: return this.parseLiteralArray(scope)
       case Tokens.AMPER: return this.parseReference(scope)
-      case Tokens.DOT:
       case Tokens.PLUS:
       case Tokens.MINUS:
       case Tokens.STAR:
