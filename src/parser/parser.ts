@@ -77,7 +77,7 @@ export default class Parser {
   }
 
   /**
-   * Causes the program to stop showing an error message
+   * Causes the program stop showing an error message
    * @param message Error message
    */
   public scrapParseError(message: string): never {
@@ -93,7 +93,7 @@ export default class Parser {
   }
 
   /**
-   * Causes the program to stop by a undefined referenced
+   * Causes the program stop by a undefined referenced
    * @param undefinedVariable Token which is a undefined reference
    */
   private scrapReferenceError(undefinedVariable: Token): never {
