@@ -31,7 +31,7 @@ class Conexion {
 fn crearConexion(usuario: Person) {
   const con = new Conexion()
 
-  if (algo que explota) {
+  if (con == null) {
     throw new Exception() after {
       
     }
