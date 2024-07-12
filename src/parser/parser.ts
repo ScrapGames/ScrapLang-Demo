@@ -76,14 +76,26 @@ export default class Parser {
     this.cursor.currentTok = this.cursor.consume() // gives an initial value to the parser
   }
 
+  /**
+   * Causes the program to stop showing an error message
+   * @param message Error message
+   */
   public scrapParseError(message: string): never {
     throw new ParsingError(message, this.cursor.currentTok)
   }
 
+  /**
+   * Adds a warning message to `warnings`
+   * @param message Warning message
+   */
   private scrapGenerateWarn(message: string): void {
     this.warnings.push(message)
   }
 
+  /**
+   * Causes the program to stop by a undefined referenced
+   * @param undefinedVariable Token which is a undefined reference
+   */
   private scrapReferenceError(undefinedVariable: Token): never {
     throw new UndefinedReferenceError(undefinedVariable)
   }
