@@ -1,8 +1,8 @@
 import Parser from "../parser/parser.ts";
-import { EntityAST, Function } from "./Expressions.ts"
+import { Entity, Function } from "./Expressions.ts"
 
 export default class AST {
-    private body: (Function | EntityAST)[]
+    private body: (Function | Entity)[]
 
     public constructor(parser: Parser) {
         this.body = []
@@ -11,7 +11,7 @@ export default class AST {
         }
     }
 
-    public pushNode(node: Function | EntityAST) {
+    public pushNode(node: Function | Entity) {
         this.body.push(node)
     }
 

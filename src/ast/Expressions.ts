@@ -26,7 +26,7 @@ export class Expression {}
  *  - Module
  *  - Variable (or constant) declaration
  */
-export class EntityAST {
+export class Entity {
     protected name: string
 
     public constructor(name: string) {
@@ -123,11 +123,13 @@ export class AssignmentExpression extends Expression {
 export class CallExpression extends Expression {
     private name: string
     private args: Expression[]
+    private whatExecute: (...args: unknown[]) => Expression
 
-    public constructor(name: string, args: Expression[]) {
+    public constructor(name: string, args: Expression[], whatExecute: (...args: unknown[]) => Expression) {
         super()
         this.name = name
         this.args = args
+        this.whatExecute = whatExecute
     }
 }
 
@@ -152,7 +154,7 @@ export class ObjectExpression extends Expression {
 
 export class UndefinedExpression extends Expression {}
 
-export class DeclarationAST extends EntityAST {
+export class DeclarationAST extends Entity {
     private declarationType: "variable" | "constant"
     private assignedValue: Expression
 
@@ -166,7 +168,7 @@ export class DeclarationAST extends EntityAST {
     public set setAssignedValue(newValue: Expression) { this.assignedValue = newValue }
 }
 
-export class Module extends EntityAST {
+export class Module extends Entity {
     private scope: Scope
 
     public constructor(name: string, scope: Scope) {
@@ -203,7 +205,7 @@ export class Function extends Expression {
     public set setReturnType(returnValue: Expression) { this.returnExpression = returnValue }
 }
 
-export class Class extends EntityAST {
+export class Class extends Entity {
     private entities: (ScrapClassProperty | ScrapClassMethod)[]
     private scope: Scope
     private hasConstructor: boolean

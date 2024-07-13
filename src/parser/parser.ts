@@ -684,7 +684,7 @@ export default class Parser {
       } else {
         const calledFunction = scope.getReference(functionName.content)
         if (!(calledFunction instanceof exp.Function))
-          this.scrapParseError(`'${(calledFunction as exp.EntityAST).getName}' is not callable since is not a function`)
+          this.scrapParseError(`'${(calledFunction as exp.Entity).getName}' is not callable since is not a function`)
 
         this.nextToken() // eat '('
         const args: exp.Expression[] = []
@@ -702,6 +702,7 @@ export default class Parser {
 
         this.nextToken() // eat ')'
 
+        // TODO: add corresponding arrow function as 3rd parameter
         return new exp.CallExpression(functionName.content, args)
       }
     }
@@ -775,7 +776,7 @@ export default class Parser {
     }
   }
 
-  private parseStatement(scope: Scope, isPrimary: boolean): exp.EntityAST | exp.Function {
+  private parseStatement(scope: Scope, isPrimary: boolean): exp.Entity | exp.Function {
     if (isPrimary) {
       switch (this.cursor.currentTok.content) {
         case Keywords.ASYNC: {
@@ -818,7 +819,7 @@ export default class Parser {
    * We reach this goal simply dont parsing the keywords in `parse` method
    * @returns 
    */
-  public parsePrimary(scope: Scope): exp.EntityAST | exp.Function {
+  public parsePrimary(scope: Scope): exp.Entity | exp.Function {
     switch (this.cursor.currentTok.content) {
       case Keywords.ASYNC:
       case Keywords.FN:
