@@ -19,7 +19,7 @@ export const BINARY_OPERATORS_PRECEDENCE = {
 }
 
 export class ScrapValue {
-    private value: unknown
+    protected value: unknown
 
     public constructor(value: unknown) {
         this.value = value
