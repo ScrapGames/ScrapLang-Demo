@@ -1,6 +1,6 @@
 // renaming import is used because it may be not ussed and simply adding a underscore the linter doesnt bother
 import { LinkedList as _LinkedList } from "../data/linked-list.ts"
-import { Expression as Expression } from "../ast/Expressions.ts"
+import { Expression } from "../ast/Expressions.ts"
 import { Nullable } from "../typings.ts"
 
 interface Options {

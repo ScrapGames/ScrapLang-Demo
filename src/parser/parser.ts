@@ -119,10 +119,10 @@ export default class Parser {
     return tokPrec;
   }
 
-  private parseBinaryExpression(_exprPrec: number, _lhs: exp.ExpressionAST, _scope: Scope): exp.BinaryExpression {
+  private parseBinaryExpression(_exprPrec: number, _lhs: exp.Expression, _scope: Scope): exp.BinaryExpression {
     let _tokPrec: number
     let _binOp: Token
-    let _rsh: exp.ExpressionAST
+    let _rsh: exp.Expression
 
     return new exp.BinaryExpression(1, 0, '+')
   }
@@ -156,7 +156,7 @@ export default class Parser {
     } else
       this.scrapGenerateWarn("A destructing pattern should have at least a variable")
     
-    return new exp.ExpressionAST()
+    return new exp.Expression()
   }
 
   /**
@@ -166,7 +166,7 @@ export default class Parser {
    */
   private parseLiteralArray(scope: Scope) {
     this.nextToken() // eat '['
-    const elements: exp.ExpressionAST[] = []
+    const elements: exp.Expression[] = []
 
     while (this.cursor.currentTok.content !== Tokens.RSQRBR) {
       elements.push(this.parseExpr(scope))
@@ -190,8 +190,8 @@ export default class Parser {
   private parseLiteralObject(scope: Scope) {
     this.nextToken() // eat '{'
     let keyName = ""
-    let valueExpression: exp.ExpressionAST
-    const keyValuePairs: [string, exp.ExpressionAST][] = []
+    let valueExpression: exp.Expression
+    const keyValuePairs: [string, exp.Expression][] = []
 
     while (this.cursor.currentTok.content !== Tokens.RBRACE) {
       if (
@@ -227,7 +227,7 @@ export default class Parser {
    * @param isMethod
    * @param scope `Scope` where the function can registry variables that has been declared inside his body
    */
-  private parseFunctionBody(isMethod: boolean, scope: Scope): exp.ExpressionAST {
+  private parseFunctionBody(isMethod: boolean, scope: Scope): exp.Expression {
     let returnExpression: exp.UndefinedExpression = new exp.UndefinedExpression()
     while (this.cursor.currentTok.content !== Tokens.RBRACE) {
       if (this.cursor.currentTok.content === Keywords.RETURN)
@@ -339,7 +339,7 @@ export default class Parser {
 
       case Keywords.VAR: {
         let name = ""
-        let variableExpression: exp.ExpressionAST = new exp.ExpressionAST()
+        let variableExpression: exp.Expression = new exp.Expression()
 
         this.nextToken() // eat 'var' keyword
         if (this.cursor.currentTok.type !== "IdentifierName")
@@ -602,7 +602,7 @@ export default class Parser {
    */
   private parseVar(scope: Scope): exp.DeclarationAST {
     let name = ""
-    let variableExpression: exp.ExpressionAST = new exp.UndefinedExpression()
+    let variableExpression: exp.Expression = new exp.UndefinedExpression()
     let isConst = false
 
     isConst = this.cursor.currentTok.content === Keywords.CONST
@@ -664,7 +664,7 @@ export default class Parser {
    *
    * @returns An `Expression`
    */
-  private parseReturn(scope: Scope): exp.ExpressionAST {
+  private parseReturn(scope: Scope): exp.Expression {
     this.nextToken() // eat 'return' keyword
     return this.parseExpr(scope)
   }
@@ -674,7 +674,7 @@ export default class Parser {
    *
    * @returns must be still resolved
    */
-  private parseIdentifier(scope: Scope): exp.ExpressionAST {
+  private parseIdentifier(scope: Scope): exp.Expression {
     if (this.cursor.next().content === Tokens.LPAREN) {
       const functionName = this.cursor.currentTok
       this.nextToken() // eat the function name
@@ -687,7 +687,7 @@ export default class Parser {
           this.scrapParseError(`'${(calledFunction as exp.EntityAST).getName}' is not callable since is not a function`)
 
         this.nextToken() // eat '('
-        const args: exp.ExpressionAST[] = []
+        const args: exp.Expression[] = []
 
         if (this.cursor.currentTok.content !== Tokens.RPAREN) {
           do {
@@ -724,10 +724,10 @@ export default class Parser {
       
     }
 
-    return new exp.ExpressionAST()
+    return new exp.Expression()
   }
 
-  private parseToken(scope: Scope): exp.ExpressionAST {
+  private parseToken(scope: Scope): exp.Expression {
     switch (this.cursor.currentTok.content) {
       case Tokens.LBRACE: return this.parseLiteralObject(scope)
       case Tokens.LSQRBR: return this.parseLiteralArray(scope)
@@ -745,7 +745,7 @@ export default class Parser {
    * @param scope Scope where the parsed expression or declaration belongs to
    * @returns A parsed expression
    */
-  private parseExpr(scope: Scope): exp.ExpressionAST {
+  private parseExpr(scope: Scope): exp.Expression {
     if (this.cursor.currentTok.content === Keywords.FN)
       return this.parseFunction(false, false, false, scope)
 

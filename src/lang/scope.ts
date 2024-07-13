@@ -2,7 +2,7 @@ import * as exp from "../ast/Expressions.ts"
 import { Token } from "../lexer/lexer.ts"
 import type { Nullable } from "../typings.ts"
 
-export type ValidEntities = exp.DeclarationAST | exp.ExpressionAST | exp.ModuleAST
+export type ValidEntities = exp.EntityAST | exp.Expression | null
 
 const { ReferenceError } = globalThis
 

@@ -18,7 +18,7 @@ export const BINARY_OPERATORS_PRECEDENCE = {
     "in": 2
 }
 
-export class ExpressionAST {}
+export class Expression {}
 
 /**
  * Represents a code entity that can handle / contain blocks of code, it can be:
@@ -36,9 +36,9 @@ export class EntityAST {
     public get getName() { return this.name }
 }
 
-export class TernaryExpression extends ExpressionAST {}
+export class TernaryExpression extends Expression {}
 
-export class IntegerExpression extends ExpressionAST {
+export class IntegerExpression extends Expression {
     private val: number
 
     public constructor(val: number) {
@@ -47,7 +47,7 @@ export class IntegerExpression extends ExpressionAST {
     }
 }
 
-export class FloatExpression extends ExpressionAST {
+export class FloatExpression extends Expression {
     private val: number
     
     public constructor(val: number) {
@@ -56,7 +56,7 @@ export class FloatExpression extends ExpressionAST {
     }
 }
 
-export class ReferenceExpression extends ExpressionAST {
+export class ReferenceExpression extends Expression {
     private referenceTo: string
 
     public constructor(referenceTo: string) {
@@ -65,16 +65,16 @@ export class ReferenceExpression extends ExpressionAST {
     }
 }
 
-export class ArrayExpression extends ExpressionAST {
-    private elements: ExpressionAST[]
+export class ArrayExpression extends Expression {
+    private elements: Expression[]
 
-    public constructor(elements: ExpressionAST[]) {
+    public constructor(elements: Expression[]) {
         super()
         this.elements = elements
     }
 }
 
-export class StringLiteralExpression extends ExpressionAST {
+export class StringLiteralExpression extends Expression {
     private readonly length: number
     private readonly size: number
     private data: string
@@ -87,12 +87,12 @@ export class StringLiteralExpression extends ExpressionAST {
     }
 }
 
-export class BinaryExpression extends ExpressionAST {
-    private lhs: ExpressionAST
-    private rhs: ExpressionAST
+export class BinaryExpression extends Expression {
+    private lhs: Expression
+    private rhs: Expression
     private operator: string
 
-    public constructor(lhs: ExpressionAST, rhs: ExpressionAST, operator: string) {
+    public constructor(lhs: Expression, rhs: Expression, operator: string) {
         super()
         this.lhs = lhs
         this.rhs = rhs
@@ -100,7 +100,7 @@ export class BinaryExpression extends ExpressionAST {
     }
 }
 
-export class CharLiteralExpression extends ExpressionAST {
+export class CharLiteralExpression extends Expression {
     private readonly length: number = 1
     private readonly size: number = 4
     private data: string 
@@ -111,30 +111,30 @@ export class CharLiteralExpression extends ExpressionAST {
     }
 }
 
-export class AssignmentExpression extends ExpressionAST {
-    private assignedValue: ExpressionAST
+export class AssignmentExpression extends Expression {
+    private assignedValue: Expression
 
-    public constructor(assignedValue: ExpressionAST) {
+    public constructor(assignedValue: Expression) {
         super()
         this.assignedValue = assignedValue
     }
 }
 
-export class CallExpression extends ExpressionAST {
+export class CallExpression extends Expression {
     private name: string
-    private args: ExpressionAST[]
+    private args: Expression[]
 
-    public constructor(name: string, args: ExpressionAST[]) {
+    public constructor(name: string, args: Expression[]) {
         super()
         this.name = name
         this.args = args
     }
 }
 
-export class LiteralObjectExpression extends ExpressionAST {
-    private keyValuePairs: [string, ExpressionAST ][]
+export class LiteralObjectExpression extends Expression {
+    private keyValuePairs: [string, Expression ][]
 
-    public constructor(keyValuePairs: [string, ExpressionAST][]) {
+    public constructor(keyValuePairs: [string, Expression][]) {
         super()
         this.keyValuePairs = keyValuePairs
     }
@@ -142,7 +142,7 @@ export class LiteralObjectExpression extends ExpressionAST {
     public get getKeyValuePairs() { return this.keyValuePairs }
 }
 
-export class ObjectExpression extends ExpressionAST {
+export class ObjectExpression extends Expression {
 
     public constructor() {
         super()
@@ -150,20 +150,20 @@ export class ObjectExpression extends ExpressionAST {
 
 }
 
-export class UndefinedExpression extends ExpressionAST {}
+export class UndefinedExpression extends Expression {}
 
 export class DeclarationAST extends EntityAST {
     private declarationType: "variable" | "constant"
-    private assignedValue: ExpressionAST
+    private assignedValue: Expression
 
-    public constructor(declarationType: "variable" | "constant", name: string, assignedValue: ExpressionAST) {
+    public constructor(declarationType: "variable" | "constant", name: string, assignedValue: Expression) {
         super(name)
         this.declarationType = declarationType
         this.assignedValue = assignedValue
     }
 
     public get getAssignedValue() { return this.assignedValue }
-    public set setAssignedValue(newValue: ExpressionAST) { this.assignedValue = newValue }
+    public set setAssignedValue(newValue: Expression) { this.assignedValue = newValue }
 }
 
 export class Module extends EntityAST {
@@ -181,13 +181,13 @@ export class Module extends EntityAST {
     public get getScope() { return this.scope }
 }
 
-export class Function extends ExpressionAST {
+export class Function extends Expression {
     private name: string
     private params: ScrapParam[]
     private scope: Scope
-    private returnExpression: ExpressionAST
+    private returnExpression: Expression
 
-    public constructor(name: string, params: ScrapParam[], scope: Scope, returnExpression: ExpressionAST) {
+    public constructor(name: string, params: ScrapParam[], scope: Scope, returnExpression: Expression) {
         super()
         this.name = name
         this.params = params
@@ -200,7 +200,7 @@ export class Function extends ExpressionAST {
     public get getScope() { return this.scope }
     public get getReturnType() { return this.returnExpression }
 
-    public set setReturnType(returnValue: ExpressionAST) { this.returnExpression = returnValue }
+    public set setReturnType(returnValue: Expression) { this.returnExpression = returnValue }
 }
 
 export class Class extends EntityAST {
