@@ -702,7 +702,7 @@ export default class Parser {
 
         this.nextToken() // eat ')'
 
-        return new exp.CallExpression(functionName.content, args)
+        return new exp.CallExpression(scope.getOwner, args)
       }
     }
 
