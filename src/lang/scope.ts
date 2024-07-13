@@ -1,8 +1,8 @@
-import * as exp from "../ast/Expressions.ts"
+import * as exp from "./Expressions.ts"
 import { Token } from "../lexer/lexer.ts"
 import type { Nullable } from "../typings.ts"
 
-export type ValidEntities = exp.Entity | exp.Expression | null
+export type ValidEntities = exp.Entity | exp.ScrapValue | null
 
 const { ReferenceError } = globalThis
 
@@ -62,6 +62,8 @@ export class Scope {
     }
 
     public get getParentScope() { return this.parentScope }
+
+    public set setParentScope(newParentScope: Scope) { this.parentScope = newParentScope }
 
     public get getOwner() { return this.belongsTo }
 
