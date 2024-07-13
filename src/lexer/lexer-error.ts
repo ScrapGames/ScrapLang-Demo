@@ -8,5 +8,7 @@ export default class LexingError extends Error {
             ${message}
             `
         )
+
+        this.name = "LexerError"
     }
 }
