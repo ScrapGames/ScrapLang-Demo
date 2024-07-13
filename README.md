@@ -10,7 +10,7 @@ ut rather to provide a very simple API where there aren't hundreds of functions 
 - Functions are first-class citizens ✅
 - Variables types are (in the most cases) automatically inferred ✅
 - Syntax is similar to other languages and share features with some of them ✅
-- Is a compiled language, so source code can be compiled directly into machine code, generating fast binaries executables ✅
+- Is a interpreted language (in this demo version), so source code can be fastly executed ✅
 - Easy multithreading asynchronous syntax ✅
 - Common utilities already included in a thorough API language ✅
 - ScrapLang is multi-paradigm ✅
