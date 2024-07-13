@@ -328,19 +328,22 @@ export class ScrapModule extends Entity {
 export class ScrapFunction extends ScrapValue {
     private name: string
     private params: ScrapParam[]
+    private body: (ScrapValue | Entity)[]
     private scope: Scope
     private returnExpression: ScrapValue
 
-    public constructor(name: string, params: ScrapParam[], scope: Scope, returnExpression: ScrapValue) {
+    public constructor(name: string, params: ScrapParam[], body: (ScrapValue | Entity)[], scope: Scope, returnExpression: ScrapValue) {
         super(undefined)
         this.name = name
         this.params = params
         this.scope = scope
+        this.body = body
         this.returnExpression = returnExpression
     }
 
     public get getName() { return this.name }
     public get getParams() { return this.params }
+    public get getBody() { return this.body }
     public get getScope() { return this.scope }
     public get getReturnType() { return this.returnExpression }
 
