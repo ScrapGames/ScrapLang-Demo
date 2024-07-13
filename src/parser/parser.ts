@@ -674,6 +674,7 @@ export default class Parser {
    * Parses if the eated identifier exists as a valid function or variable in the current or upper scope(s)
    *
    * @returns must be still resolved
+   * TODO: some logic of this method must be placed at `Interpreter`
    */
   private parseIdentifier(scope: Scope): exp.Expression {
     if (this.cursor.next().content === Tokens.LPAREN) {
@@ -684,7 +685,7 @@ export default class Parser {
         this.scrapReferenceError(functionName)
       } else {
         // TODO: method still incompleted
-        const calledFunction = scope.getReference(functionName.content) as exp.Function
+        const calledFunction = scope.getReference(functionName.content)
 
         this.nextToken() // eat '('
         const args: exp.Expression[] = []
@@ -697,34 +698,36 @@ export default class Parser {
           } while (this.cursor.currentTok.content !== Tokens.RPAREN)
         }
 
-        if (calledFunction.getParams.length !== args.length)
-          this.scrapParseError(`'${calledFunction.getName}' expects ${calledFunction.getParams.length} arguments. Only ${args.length} was supplied.`)
+        if (calledFunction instanceof exp.PredefinedFunction) {
+          if (calledFunction.getArgsLength !== args.length)
+            this.scrapParseError(`'${functionName.content}' expects ${calledFunction.getArgsLength} arguments. Only ${args.length} was supplied.`)
 
-        this.nextToken() // eat ')'
+          this.nextToken()
+          return calledFunction.getAction(args)
+        }
 
         return new exp.CallExpression(scope.getOwner, args)
       }
     }
 
-    // a variable ref
-    if (!scope.searchReference(this.cursor.currentTok.content))
+    //* if is a simple variable reference
+    if (!scope.searchReference(this.cursor.currentTok.content)) {
       this.scrapReferenceError(this.cursor.currentTok)
+    }
 
     const accessedRefName = this.cursor.currentTok.content
     this.nextToken() // eat the identifier
 
+    const accessedModule = scope.getReference(accessedRefName)
     if (this.cursor.currentTok.content === Tokens.MODULE_ACCESSOR) {
-      const accessedModule = scope.getReference(accessedRefName)
-
       if (!(accessedModule instanceof exp.Module))
         this.scrapParseError("The token '::' is reserved for modules")
 
       this.nextToken() // eat module accessor ( :: )
       this.parseIdentifier(accessedModule.getScope)
-      
     }
 
-    return new exp.Expression(undefined)
+    return (accessedModule as exp.DeclarationAST).getAssignedValue
   }
 
   private parseToken(scope: Scope): exp.Expression {
