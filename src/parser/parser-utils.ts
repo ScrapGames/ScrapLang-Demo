@@ -1,5 +1,5 @@
 import Parser from "./parser.ts"
-import * as exp from "../lang/Expressions.ts"
+import * as exp from "../lang/expressions.ts"
 
 export function parseString(this: Parser) {
     const stringExpr = new exp.ScrapString(this.cursor.currentTok.content)

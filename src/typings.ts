@@ -1,4 +1,4 @@
-import { ScrapVariable, ScrapFunction } from "./lang/Expressions.ts"
+import { ScrapVariable, ScrapFunction } from "./lang/expressions.ts"
 
 export type Nullable<T> = T | null
 

@@ -14,7 +14,7 @@ import { existsSync } from "https://deno.land/std@0.224.0/fs/mod.ts"
  * * --- English --- *
  */
 
-import * as exp from "./Expressions.ts"
+import * as exp from "./expressions.ts"
 import { Scope } from "./scope.ts"
 import { RuntimeError } from "./lang-errors.ts";
 

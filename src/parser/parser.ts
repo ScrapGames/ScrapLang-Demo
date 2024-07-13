@@ -7,7 +7,7 @@
  * this results on an error, since the const keyword represents a declaration instruction and cant be assigned.
  */
 
-import * as exp from "../lang/Expressions.ts"
+import * as exp from "../lang/expressions.ts"
 
 import { UndefinedReferenceError, Scope, createEmptyScope, type ValidEntities } from "../lang/scope.ts"
 

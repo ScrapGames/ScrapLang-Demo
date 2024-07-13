@@ -1,5 +1,5 @@
 import Parser from "../parser/parser.ts";
-import { Entity, ScrapFunction } from "../lang/Expressions.ts"
+import { Entity, ScrapFunction } from "../lang/expressions.ts"
 
 export default class AST {
     private body: (ScrapFunction | Entity)[]

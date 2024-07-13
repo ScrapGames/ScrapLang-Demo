@@ -1,4 +1,4 @@
-import * as exp from "./Expressions.ts"
+import * as exp from "./expressions.ts"
 import { Token } from "../lexer/lexer.ts"
 import type { Nullable } from "../typings.ts"
 

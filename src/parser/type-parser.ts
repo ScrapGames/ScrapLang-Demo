@@ -3,4 +3,4 @@
  * And checks his correct syntax
  */
 
-import { Token } from "../lexer/lexer.ts"
+export class TypeParser {}
