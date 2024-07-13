@@ -559,10 +559,9 @@ export default class Parser {
       this.parseClassBody(classEntities, cScope)
     }
 
-    const constructor = classEntities.find(entity => entity.nodeType instanceof exp.ScrapFunction && entity.nodeType.getName === "constructor")
+    const constructor = cScope.getReference("constructor");
 
-    if (constructor)
-      (constructor.nodeType as exp.ScrapFunction).setReturnType = new exp.ScrapString(className)
+    (constructor as exp.ScrapFunction).setReturnType = new exp.ScrapString(className)
 
     return new exp.ScrapClass(className, classEntities, cScope, constructor !== undefined)
   }
@@ -686,7 +685,7 @@ export default class Parser {
           if (calledFunction.getArgsLength !== args.length)
             this.scrapParseError(`'${functionName.content}' expects ${calledFunction.getArgsLength} arguments. Only ${args.length} was supplied.`)
 
-          this.nextToken()
+          this.nextToken() // eat ')'
           return calledFunction.getAction(args)
         }
 
