@@ -198,18 +198,37 @@ export class AssignmentExpression extends Expression {
  * Represents the call to a function
  */
 export class CallExpression extends Expression {
-    private name: string
+    private caller: string
     private args: Expression[]
 
-    public constructor(name: string, args: Expression[]) {
+    public constructor(caller: string, args: Expression[]) {
         super(undefined)
-        this.name = name
+        this.caller = caller
         this.args = args
     }
 
-    public get getName() { return this.name }
-
+    public get getCaller() { return this.caller }
     public get getArgs() { return this.args }
+}
+
+/**
+ * Represents a predefined functions. Which is a function that has been embbeded using TypeScript directly into the language engine
+ */
+export class PredefinedFunction extends Expression {
+    private caller: string
+    private paramsLength: number
+    private action: (args: Expression[]) => Expression
+
+    public constructor(caller: string, paramsLength: number, action: (args: Expression[]) => Expression) {
+        super(undefined)
+        this.caller = caller
+        this.paramsLength = paramsLength
+        this.action = action
+    }
+
+    public get getCaller() { return this.caller }
+    public get getArgsLength() { return this.paramsLength }
+    public get getAction() { return this.action }
 }
 
 /**
@@ -286,6 +305,10 @@ export class Module extends Entity {
 
     public insert(name: string, value: ValidEntities) {
         this.scope.addEntry(name, value)
+    }
+
+    public bulkInsert(...vals: { name: string, value: ValidEntities }[]) {
+        vals.forEach(val => this.scope.addEntry(val.name, val.value))
     }
 
     public get getScope() { return this.scope }
