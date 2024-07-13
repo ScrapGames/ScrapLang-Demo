@@ -124,7 +124,7 @@ export default class Parser {
     let _binOp: Token
     let _rsh: exp.Expression
 
-    return new exp.BinaryExpression(1, 0, '+')
+    return new exp.BinaryExpression(new exp.IntegerExpression(1), new exp.IntegerExpression(0), '+')
   }
 
   /**
@@ -156,7 +156,8 @@ export default class Parser {
     } else
       this.scrapGenerateWarn("A destructing pattern should have at least a variable")
     
-    return new exp.Expression()
+    // TODO(SUS1): remove this return statement
+    return new exp.Expression(undefined)
   }
 
   /**
@@ -339,7 +340,7 @@ export default class Parser {
 
       case Keywords.VAR: {
         let name = ""
-        let variableExpression: exp.Expression = new exp.Expression()
+        let variableExpression: exp.Expression = new exp.UndefinedExpression()
 
         this.nextToken() // eat 'var' keyword
         if (this.cursor.currentTok.type !== "IdentifierName")
@@ -561,7 +562,7 @@ export default class Parser {
     const constructor = classEntities.find(entity => entity.nodeType instanceof exp.Function && entity.nodeType.getName === "constructor")
 
     if (constructor)
-      (constructor.nodeType as exp.Function).setReturnType = className
+      (constructor.nodeType as exp.Function).setReturnType = new exp.StringLiteralExpression(className)
 
     return new exp.Class(className, classEntities, cScope, constructor !== undefined)
   }
@@ -682,9 +683,8 @@ export default class Parser {
       if (!scope.searchReference(functionName.content)) {
         this.scrapReferenceError(functionName)
       } else {
-        const calledFunction = scope.getReference(functionName.content)
-        if (!(calledFunction instanceof exp.Function))
-          this.scrapParseError(`'${(calledFunction as exp.Entity).getName}' is not callable since is not a function`)
+        // TODO: method still incompleted
+        const calledFunction = scope.getReference(functionName.content) as exp.Function
 
         this.nextToken() // eat '('
         const args: exp.Expression[] = []
@@ -698,11 +698,10 @@ export default class Parser {
         }
 
         if (calledFunction.getParams.length !== args.length)
-          this.scrapParseError(`'${calledFunction.getName}' expects ${calledFunction.getParams.length} parameters. Only ${args.length} was supplied.`)
+          this.scrapParseError(`'${calledFunction.getName}' expects ${calledFunction.getParams.length} arguments. Only ${args.length} was supplied.`)
 
         this.nextToken() // eat ')'
 
-        // TODO: add corresponding arrow function as 3rd parameter
         return new exp.CallExpression(functionName.content, args)
       }
     }
@@ -725,7 +724,7 @@ export default class Parser {
       
     }
 
-    return new exp.Expression()
+    return new exp.Expression(undefined)
   }
 
   private parseToken(scope: Scope): exp.Expression {
@@ -767,7 +766,7 @@ export default class Parser {
       case "CharLiteral": return pUtils.parseChar.call(this)
       case "StringLiteral": return pUtils.parseString.call(this)
       case "TemplateString": return pUtils.parseString.call(this) // TODO: Make a parseTemplateString function
-      case "Operator": return new exp.BinaryExpression(20, 30, '+')
+      case "Operator": return new exp.BinaryExpression(new exp.IntegerExpression(20), new exp.IntegerExpression(30), '+')
       case "Token": return this.parseToken(scope)
 
       case "Unknown": return this.scrapParseError("Unkown Token")

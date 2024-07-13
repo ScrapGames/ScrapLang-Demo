@@ -18,7 +18,15 @@ export const BINARY_OPERATORS_PRECEDENCE = {
     "in": 2
 }
 
-export class Expression {}
+export class Expression {
+    private value: unknown
+
+    public constructor(value: unknown) {
+        this.value = value
+    }
+
+    public get getValue() { return this.value }
+}
 
 /**
  * Represents a code entity that can handle / contain blocks of code, it can be:
@@ -39,51 +47,37 @@ export class Entity {
 export class TernaryExpression extends Expression {}
 
 export class IntegerExpression extends Expression {
-    private val: number
-
     public constructor(val: number) {
-        super()
-        this.val = val
+        super(val)
     }
 }
 
 export class FloatExpression extends Expression {
-    private val: number
-    
     public constructor(val: number) {
-        super()
-        this.val = val
+        super(val)
     }
 }
 
 export class ReferenceExpression extends Expression {
-    private referenceTo: string
-
     public constructor(referenceTo: string) {
-        super()
-        this.referenceTo = referenceTo
+        super(referenceTo)
     }
 }
 
 export class ArrayExpression extends Expression {
-    private elements: Expression[]
-
     public constructor(elements: Expression[]) {
-        super()
-        this.elements = elements
+        super(elements)
     }
 }
 
 export class StringLiteralExpression extends Expression {
     private readonly length: number
     private readonly size: number
-    private data: string
 
     public constructor(literal: string) {
-        super()
+        super(literal)
         this.length = literal.length
         this.size = new Blob([literal]).size
-        this.data = literal
     }
 }
 
@@ -93,66 +87,73 @@ export class BinaryExpression extends Expression {
     private operator: string
 
     public constructor(lhs: Expression, rhs: Expression, operator: string) {
-        super()
+        super(undefined)
         this.lhs = lhs
         this.rhs = rhs
         this.operator = operator
     }
 }
 
+export class TruthyExpression extends Expression {
+    public constructor() {
+        super(true)
+    }
+}
+
+export class FalsyExpression extends Expression {
+    public constructor() {
+        super(false)
+    }
+}
+
 export class CharLiteralExpression extends Expression {
     private readonly length: number = 1
     private readonly size: number = 4
-    private data: string 
 
     public constructor(literal: string) {
-        super()
-        this.data = literal
+        super(literal)
     }
 }
 
 export class AssignmentExpression extends Expression {
-    private assignedValue: Expression
-
     public constructor(assignedValue: Expression) {
-        super()
-        this.assignedValue = assignedValue
+        super(assignedValue)
     }
 }
 
 export class CallExpression extends Expression {
     private name: string
     private args: Expression[]
-    private whatExecute: (...args: unknown[]) => Expression
 
-    public constructor(name: string, args: Expression[], whatExecute: (...args: unknown[]) => Expression) {
-        super()
+    public constructor(name: string, args: Expression[]) {
+        super(undefined)
         this.name = name
         this.args = args
-        this.whatExecute = whatExecute
     }
+
+    public get getName() { return this.name }
+
+    public get getArgs() { return this.args }
 }
 
 export class LiteralObjectExpression extends Expression {
-    private keyValuePairs: [string, Expression ][]
-
     public constructor(keyValuePairs: [string, Expression][]) {
-        super()
-        this.keyValuePairs = keyValuePairs
+        super(keyValuePairs)
     }
-
-    public get getKeyValuePairs() { return this.keyValuePairs }
 }
 
 export class ObjectExpression extends Expression {
-
     public constructor() {
-        super()
+        super(undefined)
     }
 
 }
 
-export class UndefinedExpression extends Expression {}
+export class UndefinedExpression extends Expression {
+    public constructor() {
+        super(undefined)
+    }
+}
 
 export class DeclarationAST extends Entity {
     private declarationType: "variable" | "constant"
@@ -190,7 +191,7 @@ export class Function extends Expression {
     private returnExpression: Expression
 
     public constructor(name: string, params: ScrapParam[], scope: Scope, returnExpression: Expression) {
-        super()
+        super(undefined)
         this.name = name
         this.params = params
         this.scope = scope
