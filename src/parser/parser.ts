@@ -568,38 +568,22 @@ export default class Parser {
   }
 
   /**
-   * Parse a constant declaration and initialization.
-   * A const is a value allocated in memory which the value which points cant change, but the memory pointed to can
-   *
-   * @example
-   * // error e.g:
-   * // in this example will try to change the value where the declared constant `num` points
-   * const num = 10
-   * num = 20 // error!
-   *
-   *
-   * @example
-   * // valid e.g:
-   * fn sum(n1: i32, n2: i32) { return n1 + n2 }
-   * const num = sum(10, 20)
-   *
-   * @explain
-   * The value returned by `sum` is not kwnowed at compile-time, but still is a valid syntaxis.
-   * This is a simple case, but thinks in a request to a db, where the data are not hardcoded in the program. Even that case it is still valid.
-   *
-   * Occurs similar with arrays:
-   * const myArray = [1, 2, 3, 4, 5] // correct constat
-   * myArray.push(6) // valid, since the memory which the constant points has not changed
-   *
-   * A constant must be initialized always, since the value where points cant change. In few words, can be reassigned.
-   * @returns A VariableDeclaration AST
-   */
-
-  /**
    * Parse a variable declaration
-   * A variable is a value allocated in memory which the value and the pointer which points that value can change
    *
-   * @returns A `DeclarationAST` entity
+   * A variable is declared using the keywords `const` or `var`.
+   * Repectively:
+   *  * A variable declared with `const` is impossible that the value which points change. But the value which points can mutate.
+   *    e.g: pushing elements to an array
+   *    * Trying to change the value which a constant points, will cause an compilation error
+   *
+   * 
+   *  * A varaible decalred with `var` can both change and mutate the value which points
+   *    e.g: change the value of a variable from 10 to 20
+   *    @example
+   *    var num = 10
+   *    num = 20
+   *
+   * @returns A `ScrapVariable` entity
    */
   private parseVar(scope: Scope): exp.ScrapVariable {
     let name = ""
@@ -711,9 +695,8 @@ export default class Parser {
     }
 
     //* if is a simple variable reference
-    if (!scope.searchReference(this.cursor.currentTok.content)) {
+    if (!scope.searchReference(this.cursor.currentTok.content))
       this.scrapReferenceError(this.cursor.currentTok)
-    }
 
     const accessedRefName = this.cursor.currentTok.content
     this.nextToken() // eat the identifier
