@@ -1,4 +1,4 @@
-import { Scope, type ValidEntities } from "../lang/scope.ts"
+import { Scope, type ValidEntities } from "./scope.ts"
 import { ScrapClassMethod, ScrapClassProperty, ScrapParam } from "../typings.ts"
 
 export const BINARY_OPERATORS_PRECEDENCE = {
@@ -18,7 +18,7 @@ export const BINARY_OPERATORS_PRECEDENCE = {
     "in": 2
 }
 
-export class Expression {
+export class ScrapValue {
     private value: unknown
 
     public constructor(value: unknown) {
@@ -44,7 +44,7 @@ export class Entity {
     public get getName() { return this.name }
 }
 
-export class TernaryExpression extends Expression {}
+export class TernaryExpression extends ScrapValue {}
 
 /**
  * Represent an integer value
@@ -52,7 +52,7 @@ export class TernaryExpression extends Expression {}
  * @example
  * 1000, 0o777112
  */
-export class IntegerExpression extends Expression {
+export class ScrapInteger extends ScrapValue {
     public constructor(val: number) {
         super(val)
     }
@@ -64,7 +64,7 @@ export class IntegerExpression extends Expression {
  * @example
  * 1.1, 2.20, 0xb000.f
  */
-export class FloatExpression extends Expression {
+export class ScrapFloat extends ScrapValue {
     public constructor(val: number) {
         super(val)
     }
@@ -82,7 +82,7 @@ export class FloatExpression extends Expression {
  * 
  * // now `myNumber` value is 50
  */
-export class ReferenceExpression extends Expression {
+export class ScrapReference extends ScrapValue {
     public constructor(referenceTo: string) {
         super(referenceTo)
     }
@@ -94,8 +94,8 @@ export class ReferenceExpression extends Expression {
  * @example
  * const myArray = [1, 2, 3, 4, 5]
  */
-export class ArrayExpression extends Expression {
-    public constructor(elements: Expression[]) {
+export class ScrapArray extends ScrapValue {
+    public constructor(elements: ScrapValue[]) {
         super(elements)
     }
 }
@@ -106,7 +106,7 @@ export class ArrayExpression extends Expression {
  * @example
  * const myString = "Hello, World!"
  */
-export class StringLiteralExpression extends Expression {
+export class ScrapString extends ScrapValue {
     private readonly length: number
     private readonly size: number
 
@@ -126,12 +126,12 @@ export class StringLiteralExpression extends Expression {
  * 
  * const myStringConcatenation = "Hello, " + "World!"
  */
-export class BinaryExpression extends Expression {
-    private lhs: Expression
-    private rhs: Expression
+export class BinaryExpression extends ScrapValue {
+    private lhs: ScrapValue
+    private rhs: ScrapValue
     private operator: string
 
-    public constructor(lhs: Expression, rhs: Expression, operator: string) {
+    public constructor(lhs: ScrapValue, rhs: ScrapValue, operator: string) {
         super(undefined)
         this.lhs = lhs
         this.rhs = rhs
@@ -142,7 +142,7 @@ export class BinaryExpression extends Expression {
 /**
  * Represent a true value
  */
-export class TruthyExpression extends Expression {
+export class ScrapTrue extends ScrapValue {
     public constructor() {
         super(true)
     }
@@ -151,7 +151,7 @@ export class TruthyExpression extends Expression {
 /**
  * Reprents a false value
  */
-export class FalsyExpression extends Expression {
+export class ScrapFalse extends ScrapValue {
     public constructor() {
         super(false)
     }
@@ -160,7 +160,7 @@ export class FalsyExpression extends Expression {
 /**
  * Represents an `undefined` value
  */
-export class UndefinedExpression extends Expression {
+export class ScrapUndefined extends ScrapValue {
     public constructor() {
         super(undefined)
     }
@@ -169,7 +169,7 @@ export class UndefinedExpression extends Expression {
 /**
  * Represent a char value. Which is a value that stores a single character and require 1 byte
  */
-export class CharLiteralExpression extends Expression {
+export class ScrapChar extends ScrapValue {
     private readonly length: number = 1
     private readonly size: number = 4
 
@@ -188,8 +188,8 @@ export class CharLiteralExpression extends Expression {
  * 
  * // The assignment returns the value that has been assigned. In this last case 20.
  */
-export class AssignmentExpression extends Expression {
-    public constructor(assignedValue: Expression) {
+export class AssignmentExpression extends ScrapValue {
+    public constructor(assignedValue: ScrapValue) {
         super(assignedValue)
     }
 }
@@ -197,11 +197,11 @@ export class AssignmentExpression extends Expression {
 /**
  * Represents the call to a function
  */
-export class CallExpression extends Expression {
+export class ScrapCall extends ScrapValue {
     private caller: string
-    private args: Expression[]
+    private args: ScrapValue[]
 
-    public constructor(caller: string, args: Expression[]) {
+    public constructor(caller: string, args: ScrapValue[]) {
         super(undefined)
         this.caller = caller
         this.args = args
@@ -214,12 +214,12 @@ export class CallExpression extends Expression {
 /**
  * Represents a predefined functions. Which is a function that has been embbeded using TypeScript directly into the language engine
  */
-export class PredefinedFunction extends Expression {
+export class ScrapNative extends ScrapValue {
     private caller: string
     private paramsLength: number
-    private action: (args: Expression[]) => Expression
+    private action: (args: ScrapValue[]) => ScrapValue
 
-    public constructor(caller: string, paramsLength: number, action: (args: Expression[]) => Expression) {
+    public constructor(caller: string, paramsLength: number, action: (args: ScrapValue[]) => ScrapValue) {
         super(undefined)
         this.caller = caller
         this.paramsLength = paramsLength
@@ -241,8 +241,8 @@ export class PredefinedFunction extends Expression {
  *  c: "Hello, World!"
  * }
  */
-export class LiteralObjectExpression extends Expression {
-    public constructor(keyValuePairs: [string, Expression][]) {
+export class ScrapLitObject extends ScrapValue {
+    public constructor(keyValuePairs: [string, ScrapValue][]) {
         // TODO: the value assigned to the super constructor (Expression constructor) should be an instance of `SObject`
         super(keyValuePairs)
     }
@@ -264,18 +264,18 @@ export class LiteralObjectExpression extends Expression {
  * 
  * myVariable = 10 // this will not cause an error because is a variable value
  */
-export class DeclarationAST extends Entity {
+export class ScrapVariable extends Entity {
     private declarationType: "variable" | "constant"
-    private assignedValue: Expression
+    private assignedValue: ScrapValue
 
-    public constructor(declarationType: "variable" | "constant", name: string, assignedValue: Expression) {
+    public constructor(declarationType: "variable" | "constant", name: string, assignedValue: ScrapValue) {
         super(name)
         this.declarationType = declarationType
         this.assignedValue = assignedValue
     }
 
     public get getAssignedValue() { return this.assignedValue }
-    public set setAssignedValue(newValue: Expression) { this.assignedValue = newValue }
+    public set setAssignedValue(newValue: ScrapValue) { this.assignedValue = newValue }
 }
 
 /**
@@ -295,7 +295,7 @@ export class DeclarationAST extends Entity {
  * 
  * MyModule::privateConstant // error: privateConstant was not exported from his module. Is only accessible inside the module it has been declared
  */
-export class Module extends Entity {
+export class ScrapModule extends Entity {
     private scope: Scope
 
     public constructor(name: string, scope: Scope) {
@@ -325,13 +325,13 @@ export class Module extends Entity {
  * 
  * const myFunctionInVariable = myFunction
  */
-export class Function extends Expression {
+export class ScrapFunction extends ScrapValue {
     private name: string
     private params: ScrapParam[]
     private scope: Scope
-    private returnExpression: Expression
+    private returnExpression: ScrapValue
 
-    public constructor(name: string, params: ScrapParam[], scope: Scope, returnExpression: Expression) {
+    public constructor(name: string, params: ScrapParam[], scope: Scope, returnExpression: ScrapValue) {
         super(undefined)
         this.name = name
         this.params = params
@@ -344,7 +344,7 @@ export class Function extends Expression {
     public get getScope() { return this.scope }
     public get getReturnType() { return this.returnExpression }
 
-    public set setReturnType(returnValue: Expression) { this.returnExpression = returnValue }
+    public set setReturnType(returnValue: ScrapValue) { this.returnExpression = returnValue }
 }
 
 
@@ -379,7 +379,7 @@ export class Function extends Expression {
  * juan.name // correct, `name` has been declared using `public`
  * juan.id // error, `id` does not have a accessor modifier, this means is `private` and can only be accessible inside the class
  */
-export class Class extends Entity {
+export class ScrapClass extends Entity {
     private entities: (ScrapClassProperty | ScrapClassMethod)[]
     private scope: Scope
     private hasConstructor: boolean

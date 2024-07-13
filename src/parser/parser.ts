@@ -7,7 +7,7 @@
  * this results on an error, since the const keyword represents a declaration instruction and cant be assigned.
  */
 
-import * as exp from "../ast/Expressions.ts"
+import * as exp from "../lang/Expressions.ts"
 
 import { UndefinedReferenceError, Scope, createEmptyScope, type ValidEntities } from "../lang/scope.ts"
 
@@ -54,15 +54,15 @@ export default class Parser {
   lexer: Lexer
   cursor: ParserCursor
   warnings: string[]
-  functions: exp.Function[]
-  mainModule: exp.Module
+  functions: exp.ScrapFunction[]
+  mainModule: exp.ScrapModule
 
   public constructor(lexer: Lexer) {
     this.lexer = lexer
     this.cursor = new ParserCursor(lexer)
     this.warnings = []
     this.functions = []
-    this.mainModule = new exp.Module("MainModule", createEmptyScope(null, "MainModule"))
+    this.mainModule = new exp.ScrapModule("MainModule", createEmptyScope(null, "MainModule"))
     //this.ast = new AST(this)
 
     this.cursor.currentTok = this.cursor.consume() // gives an initial value to the parser
@@ -119,12 +119,12 @@ export default class Parser {
     return tokPrec;
   }
 
-  private parseBinaryExpression(_exprPrec: number, _lhs: exp.Expression, _scope: Scope): exp.BinaryExpression {
+  private parseBinaryExpression(_exprPrec: number, _lhs: exp.ScrapValue, _scope: Scope): exp.BinaryExpression {
     let _tokPrec: number
     let _binOp: Token
-    let _rsh: exp.Expression
+    let _rsh: exp.ScrapValue
 
-    return new exp.BinaryExpression(new exp.IntegerExpression(1), new exp.IntegerExpression(0), '+')
+    return new exp.BinaryExpression(new exp.ScrapInteger(1), new exp.ScrapInteger(0), '+')
   }
 
   /**
@@ -157,7 +157,7 @@ export default class Parser {
       this.scrapGenerateWarn("A destructing pattern should have at least a variable")
     
     // TODO(SUS1): remove this return statement
-    return new exp.Expression(undefined)
+    return new exp.ScrapValue(undefined)
   }
 
   /**
@@ -167,7 +167,7 @@ export default class Parser {
    */
   private parseLiteralArray(scope: Scope) {
     this.nextToken() // eat '['
-    const elements: exp.Expression[] = []
+    const elements: exp.ScrapValue[] = []
 
     while (this.cursor.currentTok.content !== Tokens.RSQRBR) {
       elements.push(this.parseExpr(scope))
@@ -180,7 +180,7 @@ export default class Parser {
 
     this.nextToken() // eat ']'
 
-    return new exp.ArrayExpression(elements)
+    return new exp.ScrapArray(elements)
   }
 
   /**
@@ -191,8 +191,8 @@ export default class Parser {
   private parseLiteralObject(scope: Scope) {
     this.nextToken() // eat '{'
     let keyName = ""
-    let valueExpression: exp.Expression
-    const keyValuePairs: [string, exp.Expression][] = []
+    let valueExpression: exp.ScrapValue
+    const keyValuePairs: [string, exp.ScrapValue][] = []
 
     while (this.cursor.currentTok.content !== Tokens.RBRACE) {
       if (
@@ -220,7 +220,7 @@ export default class Parser {
 
     this.nextToken() // eat '}'
 
-    return new exp.LiteralObjectExpression(keyValuePairs)
+    return new exp.ScrapLitObject(keyValuePairs)
   }
 
   /**
@@ -228,8 +228,8 @@ export default class Parser {
    * @param isMethod
    * @param scope `Scope` where the function can registry variables that has been declared inside his body
    */
-  private parseFunctionBody(isMethod: boolean, scope: Scope): exp.Expression {
-    let returnExpression: exp.UndefinedExpression = new exp.UndefinedExpression()
+  private parseFunctionBody(isMethod: boolean, scope: Scope): exp.ScrapValue {
+    let returnExpression: exp.ScrapUndefined = new exp.ScrapUndefined()
     while (this.cursor.currentTok.content !== Tokens.RBRACE) {
       if (this.cursor.currentTok.content === Keywords.RETURN)
         if (isMethod)
@@ -260,7 +260,7 @@ export default class Parser {
    * 
    * @returns A new function statement
    */
-  private parseFunction(_mustAwait: boolean, isMethod: boolean, isStatic: boolean, scope: Scope): exp.Function {
+  private parseFunction(_mustAwait: boolean, isMethod: boolean, isStatic: boolean, scope: Scope): exp.ScrapFunction {
     this.nextToken() // eat 'fn' keyword
     const params: ScrapParam[] = []
 
@@ -299,12 +299,12 @@ export default class Parser {
     this.nextToken() // eat '}'
 
 
-    const newFunction = new exp.Function(fName, params, fScope, returnExpression)
+    const newFunction = new exp.ScrapFunction(fName, params, fScope, returnExpression)
     this.functions.push(newFunction)
     return newFunction
   }
 
-  private parseClassEntity(isStatic: boolean, scope: Scope): exp.DeclarationAST | exp.Function {
+  private parseClassEntity(isStatic: boolean, scope: Scope): exp.ScrapVariable | exp.ScrapFunction {
     switch (this.cursor.currentTok.content) {
       case Keywords.ASYNC: {
         if (this.nextToken().content !== Keywords.FN)
@@ -335,12 +335,12 @@ export default class Parser {
 
         this.nextToken() // eat '='
 
-        return new exp.DeclarationAST("constant", name, this.parseExpr(scope))
+        return new exp.ScrapVariable("constant", name, this.parseExpr(scope))
       }
 
       case Keywords.VAR: {
         let name = ""
-        let variableExpression: exp.Expression = new exp.UndefinedExpression()
+        let variableExpression: exp.ScrapValue = new exp.ScrapUndefined()
 
         this.nextToken() // eat 'var' keyword
         if (this.cursor.currentTok.type !== "IdentifierName")
@@ -364,7 +364,7 @@ export default class Parser {
           variableExpression = this.parseExpr(scope)
         }
 
-        return new exp.DeclarationAST("variable", name, variableExpression)
+        return new exp.ScrapVariable("variable", name, variableExpression)
       }
 
       default: this.scrapParseError("Unknown class entity")
@@ -432,7 +432,7 @@ export default class Parser {
    * A Module is a block of code that recursively can contains other modules or other statements, like function, constants, etc.
    * @returns A Module declaration for the AST
    */
-  private parseModule(scope: Scope): exp.Module {
+  private parseModule(scope: Scope): exp.ScrapModule {
     this.nextToken() // eat 'module' keyword
 
     if (this.cursor.currentTok.type !== "IdentifierName")
@@ -453,7 +453,7 @@ export default class Parser {
 
     this.nextToken() // eat '}'
 
-    return new exp.Module(moduleName, mScope)
+    return new exp.ScrapModule(moduleName, mScope)
   }
 
   /**
@@ -522,7 +522,7 @@ export default class Parser {
     return classEntities
   }
 
-  private parseClass(scope: Scope): exp.Class {
+  private parseClass(scope: Scope): exp.ScrapClass {
     this.nextToken() // eat class keyword
     const classEntities: (ScrapClassProperty | ScrapClassMethod)[] = []
 
@@ -559,12 +559,12 @@ export default class Parser {
       this.parseClassBody(classEntities, cScope)
     }
 
-    const constructor = classEntities.find(entity => entity.nodeType instanceof exp.Function && entity.nodeType.getName === "constructor")
+    const constructor = classEntities.find(entity => entity.nodeType instanceof exp.ScrapFunction && entity.nodeType.getName === "constructor")
 
     if (constructor)
-      (constructor.nodeType as exp.Function).setReturnType = new exp.StringLiteralExpression(className)
+      (constructor.nodeType as exp.ScrapFunction).setReturnType = new exp.ScrapString(className)
 
-    return new exp.Class(className, classEntities, cScope, constructor !== undefined)
+    return new exp.ScrapClass(className, classEntities, cScope, constructor !== undefined)
   }
 
   /**
@@ -601,9 +601,9 @@ export default class Parser {
    *
    * @returns A `DeclarationAST` entity
    */
-  private parseVar(scope: Scope): exp.DeclarationAST {
+  private parseVar(scope: Scope): exp.ScrapVariable {
     let name = ""
-    let variableExpression: exp.Expression = new exp.UndefinedExpression()
+    let variableExpression: exp.ScrapValue = new exp.ScrapUndefined()
     let isConst = false
 
     isConst = this.cursor.currentTok.content === Keywords.CONST
@@ -635,7 +635,7 @@ export default class Parser {
     this.nextToken() /* eat '=' */
     variableExpression = this.parseExpr(scope)
 
-    return new exp.DeclarationAST(isConst ? "constant" : "variable", name, variableExpression)
+    return new exp.ScrapVariable(isConst ? "constant" : "variable", name, variableExpression)
   }
 
   /**
@@ -645,7 +645,7 @@ export default class Parser {
    *
    * @returns A `ReferenceExpression` expression
    */
-  private parseReference(scope: Scope): exp.ReferenceExpression {
+  private parseReference(scope: Scope): exp.ScrapReference {
     this.nextToken() // eat '&'
     const referenceTo = this.cursor.currentTok
     if (referenceTo.type !== "IdentifierName")
@@ -653,7 +653,7 @@ export default class Parser {
 
     this.parseIdentifier(scope)
 
-    return new exp.ReferenceExpression(referenceTo.content)
+    return new exp.ScrapReference(referenceTo.content)
   }
 
   /**
@@ -665,7 +665,7 @@ export default class Parser {
    *
    * @returns An `Expression`
    */
-  private parseReturn(scope: Scope): exp.Expression {
+  private parseReturn(scope: Scope): exp.ScrapValue {
     this.nextToken() // eat 'return' keyword
     return this.parseExpr(scope)
   }
@@ -676,7 +676,7 @@ export default class Parser {
    * @returns must be still resolved
    * TODO: some logic of this method must be placed at `Interpreter`
    */
-  private parseIdentifier(scope: Scope): exp.Expression {
+  private parseIdentifier(scope: Scope): exp.ScrapValue {
     if (this.cursor.next().content === Tokens.LPAREN) {
       const functionName = this.cursor.currentTok
       this.nextToken() // eat the function name
@@ -688,7 +688,7 @@ export default class Parser {
         const calledFunction = scope.getReference(functionName.content)
 
         this.nextToken() // eat '('
-        const args: exp.Expression[] = []
+        const args: exp.ScrapValue[] = []
 
         if (this.cursor.currentTok.content !== Tokens.RPAREN) {
           do {
@@ -698,7 +698,7 @@ export default class Parser {
           } while (this.cursor.currentTok.content !== Tokens.RPAREN)
         }
 
-        if (calledFunction instanceof exp.PredefinedFunction) {
+        if (calledFunction instanceof exp.ScrapNative) {
           if (calledFunction.getArgsLength !== args.length)
             this.scrapParseError(`'${functionName.content}' expects ${calledFunction.getArgsLength} arguments. Only ${args.length} was supplied.`)
 
@@ -706,7 +706,7 @@ export default class Parser {
           return calledFunction.getAction(args)
         }
 
-        return new exp.CallExpression(scope.getOwner, args)
+        return new exp.ScrapCall(scope.getOwner, args)
       }
     }
 
@@ -720,17 +720,17 @@ export default class Parser {
 
     const accessedModule = scope.getReference(accessedRefName)
     if (this.cursor.currentTok.content === Tokens.MODULE_ACCESSOR) {
-      if (!(accessedModule instanceof exp.Module))
+      if (!(accessedModule instanceof exp.ScrapModule))
         this.scrapParseError("The token '::' is reserved for modules")
 
       this.nextToken() // eat module accessor ( :: )
       this.parseIdentifier(accessedModule.getScope)
     }
 
-    return (accessedModule as exp.DeclarationAST).getAssignedValue
+    return (accessedModule as exp.ScrapVariable).getAssignedValue
   }
 
-  private parseToken(scope: Scope): exp.Expression {
+  private parseToken(scope: Scope): exp.ScrapValue {
     switch (this.cursor.currentTok.content) {
       case Tokens.LBRACE: return this.parseLiteralObject(scope)
       case Tokens.LSQRBR: return this.parseLiteralArray(scope)
@@ -748,7 +748,7 @@ export default class Parser {
    * @param scope Scope where the parsed expression or declaration belongs to
    * @returns A parsed expression
    */
-  private parseExpr(scope: Scope): exp.Expression {
+  private parseExpr(scope: Scope): exp.ScrapValue {
     if (this.cursor.currentTok.content === Keywords.FN)
       return this.parseFunction(false, false, false, scope)
 
@@ -769,7 +769,7 @@ export default class Parser {
       case "CharLiteral": return pUtils.parseChar.call(this)
       case "StringLiteral": return pUtils.parseString.call(this)
       case "TemplateString": return pUtils.parseString.call(this) // TODO: Make a parseTemplateString function
-      case "Operator": return new exp.BinaryExpression(new exp.IntegerExpression(20), new exp.IntegerExpression(30), '+')
+      case "Operator": return new exp.BinaryExpression(new exp.ScrapInteger(20), new exp.ScrapInteger(30), '+')
       case "Token": return this.parseToken(scope)
 
       case "Unknown": return this.scrapParseError("Unkown Token")
@@ -778,7 +778,7 @@ export default class Parser {
     }
   }
 
-  private parseStatement(scope: Scope, isPrimary: boolean): exp.Entity | exp.Function {
+  private parseStatement(scope: Scope, isPrimary: boolean): exp.Entity | exp.ScrapFunction {
     if (isPrimary) {
       switch (this.cursor.currentTok.content) {
         case Keywords.ASYNC: {
@@ -821,7 +821,7 @@ export default class Parser {
    * We reach this goal simply dont parsing the keywords in `parse` method
    * @returns 
    */
-  public parsePrimary(scope: Scope): exp.Entity | exp.Function {
+  public parsePrimary(scope: Scope): exp.Entity | exp.ScrapFunction {
     switch (this.cursor.currentTok.content) {
       case Keywords.ASYNC:
       case Keywords.FN:

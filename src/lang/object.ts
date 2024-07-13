@@ -1,17 +1,17 @@
 // renaming import is used because it may be not ussed and simply adding a underscore the linter doesnt bother
 import { LinkedList as _LinkedList } from "../data/linked-list.ts"
-import { Expression } from "../ast/Expressions.ts"
+import { ScrapValue } from "./Expressions.ts"
 import { Nullable } from "../typings.ts"
 
 interface Options {
   sealed: boolean,
   freezed: boolean,
   writable: boolean
-  value: Expression
+  value: ScrapValue
 }
 
 interface SProperty {
-  [key: PropertyKey]: Nullable<Expression>
+  [key: PropertyKey]: Nullable<ScrapValue>
 }
 
 /**
@@ -19,7 +19,7 @@ interface SProperty {
  * In the inheritance system based on prototypes, object is the last class (or the first saw from a traditional POO programming language)
  */
 export default class SObject {
-  public static myPrototype: Nullable<SObject> = null;
+  public myPrototype: Nullable<SObject> = null
   private properties: SProperty[] = []
 
   /**
@@ -30,16 +30,9 @@ export default class SObject {
   private isFreezed = false
   private writable = true
 
-  public constructor(value?: Expression) {
+  public constructor(value?: ScrapValue) {
     
   }
-
-  /* public static create(obj: Nullable<SObject>) {
-    const newObj = new SObject(null)
-    newObj.myPrototype = obj ? obj : null
-
-    return newObj
-  } */
 
   public static seal(obj: SObject): SObject {
     return new SObject(obj)

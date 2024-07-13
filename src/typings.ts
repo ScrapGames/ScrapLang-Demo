@@ -1,4 +1,4 @@
-import { DeclarationAST, FunctionAST } from "./ast/Expressions.ts"
+import { ScrapVariable, ScrapFunction } from "./lang/Expressions.ts"
 
 export type Nullable<T> = T | null
 
@@ -15,8 +15,8 @@ export interface ScrapClassEntity {
     accessor: AccessorModifiers,
     isStatic: boolean,
     canOverride: boolean,
-    nodeType: FunctionAST | DeclarationAST
+    nodeType: ScrapFunction | ScrapVariable
 }
 
 export type ScrapClassProperty = ScrapClassEntity
-export type ScrapClassMethod = ScrapClassEntity & FunctionAST
+export type ScrapClassMethod = ScrapClassEntity & ScrapFunction
