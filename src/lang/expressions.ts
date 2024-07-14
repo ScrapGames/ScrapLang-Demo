@@ -94,8 +94,8 @@ export class ScrapReference extends ScrapValue {
  * @example
  * const myArray = [1, 2, 3, 4, 5]
  */
-export class ScrapArray extends ScrapValue {
-    public constructor(elements: ScrapValue[]) {
+export class ScrapArray<T> extends ScrapValue {
+    public constructor(elements: T[]) {
         super(elements)
     }
 }
