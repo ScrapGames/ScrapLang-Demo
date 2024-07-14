@@ -1,12 +1,5 @@
-fn main() {
-  const bruh = 10
-  const name = "LOL"
-  const res = parseInt("10")
-  const items = readNamesOfDirs("/home/scrapper1/.config/nvim")
+fn main(args: ...String) {
+  var myBruhConstant = 10
 
-  log(arrayAt(items, 0))
-  log("Salto de linea pocho xd")
-  log(items)
-
-  log(parseInt("10"))
+  myBruhConstant = 20
 }
