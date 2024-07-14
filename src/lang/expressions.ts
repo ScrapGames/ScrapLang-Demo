@@ -189,9 +189,15 @@ export class ScrapChar extends ScrapValue {
  * // The assignment returns the value that has been assigned. In this last case 20.
  */
 export class AssignmentExpression extends ScrapValue {
-    public constructor(assignedValue: ScrapValue) {
+
+    private varCandidate: ScrapVariable
+
+    public constructor(varCandidate: ScrapVariable, assignedValue: ScrapValue) {
         super(assignedValue)
+        this.varCandidate = varCandidate
     }
+
+    public get getVarCandidate() { return this.varCandidate }
 }
 
 /**
