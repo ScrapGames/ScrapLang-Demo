@@ -228,8 +228,9 @@ export default class Parser {
    * @param isMethod
    * @param scope `Scope` where the function can registry variables that has been declared inside his body
    */
-  private parseFunctionBody(isMethod: boolean, scope: Scope): exp.ScrapValue {
+  private parseFunctionBody(isMethod: boolean, body: (exp.ScrapValue | exp.Entity)[], scope: Scope): exp.ScrapValue {
     let returnExpression: exp.ScrapUndefined = new exp.ScrapUndefined()
+    let parsedVal: exp.ScrapValue | exp.Entity
     while (this.cursor.currentTok.content !== Tokens.RBRACE) {
       if (this.cursor.currentTok.content === Keywords.RETURN)
         if (isMethod)
@@ -237,12 +238,14 @@ export default class Parser {
         else
           returnExpression = this.parseReturn(scope)
       else {
-        if (this.cursor.currentTok.type === "IdentifierName")
-          this.parseIdentifier(scope)
-        else {
-          const parsedObj = this.parseStatement(scope, false)
-          this.addToScope(scope, parsedObj.getName, parsedObj)
+        if (this.cursor.currentTok.type === "IdentifierName") {
+          parsedVal = this.parseIdentifier(scope)
+        } else {
+          parsedVal = this.parseStatement(scope, false)
+          this.addToScope(scope, (parsedVal as exp.Entity | exp.ScrapFunction).getName, parsedVal)
         }
+
+        body.push(parsedVal)
       }
     }
 
@@ -294,12 +297,12 @@ export default class Parser {
     this.nextToken() // eat '{'
     
     const fScope = createEmptyScope(scope, fName)
-    const returnExpression = this.parseFunctionBody(isMethod, fScope)
+    const functionBody: (exp.ScrapValue | exp.Entity)[] = []
+    const returnExpression = this.parseFunctionBody(isMethod, functionBody, fScope)
 
     this.nextToken() // eat '}'
 
-
-    const newFunction = new exp.ScrapFunction(fName, params, fScope, returnExpression)
+    const newFunction = new exp.ScrapFunction(fName, params, functionBody, fScope, returnExpression)
     this.functions.push(newFunction)
     return newFunction
   }
