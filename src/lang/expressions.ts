@@ -205,10 +205,10 @@ export class AssignmentExpression extends ScrapValue {
  */
 export class ScrapCall extends ScrapValue {
     private caller: string
-    private called: string
+    private called: ScrapFunction
     private args: ScrapValue[]
 
-    public constructor(caller: string, called: string, args: ScrapValue[]) {
+    public constructor(caller: string, called: ScrapFunction, args: ScrapValue[]) {
         super(undefined)
         this.caller = caller
         this.called = called
