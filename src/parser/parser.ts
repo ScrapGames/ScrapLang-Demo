@@ -235,7 +235,7 @@ export default class Parser {
    * @param scope `Scope` where the function can registry variables that has been declared inside his body
    */
   private parseFunctionBody(isMethod: boolean, body: (exp.ScrapValue | exp.Entity)[], scope: Scope): exp.ScrapValue {
-    let returnExpression: exp.ScrapUndefined = new exp.ScrapUndefined()
+    let returnExpression: exp.ScrapValue = new exp.ScrapUndefined()
     let parsedVal: exp.ScrapValue | exp.Entity
     while (this.cursor.currentTok.content !== Tokens.RBRACE) {
       if (this.cursor.currentTok.content === Keywords.RETURN)
@@ -685,16 +685,19 @@ export default class Parser {
    */
   private parseIdentifier(scope: Scope): exp.ScrapValue {
     if (this.cursor.next().content === Tokens.LPAREN) {
+
       const functionName = this.cursor.currentTok
-      this.nextToken() // eat the function name
+      const calledFunction = scope.getReference(functionName.content)
 
-      if (!scope.searchReference(functionName.content)) {
+      if (!calledFunction)
         this.scrapReferenceError(functionName)
-      } else {
-        // TODO: method still incompleted
-        const calledFunction = scope.getReference(functionName.content)
 
+      if (!(calledFunction instanceof exp.ScrapFunction))
+        this.scrapParseError(`${functionName.content} is not callable since is not a function`)
+
+      this.nextToken() // eat the function name
         this.nextToken() // eat '('
+
         const args: exp.ScrapValue[] = []
 
         if (this.cursor.currentTok.content !== Tokens.RPAREN) {
