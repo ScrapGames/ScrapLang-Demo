@@ -50,6 +50,12 @@ const RESERVERD_VAR_NAMES = [
   "super"
 ]
 
+/**
+ * Returns readable nodes for the AST, and these, in turn, are readed by the `interpreter`
+ * which is responsible of apply the logic to these nodes.
+ * 
+ * In this way, the logic between components is modulable and easily scalable.
+ */
 export default class Parser {
   lexer: Lexer
   cursor: ParserCursor
