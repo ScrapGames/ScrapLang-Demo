@@ -710,7 +710,7 @@ export default class Parser {
 
           this.nextToken() // eat ')'
 
-      return new exp.ScrapCall(scope.getOwner, calledFunction.getName, args)
+      return new exp.ScrapCall(scope.getOwner, calledFunction, args)
 
     }
 
