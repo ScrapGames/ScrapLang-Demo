@@ -641,9 +641,8 @@ export default class Parser {
     this.nextToken() // eat '='
 
     const assignedValue = this.parseExpr(scope)
-    candidateVar.setAssignedValue = assignedValue
 
-    return assignedValue
+    return new exp.AssignmentExpression(candidateVar, assignedValue)
   }
 
   /**
