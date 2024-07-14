@@ -56,6 +56,8 @@ export class ScrapInteger extends ScrapValue {
     public constructor(val: number) {
         super(val)
     }
+
+    public get getValue() { return this.value as number }
 }
 
 /**
@@ -68,6 +70,8 @@ export class ScrapFloat extends ScrapValue {
     public constructor(val: number) {
         super(val)
     }
+
+    public get getValue() { return this.value as number }
 }
 
 /**
@@ -98,6 +102,8 @@ export class ScrapArray<T> extends ScrapValue {
     public constructor(elements: T[]) {
         super(elements)
     }
+
+    public get getValue() { return this.value as T[] }
 }
 
 /**
@@ -115,6 +121,8 @@ export class ScrapString extends ScrapValue {
         this.length = literal.length
         this.size = new Blob([literal]).size
     }
+
+    public get getValue() { return this.value as string }
 }
 
 /**
@@ -146,6 +154,8 @@ export class ScrapTrue extends ScrapValue {
     public constructor() {
         super(true)
     }
+
+    public get getValue() { return this.value as true }
 }
 
 /**
@@ -155,6 +165,8 @@ export class ScrapFalse extends ScrapValue {
     public constructor() {
         super(false)
     }
+
+    public get getValue() { return this.value as false }
 }
 
 /**
@@ -164,6 +176,8 @@ export class ScrapUndefined extends ScrapValue {
     public constructor() {
         super(undefined)
     }
+
+    public get getValue() { return this.value as undefined }
 }
 
 /**
@@ -176,6 +190,8 @@ export class ScrapChar extends ScrapValue {
     public constructor(literal: string) {
         super(literal)
     }
+
+    public get getValue() { return this.value as string }
 }
 
 /**
@@ -235,6 +251,8 @@ export class ScrapLitObject extends ScrapValue {
         // TODO: the value assigned to the super constructor (Expression constructor) should be an instance of `SObject`
         super(keyValuePairs)
     }
+
+    public get getValue() { return this.value as [string, ScrapValue][] }
 }
 
 /**
