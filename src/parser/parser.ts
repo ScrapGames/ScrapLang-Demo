@@ -624,6 +624,22 @@ export default class Parser {
     return new exp.ScrapVariable(isConst ? "constant" : "variable", name, variableExpression)
   }
 
+  private parseAssignment(candidateVar: ValidEntities, scope: Scope): exp.ScrapValue {
+
+    if (!(candidateVar instanceof exp.ScrapVariable))
+      this.scrapParseError("A value that is not a variable can not be modified")
+
+    if (candidateVar.getVariableType === "constant")
+      this.scrapParseError("A constant can not change the value which points")
+
+    this.nextToken() // eat '='
+
+    const assignedValue = this.parseExpr(scope)
+    candidateVar.setAssignedValue = assignedValue
+
+    return assignedValue
+  }
+
   /**
    * Parses a reference to a variable
    * @explain
@@ -700,19 +716,27 @@ export default class Parser {
     if (!scope.searchReference(this.cursor.currentTok.content))
       this.scrapReferenceError(this.cursor.currentTok)
 
-    const accessedRefName = this.cursor.currentTok.content
+    const variableTok = this.cursor.currentTok
     this.nextToken() // eat the identifier
 
-    const accessedModule = scope.getReference(accessedRefName)
+    const variable = scope.getReference(variableTok.content)
+
+    if (!variable)
+      this.scrapReferenceError(variableTok)
+
+    switch (this.cursor.currentTok.content) {
+      case Tokens.EQUAL: return this.parseAssignment(variable, scope)
+    }
+
     if (this.cursor.currentTok.content === Tokens.MODULE_ACCESSOR) {
-      if (!(accessedModule instanceof exp.ScrapModule))
+      if (!(variable instanceof exp.ScrapModule))
         this.scrapParseError("The token '::' is reserved for modules")
 
       this.nextToken() // eat module accessor ( :: )
-      this.parseIdentifier(accessedModule.getScope)
+      this.parseIdentifier(variable.getScope)
     }
 
-    return (accessedModule as exp.ScrapVariable).getAssignedValue
+    return (variable as exp.ScrapVariable).getAssignedValue
   }
 
   private parseToken(scope: Scope): exp.ScrapValue {
