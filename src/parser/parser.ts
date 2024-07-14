@@ -708,16 +708,10 @@ export default class Parser {
           } while (this.cursor.currentTok.content !== Tokens.RPAREN)
         }
 
-        if (calledFunction instanceof exp.ScrapNative) {
-          if (calledFunction.getArgsLength !== args.length)
-            this.scrapParseError(`'${functionName.content}' expects ${calledFunction.getArgsLength} arguments. Only ${args.length} was supplied.`)
-
           this.nextToken() // eat ')'
-          return calledFunction.getAction(args)
-        }
 
-        return new exp.ScrapCall(scope.getOwner, args)
-      }
+      return new exp.ScrapCall(scope.getOwner, calledFunction.getName, args)
+
     }
 
     //* if is a simple variable reference

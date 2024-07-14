@@ -199,36 +199,19 @@ export class AssignmentExpression extends ScrapValue {
  */
 export class ScrapCall extends ScrapValue {
     private caller: string
+    private called: string
     private args: ScrapValue[]
 
-    public constructor(caller: string, args: ScrapValue[]) {
+    public constructor(caller: string, called: string, args: ScrapValue[]) {
         super(undefined)
         this.caller = caller
+        this.called = called
         this.args = args
     }
 
     public get getCaller() { return this.caller }
+    public get getCalled() { return this.called }
     public get getArgs() { return this.args }
-}
-
-/**
- * Represents a predefined functions. Which is a function that has been embbeded using TypeScript directly into the language engine
- */
-export class ScrapNative extends ScrapValue {
-    private caller: string
-    private paramsLength: number
-    private action: (args: ScrapValue[]) => ScrapValue
-
-    public constructor(caller: string, paramsLength: number, action: (args: ScrapValue[]) => ScrapValue) {
-        super(undefined)
-        this.caller = caller
-        this.paramsLength = paramsLength
-        this.action = action
-    }
-
-    public get getCaller() { return this.caller }
-    public get getArgsLength() { return this.paramsLength }
-    public get getAction() { return this.action }
 }
 
 /**
@@ -350,6 +333,19 @@ export class ScrapFunction extends ScrapValue {
     public set setReturnType(returnValue: ScrapValue) { this.returnExpression = returnValue }
 }
 
+/**
+ * Represents a predefined functions. Which is a function that has been embbeded using TypeScript directly into the language engine
+ */
+export class ScrapNative extends ScrapFunction {
+    private action: (...args: ScrapValue[]) => ScrapValue
+
+    public constructor(name: string, params: ScrapParam[], scope: Scope, action: (...args: ScrapValue[]) => ScrapValue) {
+        super(name, params, [], scope, new ScrapUndefined())
+        this.action = action
+    }
+
+    public get getAction() { return this.action }
+}
 
 /**
  * Represent a class
