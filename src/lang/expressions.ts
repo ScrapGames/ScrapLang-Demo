@@ -353,6 +353,37 @@ export class ScrapNative extends ScrapFunction {
     public get getAction() { return this.action }
 }
 
+export class ScrapControlBlock {
+    private expression: ScrapTrue
+    private body: (ScrapValue | Entity)[]
+
+    public constructor(expression: ScrapTrue, body: (ScrapValue | Entity)[]) {
+        this.expression = expression
+        this.body = body
+    }
+
+    public get getExpression() { return this.expression }
+    public get getBody() { return this.body }
+}
+
+export class ScrapIf extends ScrapControlBlock {}
+
+export class ScrapWhile extends ScrapControlBlock {}
+
+export class ScrapFor extends ScrapControlBlock {
+    private varDeclaration: ScrapVariable
+    private valueModifier: ScrapValue
+
+    public constructor(varDeclaration: ScrapVariable, expression: ScrapTrue, valueModifier: ScrapValue, body: (ScrapValue | Entity)[]) {
+        super(expression, body)
+        this.varDeclaration = varDeclaration
+        this.valueModifier = valueModifier
+    }
+
+    public get getVarDeclaration() { return this.varDeclaration }
+    public get getValueModifier() { return this.valueModifier }
+}
+
 /**
  * Represent a class
  * 
