@@ -6,6 +6,7 @@ import { CompilationError } from "../src/lang/lang-errors.ts"
 import { inArray } from "../src/utils.ts"
 import { repl } from "../src/repl.ts"
 import { addSTD } from "../src/lang/std.ts"
+import { RuntimeError } from "../src/lang/lang-errors.ts"
 
 const args = Deno.args
 
@@ -29,7 +30,7 @@ async function main() {
             const mainFunction = parser.functions.find(func => func.getName === "main")
             
             if (!mainFunction)
-                throw new CompilationError("Missing program entrypoint (main function)")
+                throw new RuntimeError("Missing program entrypoint (main function)")
             
             //console.log(ast)
             parser.warnings.forEach(warning => console.warn("Warning: %s", warning))
