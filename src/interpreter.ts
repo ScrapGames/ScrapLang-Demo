@@ -1,5 +1,6 @@
 import * as exp from "./lang/expressions.ts"
 import Parser from "./parser/parser.ts"
+import { CompilationError } from "./lang/lang-errors.ts"
 
 export class Interpreter {
 
@@ -61,6 +62,9 @@ export class Interpreter {
 
     public run() {
         const program = this.parser.ast.getProgram
+
+        if (program.length === 0)
+            throw new CompilationError("The AST is empty. You must run the parser before the interpreter")
 
         for (const node of program)
             this.compute(node.getNodeValue)
