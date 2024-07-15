@@ -145,17 +145,9 @@ export default class Parser {
   }
 
   /**
-   * Assign values to new declared variables inside an array pattern, where the values of that variables are the items of the array
-   * Then, register the values of that values on the corresponding scope
-   * 
-   * @example
-   * const arr = [1, 2, 3, 4, 5]
-   * 
-   * const [num1, num2, num3] = arr
-   *
-   * @returns // TODO: handle correctly the return value
+   * As many variables will be declared as identifiers appear in the destructuring pattern
    */
-  private parseArrayDestructing() {
+  private parseArrayDestructuring() {
     this.nextToken() // eat '['
 
     if (this.cursor.currentTok.content !== Tokens.RSQRBR) {
@@ -171,7 +163,7 @@ export default class Parser {
             this.nextToken() // eats the comma, then in the next iteration the currentTok should be an identifier
       } while (this.cursor.currentTok.content !== Tokens.RSQRBR)
     } else
-      this.scrapGenerateWarn("A destructing pattern should have at least a variable")
+      this.scrapGenerateWarn("A destructuring pattern should have at least a variable")
   }
 
   /**
