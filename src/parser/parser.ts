@@ -178,30 +178,7 @@ export default class Parser {
   }
 
   /**
-   * Parses the literal form of create an array
-   * @param scope Scope where the elements of the array may be found
-   * @returns A new ArrayExpression
-   */
-  private parseLiteralArray(scope: Scope) {
-    this.nextToken() // eat '['
-    const elements: exp.ScrapValue[] = []
-
-    while (this.cursor.currentTok.content !== Tokens.RSQRBR) {
-      elements.push(this.parseExpr(scope))
-      if (this.cursor.currentTok.content !== Tokens.RSQRBR) {
-        if (this.cursor.currentTok.content !== Tokens.COMMA) {
-          this.scrapParseError("Expected comma after item")
-        } else this.nextToken() // consume the comma
-      }
-    }
-
-    this.nextToken() // eat ']'
-
-    return new exp.ScrapArray(elements)
-  }
-
-  /**
-   * Parses a literal object
+   * Parses the literal form of create an object
    * @param scope Scope where the values of the object may be found
    * @returns A new `LiteralObjectExpression`
    */
@@ -237,7 +214,36 @@ export default class Parser {
 
     this.nextToken() // eat '}'
 
-    return new exp.ScrapLitObject(keyValuePairs)
+    const newObject = new exp.ScrapLitObject(keyValuePairs)
+
+    this.ast.pushNode(newObject)
+    return newObject
+  }
+
+  /**
+   * Parses the literal form of create an array
+   * @param scope Scope where the elements of the array may be found
+   * @returns A new `ScrapArray`
+   */
+  private parseLiteralArray(scope: Scope) {
+    this.nextToken() // eat '['
+    const elements: exp.ScrapValue[] = []
+
+    while (this.cursor.currentTok.content !== Tokens.RSQRBR) {
+      elements.push(this.parseExpr(scope))
+      if (this.cursor.currentTok.content !== Tokens.RSQRBR) {
+        if (this.cursor.currentTok.content !== Tokens.COMMA) {
+          this.scrapParseError("Expected comma after item")
+        } else this.nextToken() // consume the comma
+      }
+    }
+
+    this.nextToken() // eat ']'
+
+    const newArray = new exp.ScrapArray(elements)
+
+    this.ast.pushNode(newArray)
+    return newArray
   }
 
   /**
