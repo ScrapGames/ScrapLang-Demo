@@ -620,7 +620,7 @@ export default class Parser {
       this.scrapParseError("Invalid variable declaration, expected an identifier, '[' or '{'")
 
     if (this.cursor.currentTok.content === Tokens.LSQRBR)
-      this.parseArrayDestructing()
+      this.parseArrayDestructuring()
     else if (this.cursor.currentTok.content === Tokens.LBRACE)
       this.parseLiteralObject(scope)
     else {
