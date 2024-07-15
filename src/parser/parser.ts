@@ -169,7 +169,7 @@ export default class Parser {
   /**
    * Parses the literal form of create an object
    * @param scope Scope where the values of the object may be found
-   * @returns A new `LiteralObjectExpression`
+   * @returns A new `ScrapLitObject`
    */
   private parseLiteralObject(scope: Scope) {
     this.nextToken() // eat '{'
