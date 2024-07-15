@@ -313,73 +313,6 @@ export default class Parser {
     return newFunction
   }
 
-  private parseClassEntity(isStatic: boolean, scope: Scope): exp.ScrapVariable | exp.ScrapFunction {
-    switch (this.cursor.currentTok.content) {
-      case Keywords.ASYNC: {
-        if (this.nextToken().content !== Keywords.FN)
-          this.scrapParseError("'async' keywords is only applicable to functions")
-
-        return this.parseFunction(true, false, false, scope)
-      }
-      case Keywords.FN: return this.parseFunction(false, true, isStatic, scope)
-      case Keywords.CONST: {
-        let name = ""
-        this.nextToken() // eat 'const' keyword
-        if (this.cursor.currentTok.type !== "IdentifierName")
-          this.scrapParseError("Invalid class property declaration, expected an identifier")
-
-          name = this.cursor.currentTok.content
-          this.nextToken() // eats identifier variable name
-
-        //@ts-ignore: ???
-        if (this.cursor.currentTok.content === Tokens.COLON) {
-          if (this.nextToken().type !== "IdentifierName")
-            this.scrapParseError("Missing data type after colon ':'")
-          else this.nextToken() // consume the data type
-        }
-
-        //@ts-ignore: ???
-        if (this.cursor.currentTok.content !== Tokens.EQUAL)
-          this.scrapParseError("Missing assignment operator '=' after const declaration. A constant must be initialized since his value can not change")
-
-        this.nextToken() // eat '='
-
-        return new exp.ScrapVariable("constant", name, this.parseExpr(scope))
-      }
-
-      case Keywords.VAR: {
-        let name = ""
-        let variableExpression: exp.ScrapValue = new exp.ScrapUndefined()
-
-        this.nextToken() // eat 'var' keyword
-        if (this.cursor.currentTok.type !== "IdentifierName")
-          this.scrapParseError("Invalid variable declaration, expected an identifier, '[' or '{'")
-
-          name = this.cursor.currentTok.content
-          this.cursor.currentTok
-          this.nextToken() // eats identifier variable name
-
-        //@ts-ignore: ???
-        if (this.cursor.currentTok.content === Tokens.COLON) {
-          if (this.nextToken().type !== "IdentifierName") {
-            this.scrapParseError("Missing data type after colon ':'")
-          } else this.nextToken() // consume the data type
-        }
-
-        //@ts-ignore: ???
-        if (this.cursor.currentTok.content === Tokens.EQUAL) {
-          this.nextToken() // eat '='
-      
-          variableExpression = this.parseExpr(scope)
-        }
-
-        return new exp.ScrapVariable("variable", name, variableExpression)
-      }
-
-      default: this.scrapParseError("Unknown class entity")
-    }
-  }
-
   /**
    * Same as `parseBody`, in this case, a module could contains another module.
    * By this reason, this reason, the body module parsing is separated from the normal `parseBody`
@@ -462,7 +395,77 @@ export default class Parser {
 
     this.nextToken() // eat '}'
 
-    return new exp.ScrapModule(moduleName, mScope)
+    const newModule = new exp.ScrapModule(moduleName, mScope)
+
+    this.ast.pushNode(newModule, mScope)
+    return newModule
+  }
+
+  private parseClassEntity(isStatic: boolean, scope: Scope): exp.ScrapVariable | exp.ScrapFunction {
+    switch (this.cursor.currentTok.content) {
+      case Keywords.ASYNC: {
+        if (this.nextToken().content !== Keywords.FN)
+          this.scrapParseError("'async' keywords is only applicable to functions")
+
+        return this.parseFunction(true, false, false, scope)
+      }
+      case Keywords.FN: return this.parseFunction(false, true, isStatic, scope)
+      case Keywords.CONST: {
+        let name = ""
+        this.nextToken() // eat 'const' keyword
+        if (this.cursor.currentTok.type !== "IdentifierName")
+          this.scrapParseError("Invalid class property declaration, expected an identifier")
+
+          name = this.cursor.currentTok.content
+          this.nextToken() // eats identifier variable name
+
+        //@ts-ignore: ???
+        if (this.cursor.currentTok.content === Tokens.COLON) {
+          if (this.nextToken().type !== "IdentifierName")
+            this.scrapParseError("Missing data type after colon ':'")
+          else this.nextToken() // consume the data type
+        }
+
+        //@ts-ignore: ???
+        if (this.cursor.currentTok.content !== Tokens.EQUAL)
+          this.scrapParseError("Missing assignment operator '=' after const declaration. A constant must be initialized since his value can not change")
+
+        this.nextToken() // eat '='
+
+        return new exp.ScrapVariable("constant", name, this.parseExpr(scope))
+      }
+
+      case Keywords.VAR: {
+        let name = ""
+        let variableExpression: exp.ScrapValue = new exp.ScrapUndefined()
+
+        this.nextToken() // eat 'var' keyword
+        if (this.cursor.currentTok.type !== "IdentifierName")
+          this.scrapParseError("Invalid variable declaration, expected an identifier, '[' or '{'")
+
+          name = this.cursor.currentTok.content
+          this.cursor.currentTok
+          this.nextToken() // eats identifier variable name
+
+        //@ts-ignore: ???
+        if (this.cursor.currentTok.content === Tokens.COLON) {
+          if (this.nextToken().type !== "IdentifierName") {
+            this.scrapParseError("Missing data type after colon ':'")
+          } else this.nextToken() // consume the data type
+        }
+
+        //@ts-ignore: ???
+        if (this.cursor.currentTok.content === Tokens.EQUAL) {
+          this.nextToken() // eat '='
+      
+          variableExpression = this.parseExpr(scope)
+        }
+
+        return new exp.ScrapVariable("variable", name, variableExpression)
+      }
+
+      default: this.scrapParseError("Unknown class entity")
+    }
   }
 
   /**
