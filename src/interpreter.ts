@@ -1,5 +1,5 @@
-import AST from "./ast/ast.ts"
-import _Parser from "./parser/parser.ts"
+import * as exp from "./lang/expressions.ts"
+import Parser from "./parser/parser.ts"
 
 export class Interpreter {
 
