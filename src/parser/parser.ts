@@ -172,9 +172,6 @@ export default class Parser {
       } while (this.cursor.currentTok.content !== Tokens.RSQRBR)
     } else
       this.scrapGenerateWarn("A destructing pattern should have at least a variable")
-    
-    // TODO(SUS1): remove this return statement
-    return new exp.ScrapValue(undefined)
   }
 
   /**
