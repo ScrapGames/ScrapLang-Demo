@@ -281,7 +281,10 @@ export class ScrapVariable extends Entity {
         this.assignedValue = assignedValue
     }
 
+    public get getVariableType() { return this.declarationType }
+
     public get getAssignedValue() { return this.assignedValue }
+
     public set setAssignedValue(newValue: ScrapValue) { this.assignedValue = newValue }
 }
 
