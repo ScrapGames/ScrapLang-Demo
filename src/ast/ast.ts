@@ -1,27 +1,25 @@
-import Parser from "../parser/parser.ts";
-import { Entity, ScrapFunction } from "../lang/expressions.ts"
+import { Entity, ScrapValue } from "../lang/expressions.ts"
 
-export default class AST {
-    private body: (ScrapFunction | Entity)[]
+export class ASTNode {
+    private nodeValue: ScrapValue | Entity
 
-    public constructor(parser: Parser) {
-        this.body = []
-        while (parser.cursor.isEOF()) {
-            this.body.push(parser.parsePrimary(parser.mainModule.getScope))
-        }
+    public constructor(nodeValue: ScrapValue | Entity) {
+        this.nodeValue = nodeValue
     }
 
-    public pushNode(node: ScrapFunction | Entity) {
-        this.body.push(node)
+    public get getNodeValue() { return this.nodeValue }
+}
+
+export class AST {
+    private program: ASTNode[]
+
+    public constructor() {
+        this.program = []
     }
 
-    public static from(parser: Parser): AST {
-        const ast = new this(parser)
-
-        while (!parser.cursor.isEOF()) {
-            ast.pushNode(parser.parsePrimary(parser.mainModule.getScope))
-        }
-
-        return ast
+    public pushNode(node: ScrapValue | Entity) {
+        this.program.push(new ASTNode(node))
     }
+
+    public get getProgram() { return this.program }
 }
