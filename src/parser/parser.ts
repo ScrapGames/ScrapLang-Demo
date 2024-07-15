@@ -141,7 +141,7 @@ export default class Parser {
     const tokPrec = exp.BINARY_OPERATORS_PRECEDENCE[this.cursor.currentTok.content as keyof typeof exp.BINARY_OPERATORS_PRECEDENCE]
 
     if (tokPrec <= 0)
-        return -1;
+      return -1;
     
     return tokPrec;
   }
@@ -291,7 +291,7 @@ export default class Parser {
 
     const fName = this.cursor.currentTok.content
 
-        // we admit that the name can be only 2 keywords
+    // we admit that the name can be only 2 keywords
     // allowing be possible make constructor and destructor function for classes
     const isKeywordName = this.cursor.currentTok.content === Keywords.CONSTRUCTOR || this.cursor.currentTok.content === Keywords.DESTRUCTOR
     if (!isMethod) {
@@ -305,7 +305,7 @@ export default class Parser {
       this.scrapParseError("Missing function parameters")
 
     if (isMethod && isStatic)
-      params.push({ pName: "this", pType: "this" })
+      params.push({ pName: "this", pType: exp.ScrapUndefined }) //! Provisional value for 'pType'
 
     if (this.nextToken().content !== Tokens.RPAREN)
       this.parseParamList(params)
@@ -349,7 +349,7 @@ export default class Parser {
    * @param param Array of params that the function receive
    */
   private parseParamList(params: ScrapParam[]) {
-    let pName, pType
+    let pName, _pType
 
     do {
       if (this.cursor.currentTok.type !== "IdentifierName")
@@ -365,8 +365,8 @@ export default class Parser {
           this.scrapParseError("Missing parameter data type")
         } else {
           // Variable args is taked as an array by the compiler and must be managed in the same way by the user in the function body
-          pType = this.cursor.currentTok.content + "[]"
-          params.push({ pName, pType })
+          _pType = this.cursor.currentTok.content + "[]"
+          params.push({ pName, pType: exp.ScrapUndefined }) //! provisional value for 'pType'
         }
 
         if (this.cursor.next().content === Tokens.COMMA) {
@@ -376,13 +376,13 @@ export default class Parser {
         if (this.cursor.currentTok.type !== "IdentifierName")
           this.scrapParseError("Missing parameter data type")
         else {
-          pType = this.cursor.currentTok.content
-          params.push({ pName, pType })
+          _pType = this.cursor.currentTok.content
+          params.push({ pName, pType: exp.ScrapUndefined }) //! provisional value for 'pType'
         }
 
       if (this.nextToken().content === Tokens.COMMA) {
         pName = ""
-        pType = ""
+        _pType = ""
         this.nextToken()
       }
 
@@ -592,9 +592,10 @@ export default class Parser {
       this.parseClassBody(classEntities, cScope)
     }
 
-    const constructor = cScope.getReference("constructor");
+    const constructor = cScope.getReference("constructor")
 
-    (constructor as exp.ScrapFunction).setReturnType = new exp.ScrapString(className)
+    if (constructor)
+      (constructor as exp.ScrapFunction).setReturnType = new exp.ScrapString(className)
 
     const newClass = new exp.ScrapClass(className, classEntities, cScope, constructor !== undefined)
 
@@ -729,19 +730,19 @@ export default class Parser {
         this.scrapParseError(`${functionName.content} is not callable since is not a function`)
 
       this.nextToken() // eat the function name
-        this.nextToken() // eat '('
+      this.nextToken() // eat '('
 
-        const args: exp.ScrapValue[] = []
+      const args: exp.ScrapValue[] = []
 
-        if (this.cursor.currentTok.content !== Tokens.RPAREN) {
-          do {
-            args.push(this.parseExpr(scope))
-            if (this.cursor.currentTok.content === Tokens.COMMA)
-              this.nextToken()
-          } while (this.cursor.currentTok.content !== Tokens.RPAREN)
-        }
+      if (this.cursor.currentTok.content !== Tokens.RPAREN) {
+        do {
+          args.push(this.parseExpr(scope))
+          if (this.cursor.currentTok.content === Tokens.COMMA)
+            this.nextToken()
+        } while (this.cursor.currentTok.content !== Tokens.RPAREN)
+      }
 
-          this.nextToken() // eat ')'
+      this.nextToken() // eat ')'
 
       return new exp.ScrapCall(scope.getOwner, calledFunction, args)
 
@@ -761,14 +762,6 @@ export default class Parser {
 
     switch (this.cursor.currentTok.content) {
       case Tokens.EQUAL: return this.parseAssignment(variable, scope)
-    }
-
-    if (this.cursor.currentTok.content === Tokens.MODULE_ACCESSOR) {
-      if (!(variable instanceof exp.ScrapModule))
-        this.scrapParseError("The token '::' is reserved for modules")
-
-      this.nextToken() // eat module accessor ( :: )
-      this.parseIdentifier(variable.getScope)
     }
 
     return (variable as exp.ScrapVariable).getAssignedValue
@@ -835,7 +828,7 @@ export default class Parser {
         case Keywords.CONST: return this.parseVar(scope)
         case Keywords.CLASS: return this.parseClass(scope)
         case Keywords.MODULE: return this.parseModule(scope)
-  
+
         default: this.scrapParseError(`'${this.cursor.currentTok.content}' does not appear to be a valid primary statement`)
       }
     } else {
