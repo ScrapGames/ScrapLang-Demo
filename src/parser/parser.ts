@@ -112,10 +112,21 @@ export default class Parser {
     }
   }
 
+  /**
+   * Advance the cursor one position on `Cursor.source`
+   * @returns The new value where `Cursor.pos` is placed
+   */
   private consume() { return this.cursor.consume() }
 
+  /**
+   * Assign to `Cursor.currentTok` the value of the next position getted by using `this.consume`
+   * @returns The new value for `this.cursor.currentTok`
+   */
   public nextToken() { return this.cursor.currentTok = this.consume() }
 
+  /**
+   * # Still is an incompleted method
+   */
   private getTokPrecedence() {
     const tokPrec = exp.BINARY_OPERATORS_PRECEDENCE[this.cursor.currentTok.content as keyof typeof exp.BINARY_OPERATORS_PRECEDENCE]
 
