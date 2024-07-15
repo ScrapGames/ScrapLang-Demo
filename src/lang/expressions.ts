@@ -321,7 +321,22 @@ export class ScrapModule extends Entity {
         vals.forEach(val => this.scope.addEntry(val.name, val.value))
     }
 
+    public get getName() { return this.name }
+
+    public set setScope(newScope: Scope) { this.scope = newScope }
+
     public get getScope() { return this.scope }
+}
+
+export class DefinedModule extends ScrapModule {
+    private body: (Entity | ScrapFunction)[]
+
+    public constructor(name: string, body: (Entity | ScrapFunction)[], scope: Scope) {
+        super(name, scope)
+        this.body = body
+    }
+
+    public get getBody() { return this.body }
 }
 
 /**

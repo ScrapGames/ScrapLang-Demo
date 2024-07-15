@@ -338,9 +338,9 @@ export default class Parser {
    * Same as `parseBody`, in this case, a module could contains another module.
    * By this reason, this reason, the body module parsing is separated from the normal `parseBody`
    */
-  private parseModuleBody(scope: Scope) {
+  private parseModuleBody(scope: Scope, body: (exp.Entity | exp.ScrapFunction)[]) {
     while (this.cursor.currentTok.content !== Tokens.RBRACE) {
-      this.parsePrimary(scope) // does not need to explcitly add to the scope, because parsePrimary already adds to the passed scope
+      body.push(this.parsePrimary(scope)) // does not need to explcitly add to the scope, because parsePrimary already adds to the passed scope
     }
   }
 
@@ -412,11 +412,12 @@ export default class Parser {
     this.nextToken() // eat '{'
 
     const mScope = createEmptyScope(scope, moduleName)
-    this.parseModuleBody(mScope)
+    const body: (exp.Entity | exp.ScrapFunction)[] = []
+    this.parseModuleBody(mScope, body)
 
     this.nextToken() // eat '}'
 
-    const newModule = new exp.ScrapModule(moduleName, mScope)
+    const newModule = new exp.DefinedModule(moduleName, body, mScope)
 
     this.ast.pushNode(newModule)
     return newModule
