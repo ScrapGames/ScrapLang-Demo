@@ -114,6 +114,14 @@ export default class Parser {
     }
   }
 
+  public build(): this {
+    while (!this.cursor.isEOF()) {
+      this.parsePrimary(this.mainModule.getScope)
+    }
+
+    return this
+  }
+
   /**
    * Advance the cursor one position on `Cursor.source`
    * @returns The new value where `Cursor.pos` is placed
