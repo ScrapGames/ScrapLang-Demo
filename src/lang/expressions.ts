@@ -352,26 +352,36 @@ export class DefinedModule extends ScrapModule {
  */
 export class ScrapFunction extends ScrapValue {
     private name: string
+
+    public constructor(name: string) {
+        super(undefined)
+        this.name = name
+    }
+
+    public get getName() { return this.name }
+}
+
+export class DefinedFunction extends ScrapFunction {
     private params: ScrapParam[]
     private body: (ScrapValue | Entity)[]
     private scope: Scope
     private returnExpression: ScrapValue
 
     public constructor(name: string, params: ScrapParam[], body: (ScrapValue | Entity)[], scope: Scope, returnExpression: ScrapValue) {
-        super(undefined)
-        this.name = name
+        super(name)
         this.params = params
         this.scope = scope
         this.body = body
         this.returnExpression = returnExpression
     }
 
-    public get getName() { return this.name }
+
     public get getParams() { return this.params }
     public get getBody() { return this.body }
     public get getScope() { return this.scope }
     public get getReturnType() { return this.returnExpression }
 
+    public set setScope(newScope: Scope) { this.scope = newScope }
     public set setReturnType(returnValue: ScrapValue) { this.returnExpression = returnValue }
 }
 
@@ -380,12 +390,15 @@ export class ScrapFunction extends ScrapValue {
  */
 export class ScrapNative extends ScrapFunction {
     private action: (...args: ScrapValue[]) => ScrapValue
+    private argsCount: number | true
 
-    public constructor(name: string, params: ScrapParam[], scope: Scope, action: (...args: ScrapValue[]) => ScrapValue) {
-        super(name, params, [], scope, new ScrapUndefined())
+    public constructor(name: string, argsCount: number | true, action: (...args: ScrapValue[]) => ScrapValue) {
+        super(name)
+        this.argsCount = argsCount
         this.action = action
     }
 
+    public get getArgsCount() { return this.argsCount }
     public get getAction() { return this.action }
 }
 

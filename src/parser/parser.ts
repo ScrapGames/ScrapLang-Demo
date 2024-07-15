@@ -327,7 +327,7 @@ export default class Parser {
 
     this.nextToken() // eat '}'
 
-    const newFunction = new exp.ScrapFunction(fName, params, functionBody, fScope, returnExpression)
+    const newFunction = new exp.DefinedFunction(fName, params, functionBody, fScope, returnExpression)
 
     this.functions.push(newFunction)
     this.ast.pushNode(newFunction)
@@ -596,7 +596,7 @@ export default class Parser {
     const constructor = cScope.getReference("constructor")
 
     if (constructor)
-      (constructor as exp.ScrapFunction).setReturnType = new exp.ScrapString(className)
+      (constructor as exp.DefinedFunction).setReturnType = new exp.ScrapString(className)
 
     const newClass = new exp.ScrapClass(className, classEntities, cScope, constructor !== undefined)
 
