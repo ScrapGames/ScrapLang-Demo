@@ -20,6 +20,7 @@ import ParsingError from "./parser-error.ts"
 import ParserCursor from "./parser-cursor.ts"
 
 import { inArray } from "../utils.ts"
+import { AST } from "../ast/ast.ts"
 
 export enum PrimitiveTypes {
   u8      = "u8",
@@ -62,6 +63,7 @@ export default class Parser {
   warnings: string[]
   functions: exp.ScrapFunction[]
   mainModule: exp.ScrapModule
+  ast: AST
 
   public constructor(lexer: Lexer) {
     this.lexer = lexer
@@ -69,7 +71,7 @@ export default class Parser {
     this.warnings = []
     this.functions = []
     this.mainModule = new exp.ScrapModule("MainModule", createEmptyScope(null, "MainModule"))
-    //this.ast = new AST(this)
+    this.ast = new AST()
 
     this.cursor.currentTok = this.cursor.consume() // gives an initial value to the parser
   }
@@ -315,7 +317,9 @@ export default class Parser {
     this.nextToken() // eat '}'
 
     const newFunction = new exp.ScrapFunction(fName, params, functionBody, fScope, returnExpression)
+
     this.functions.push(newFunction)
+    this.ast.pushNode(newFunction)
     return newFunction
   }
 
@@ -403,7 +407,7 @@ export default class Parser {
 
     const newModule = new exp.ScrapModule(moduleName, mScope)
 
-    this.ast.pushNode(newModule, mScope)
+    this.ast.pushNode(newModule)
     return newModule
   }
 
@@ -581,7 +585,10 @@ export default class Parser {
 
     (constructor as exp.ScrapFunction).setReturnType = new exp.ScrapString(className)
 
-    return new exp.ScrapClass(className, classEntities, cScope, constructor !== undefined)
+    const newClass = new exp.ScrapClass(className, classEntities, cScope, constructor !== undefined)
+
+    this.ast.pushNode(newClass)
+    return newClass
   }
 
   /**
@@ -636,10 +643,13 @@ export default class Parser {
     this.nextToken() /* eat '=' */
     variableExpression = this.parseExpr(scope)
 
-    return new exp.ScrapVariable(isConst ? "constant" : "variable", name, variableExpression)
+    const newVariable = new exp.ScrapVariable(isConst ? "constant" : "variable", name, variableExpression)
+
+    this.ast.pushNode(newVariable)
+    return newVariable
   }
 
-  private parseAssignment(candidateVar: ValidEntities, scope: Scope): exp.ScrapValue {
+  private parseAssignment(candidateVar: ValidEntities, scope: Scope): exp.AssignmentExpression {
 
     if (!(candidateVar instanceof exp.ScrapVariable))
       this.scrapParseError("A value that is not a variable can not be modified")
@@ -651,7 +661,10 @@ export default class Parser {
 
     const assignedValue = this.parseExpr(scope)
 
-    return new exp.AssignmentExpression(candidateVar, assignedValue)
+    const assignment = new exp.AssignmentExpression(candidateVar, assignedValue)
+
+    this.ast.pushNode(assignment)
+    return assignment
   }
 
   /**
