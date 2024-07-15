@@ -289,14 +289,17 @@ export default class Parser {
     this.nextToken() // eat 'fn' keyword
     const params: ScrapParam[] = []
 
-    if (this.cursor.currentTok.type !== "IdentifierName" &&
-        (this.cursor.currentTok.content !== Keywords.CONSTRUCTOR &&
-        this.cursor.currentTok.content !== Keywords.DESTRUCTOR)
-        // we admit that the name can be only 2 keywords
-        // allowing be possible make constructor and destructor function for objects          
-      )
-      this.scrapParseError("Function name expected")
     const fName = this.cursor.currentTok.content
+
+        // we admit that the name can be only 2 keywords
+    // allowing be possible make constructor and destructor function for classes
+    const isKeywordName = this.cursor.currentTok.content === Keywords.CONSTRUCTOR || this.cursor.currentTok.content === Keywords.DESTRUCTOR
+    if (!isMethod) {
+      if (isKeywordName)
+        this.scrapParseError(`'${fName}' as function name is not allowed outside classes`)
+    } else if (this.cursor.currentTok.type !== "IdentifierName") {
+      this.scrapParseError("Function name expected")
+    }
 
     if (this.nextToken().content !== Tokens.LPAREN)
       this.scrapParseError("Missing function parameters")
