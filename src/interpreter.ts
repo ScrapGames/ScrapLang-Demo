@@ -45,14 +45,18 @@ export class Interpreter {
         return newValue
     }
 
+    private computeArrayAccess(value: exp.ScrapArrayAccess): exp.ScrapValue  | exp.ScrapUndefined {
+        const accessedValue = value.getAccessedArray.getValue.at(value.getAccessedPosition.getValue)
+        return accessedValue ? accessedValue : new exp.ScrapUndefined()
+    }
+
     public compute(value: exp.ScrapValue | exp.Entity): exp.ScrapValue {
         switch (true) {
             case value instanceof exp.ScrapCall: return this.resolveExecutor(value)
             case value instanceof exp.ScrapVariable: return this.computeVariable(value)
             case value instanceof exp.AssignmentExpression: return this.computeAssignment(value)
-            case value instanceof exp.ScrapArray: {
-                return new exp.ScrapArray(value.getValue.map((item: exp.ScrapValue) => this.compute(item).getValue))
-            }
+            case value instanceof exp.ScrapArray: return new exp.ScrapArray(value.getValue.map((item: exp.ScrapValue) => this.compute(item).getValue))
+            case value instanceof exp.ScrapArrayAccess: return this.computeArrayAccess(value)
 
             case value instanceof exp.ScrapValue: return new exp.ScrapValue(value.getValue)
 

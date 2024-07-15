@@ -711,6 +711,19 @@ export default class Parser {
     return this.parseExpr(scope)
   }
 
+  private parseArrayAccessor(accessedArray: exp.ScrapArray<exp.ScrapValue>, scope: Scope): exp.ScrapArrayAccess {
+    this.nextToken() // eat '['
+
+    const position = this.parseExpr(scope)
+
+    if (!(position instanceof exp.ScrapInteger))
+      this.scrapParseError("Numeric value expected")
+
+    this.nextToken() // eat ']'
+
+    return new exp.ScrapArrayAccess(accessedArray, position)
+  }
+
   /**
    * Parses if the eated identifier exists as a valid function or variable in the current or upper scope(s)
    *
@@ -762,6 +775,14 @@ export default class Parser {
 
     switch (this.cursor.currentTok.content) {
       case Tokens.EQUAL: return this.parseAssignment(variable, scope)
+      case Tokens.LSQRBR: {
+        if (!((variable as exp.ScrapVariable).getAssignedValue instanceof exp.ScrapArray))
+          this.scrapParseError(`${variable}`)
+
+        const newArrayAccessor = this.parseArrayAccessor((variable as exp.ScrapVariable).getAssignedValue as exp.ScrapArray<exp.ScrapValue>, scope)
+        this.ast.pushNode(newArrayAccessor)
+        return newArrayAccessor
+      }
     }
 
     return (variable as exp.ScrapVariable).getAssignedValue

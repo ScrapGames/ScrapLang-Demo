@@ -374,6 +374,23 @@ export class ScrapNative extends ScrapFunction {
     public get getAction() { return this.action }
 }
 
+export class ScrapArrayAccess extends ScrapValue {
+
+    private accessedPosition: ScrapInteger
+    private accessedArray: ScrapArray<ScrapValue>
+
+
+    public constructor(accessedArray: ScrapArray<ScrapValue>, accessedPosition: ScrapInteger) {
+        super(undefined)
+        this.accessedArray = accessedArray
+        this.accessedPosition = accessedPosition
+    }
+
+    public get getAccessedPosition() { return this.accessedPosition }
+
+    public get getAccessedArray() { return this.accessedArray }
+}
+
 export class ScrapControlBlock {
     private expression: ScrapTrue
     private body: (ScrapValue | Entity)[]
