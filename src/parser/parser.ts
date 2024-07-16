@@ -402,9 +402,6 @@ export default class Parser {
       this.scrapParseError("Missing module name")
 
     const moduleName = this.cursor.currentTok.content
-    const firstModuleNameLetter = moduleName.charAt(0)
-    if (!/[A-Z]/.test(firstModuleNameLetter))
-      this.scrapGenerateWarn(`A module name should have a Pascal-Case format. '${firstModuleNameLetter.toUpperCase() + moduleName.substring(1)}' in this case.`)
 
     if (this.nextToken().content !== Tokens.LBRACE)
       this.scrapParseError("Missing module body opening '{'")
