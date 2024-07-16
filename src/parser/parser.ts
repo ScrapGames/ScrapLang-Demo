@@ -882,16 +882,12 @@ export default class Parser {
   }
 
   /**
-   * Parse the primary AST nodes that are allowed to appear in the 'root' of the file
-   * Instead of call 'parse' this way is clearest because it call directly the methods that can parse the 'primary' structures.
+   * `parseRoot` calls the methods which parses entities allowed the be declared at the file root.
    * 
-   * In this way, we avoid that the program have posibilities of declare global variables.
-   * Which in the long term, results confusing and make hard read code for the users which needs to read the source code of a program.
-   * 
-   * We reach this goal simply dont parsing the keywords in `parse` method
-   * @returns 
+   * * Not parsed example: A function declared inside another function will not be parsed since `parseRoot` is not invoked inside function body's.
+   * * Parsed example: `main` function, since it is not declared inside another entity, `parseRoot` will call the method who parse functions
    */
-  public parsePrimary(scope: Scope): exp.Entity | exp.ScrapFunction {
+  public parseRoot(scope: Scope): exp.ScrapFunction | exp.ScrapEntity {
     switch (this.cursor.currentTok.content) {
       case Keywords.ASYNC:
       case Keywords.FN:
