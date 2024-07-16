@@ -134,6 +134,25 @@ export default class Parser {
    */
   public nextToken() { return this.cursor.currentTok = this.consume() }
 
+  
+  public shouldBeLike(shouldBeLike: string, message: string) {
+    const nextToken = this.nextToken()
+
+    if (nextToken.content !== shouldBeLike)
+      this.scrapParseError(message)
+
+    return nextToken
+  }
+
+  public shouldBeOf(shouldBeOf: TokenType) {
+    const nextToken = this.nextToken()
+
+    if (nextToken.content !== shouldBeOf)
+      this.scrapParseError(shouldBeOf)
+
+    return nextToken
+  }
+
   /**
    * # Still is an incompleted method
    */
