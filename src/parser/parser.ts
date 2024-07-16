@@ -637,41 +637,33 @@ export default class Parser {
    *    var num = 10
    *    num = 20
    *
-   * @returns A `ScrapVariable` entity
+   * @returns A `ScrapVariable` where the stored value will be `undefined` or an assigned value
    */
   private parseVar(scope: Scope): exp.ScrapVariable {
-    let name = ""
     let variableExpression: exp.ScrapValue = new exp.ScrapUndefined()
     const isConst = this.cursor.currentTok.content === Keywords.CONST
 
-    this.nextToken() // eat 'var' or 'const' keyword
-    if (this.cursor.currentTok.type !== "IdentifierName" && (this.cursor.currentTok.content !== Tokens.LSQRBR && this.cursor.currentTok.content !== Tokens.LBRACE))
-      this.scrapParseError("Invalid variable declaration, expected an identifier, '[' or '{'")
+    const varTypeToken = this.nextToken() // eat 'var' or 'const' keyword
 
-    switch (this.cursor.currentTok.content) {
+
+    switch (varTypeToken.content) {
       case Tokens.LSQRBR: this.parseArrayDestructuring(); break
       case Tokens.LBRACE: this.parseLiteralObject(scope); break
     }
     
-      name = this.cursor.currentTok.content
+    const name = this.cursor.currentTok.content
       if (inArray(name, RESERVERD_VAR_NAMES))
         this.scrapParseError(`'${name}' is not allowed as a variable declaration name.`)
 
-      this.nextToken() // eats identifier variable name
-
-    if (this.cursor.currentTok.content === Tokens.COLON) {
-      if (this.nextToken().type !== "IdentifierName")
-        this.scrapParseError("Missing data type after colon ':'")
-
-      else this.nextToken() // consume the data type
+    const typeOrEqToken = this.nextToken()
+    if (typeOrEqToken.content === Tokens.COLON) {
+      const _typeName =  this.parseDataType() // consume the data type
     }
 
-    if (isConst) {
-      if (this.cursor.currentTok.content !== Tokens.EQUAL)
-        this.scrapParseError("A constant must have a assigned value")
-    }
+    if (isConst)
+      this.expectsContent(Tokens.EQUAL, "current", "A constant must have a assigned value")
 
-    this.nextToken() /* eat '=' */
+    this.nextToken() // eat '='
     variableExpression = this.parseExpr(scope)
 
     const newVariable = new exp.ScrapVariable(isConst ? "constant" : "variable", name, variableExpression)
@@ -680,9 +672,12 @@ export default class Parser {
     return newVariable
   }
 
-  private parseAssignment(candidateVar: ValidEntities, scope: Scope): exp.AssignmentExpression {
+  private parseDataType() {
+    this.expectsType("IdentifierName", "next", "Missing data type after colon ':'")
 
-    if (!(candidateVar instanceof exp.ScrapVariable))
+    return this.nextToken() // eat data type
+  }
+
       this.scrapParseError("A value that is not a variable can not be modified")
 
     if (candidateVar.getVariableType === "constant")
