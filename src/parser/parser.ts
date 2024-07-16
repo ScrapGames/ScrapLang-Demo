@@ -304,8 +304,7 @@ export default class Parser {
    * 
    * @returns A new function statement
    */
-  private parseFunction(_mustAwait: boolean, isMethod: boolean, isStatic: boolean, scope: Scope): exp.ScrapFunction {
-    this.nextToken() // eat 'fn' keyword
+  public parseFunction(_mustAwait: boolean, isMethod: boolean, isStatic: boolean, scope: Scope): exp.DefinedFunction {
     const params: ScrapParam[] = []
 
     const fName = this.cursor.currentTok.content
