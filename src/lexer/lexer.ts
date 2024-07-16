@@ -85,6 +85,7 @@ export enum Keywords {
   IF          = "if",
   ELSE        = "else",
   ELIF        = "elif",
+  MATCH       = "match",
   SWITCH      = "switch",
   CASE        = "case",
   DEFAULT     = "default",
