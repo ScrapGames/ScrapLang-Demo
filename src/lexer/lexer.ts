@@ -25,8 +25,7 @@ export type TokenType = |
   "TemplateString"      |
   "Keyword"             |
   "Operator"            |
-  "Token"               |
-  "Unknown"
+  "Token"
 
 export enum Tokens {
   LPAREN        = '(',

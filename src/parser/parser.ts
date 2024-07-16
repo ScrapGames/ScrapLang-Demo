@@ -849,9 +849,7 @@ export default class Parser {
       case "Operator": return new exp.BinaryExpression(new exp.ScrapInteger(20), new exp.ScrapInteger(30), '+')
       case "Token": return this.parseToken(scope)
 
-      case "Unknown": return this.scrapParseError("Unkown Token")
-
-      default: this.scrapParseError("Unexpected token while parsing. Maybe it is not an expression")
+      default: this.scrapParseError("Expected expression")
     }
   }
 
