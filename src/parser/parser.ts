@@ -826,7 +826,7 @@ export default class Parser {
    * @returns A parsed expression
    */
   private parseExpr(scope: Scope): exp.ScrapValue {
-    if (this.cursor.currentTok.content === Keywords.FN)
+    if (this.cursor.currentTok.type === "Statement" && this.cursor.currentTok.content === Keywords.FN)
       return this.parseFunction(false, false, false, scope)
 
     if (this.cursor.currentTok.content === Keywords.ASYNC) {
