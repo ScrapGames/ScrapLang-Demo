@@ -562,16 +562,17 @@ export default class Parser {
 
     if (this.cursor.currentTok.type !== "IdentifierName")
       this.scrapParseError("Expected a class name")
+
     const className = this.cursor.currentTok.content
-    
     this.nextToken() // eat class name (identifier)
+
     if (this.cursor.currentTok.content === Keywords.EXTENDS || this.cursor.currentTok.content === Keywords.IMPLEMENTS) {
 
       // now will parse the possibility of a class to extends and implements or just extends
       if (this.cursor.currentTok.content === Keywords.EXTENDS) {
         if (this.nextToken().type !== "IdentifierName")
           this.scrapParseError("Expected an identifier")
-        else
+        
           this.cursor.currentTok = this.consume() // eats the identifier (class from current parsed class extends)
 
         if (this.cursor.currentTok.content === Keywords.IMPLEMENTS) {
@@ -579,7 +580,7 @@ export default class Parser {
 
           if (this.cursor.currentTok.type !== "IdentifierName")
             this.scrapParseError("Expected an identifier")
-          else
+
             this.nextToken() // eats the identifier (interface where class is implemeting)
         }
       } else if (this.cursor.currentTok.content === Keywords.IMPLEMENTS) {
