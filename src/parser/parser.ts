@@ -625,9 +625,8 @@ export default class Parser {
   private parseVar(scope: Scope): exp.ScrapVariable {
     let name = ""
     let variableExpression: exp.ScrapValue = new exp.ScrapUndefined()
-    let isConst = false
+    const isConst = this.cursor.currentTok.content === Keywords.CONST
 
-    isConst = this.cursor.currentTok.content === Keywords.CONST
     this.nextToken() // eat 'var' or 'const' keyword
     if (this.cursor.currentTok.type !== "IdentifierName" && (this.cursor.currentTok.content !== Tokens.LSQRBR && this.cursor.currentTok.content !== Tokens.LBRACE))
       this.scrapParseError("Invalid variable declaration, expected an identifier, '[' or '{'")
