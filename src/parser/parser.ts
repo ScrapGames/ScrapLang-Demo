@@ -632,22 +632,24 @@ export default class Parser {
     if (this.cursor.currentTok.type !== "IdentifierName" && (this.cursor.currentTok.content !== Tokens.LSQRBR && this.cursor.currentTok.content !== Tokens.LBRACE))
       this.scrapParseError("Invalid variable declaration, expected an identifier, '[' or '{'")
 
-    if (this.cursor.currentTok.content === Tokens.LSQRBR)
-      this.parseArrayDestructuring()
-    else if (this.cursor.currentTok.content === Tokens.LBRACE)
-      this.parseLiteralObject(scope)
-    else {
+    switch (this.cursor.currentTok.content) {
+      case Tokens.LSQRBR: this.parseArrayDestructuring(); break
+      case Tokens.LBRACE: this.parseLiteralObject(scope); break
+    }
+    
       name = this.cursor.currentTok.content
       if (inArray(name, RESERVERD_VAR_NAMES))
         this.scrapParseError(`'${name}' is not allowed as a variable declaration name.`)
 
       this.nextToken() // eats identifier variable name
-    }
+
     if (this.cursor.currentTok.content === Tokens.COLON) {
-      if (this.nextToken().type !== "IdentifierName") {
+      if (this.nextToken().type !== "IdentifierName")
         this.scrapParseError("Missing data type after colon ':'")
-      } else this.nextToken() // consume the data type
+
+      else this.nextToken() // consume the data type
     }
+
     if (isConst) {
       if (this.cursor.currentTok.content !== Tokens.EQUAL)
         this.scrapParseError("A constant must have a assigned value")
