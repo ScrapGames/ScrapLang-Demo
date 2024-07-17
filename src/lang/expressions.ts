@@ -34,7 +34,7 @@ export class ScrapValue {
  *  - Module
  *  - Variable (or constant) declaration
  */
-export class Entity {
+export class ScrapEntity {
     protected name: string
 
     public constructor(name: string) {
@@ -271,7 +271,7 @@ export class ScrapLitObject extends ScrapValue {
  * 
  * myVariable = 10 // this will not cause an error because is a variable value
  */
-export class ScrapVariable extends Entity {
+export class ScrapVariable extends ScrapEntity {
     private declarationType: "variable" | "constant"
     private assignedValue: ScrapValue
 
@@ -305,7 +305,7 @@ export class ScrapVariable extends Entity {
  * 
  * MyModule::privateConstant // error: privateConstant was not exported from his module. Is only accessible inside the module it has been declared
  */
-export class ScrapModule extends Entity {
+export class ScrapModule extends ScrapEntity {
     private scope: Scope
 
     public constructor(name: string, scope: Scope) {
@@ -363,11 +363,11 @@ export class ScrapFunction extends ScrapValue {
 
 export class DefinedFunction extends ScrapFunction {
     private params: ScrapParam[]
-    private body: (ScrapValue | Entity)[]
+    private body: (ScrapValue | ScrapEntity)[]
     private scope: Scope
     private returnExpression: ScrapValue
 
-    public constructor(name: string, params: ScrapParam[], body: (ScrapValue | Entity)[], scope: Scope, returnExpression: ScrapValue) {
+    public constructor(name: string, params: ScrapParam[], body: (ScrapValue | ScrapEntity)[], scope: Scope, returnExpression: ScrapValue) {
         super(name)
         this.params = params
         this.scope = scope
@@ -421,9 +421,9 @@ export class ScrapArrayAccess extends ScrapValue {
 
 export class ScrapControlBlock {
     private expression: ScrapTrue
-    private body: (ScrapValue | Entity)[]
+    private body: (ScrapValue | ScrapEntity)[]
 
-    public constructor(expression: ScrapTrue, body: (ScrapValue | Entity)[]) {
+    public constructor(expression: ScrapTrue, body: (ScrapValue | ScrapEntity)[]) {
         this.expression = expression
         this.body = body
     }
@@ -440,7 +440,7 @@ export class ScrapFor extends ScrapControlBlock {
     private varDeclaration: ScrapVariable
     private valueModifier: ScrapValue
 
-    public constructor(varDeclaration: ScrapVariable, expression: ScrapTrue, valueModifier: ScrapValue, body: (ScrapValue | Entity)[]) {
+    public constructor(varDeclaration: ScrapVariable, expression: ScrapTrue, valueModifier: ScrapValue, body: (ScrapValue | ScrapEntity)[]) {
         super(expression, body)
         this.varDeclaration = varDeclaration
         this.valueModifier = valueModifier
