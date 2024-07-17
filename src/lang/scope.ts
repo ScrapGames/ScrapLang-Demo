@@ -11,10 +11,10 @@ export class Scope {
     private belongsTo: string
     private scopedEntities: Map<string, ValidEntities>
 
-    public constructor(parentScope: Nullable<Scope>, belongsTo: string, scopedEntities: Map<string, ValidEntities>) {
+    public constructor(parentScope: Nullable<Scope>, belongsTo: string) {
         this.parentScope = parentScope
         this.belongsTo = belongsTo
-        this.scopedEntities = scopedEntities
+        this.scopedEntities = new Map()
     }
 
     /**
