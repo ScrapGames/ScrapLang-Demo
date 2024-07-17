@@ -1,4 +1,4 @@
-import { ScrapVariable, ScrapFunction } from "./lang/expressions.ts"
+import { ScrapVariable, DefinedFunction } from "./lang/expressions.ts"
 
 export type Nullable<T> = T | null
 
@@ -11,12 +11,9 @@ export interface ScrapParam {
 
 export type AccessorModifiers = "public" | "private" | "protected"
 
-export interface ScrapClassEntity {
+export interface ScrapClassEntityProps {
     accessor: AccessorModifiers,
     isStatic: boolean,
     canOverride: boolean,
-    nodeType: ScrapFunction | ScrapVariable
+    entitiyType: ScrapVariable | DefinedFunction
 }
-
-export type ScrapClassProperty = ScrapClassEntity
-export type ScrapClassMethod = ScrapClassEntity & ScrapFunction
