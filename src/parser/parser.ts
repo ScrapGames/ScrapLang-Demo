@@ -675,16 +675,18 @@ export default class Parser {
     return this.nextToken() // eat data type
   }
 
+  private parseAssignment(varCandidate: ValidEntities, scope: Scope): exp.AssignmentExpression {
+    if (!(varCandidate instanceof exp.ScrapVariable))
       this.scrapParseError("A value that is not a variable can not be modified")
 
-    if (candidateVar.getVariableType === "constant")
+    if (varCandidate.getVariableType === "constant")
       this.scrapParseError("A constant can not change the value which points")
 
     this.nextToken() // eat '='
 
     const assignedValue = this.parseExpr(scope)
 
-    const assignment = new exp.AssignmentExpression(candidateVar, assignedValue)
+    const assignment = new exp.AssignmentExpression(varCandidate, assignedValue)
 
     this.ast.pushNode(assignment)
     return assignment
