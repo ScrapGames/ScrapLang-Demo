@@ -481,15 +481,22 @@ export class ScrapFor extends ScrapControlBlock {
  * juan.name // correct, `name` has been declared using `public`
  * juan.id // error, `id` does not have a accessor modifier, this means is `private` and can only be accessible inside the class
  */
-export class ScrapClass extends Entity {
-    private entities: (ScrapClassProperty | ScrapClassMethod)[]
+export class ScrapClass extends ScrapEntity {
+    private entities: ScrapClassEntityProps[]
+    private options: { inherits?: ScrapClass, implements?: string }
     private scope: Scope
     private hasConstructor: boolean
 
-    public constructor(className: string, entities: (ScrapClassProperty | ScrapClassMethod)[], scope: Scope, hasConstructor: boolean) {
+    public constructor(className: string, entities: ScrapClassEntityProps[], options: { inherits?: ScrapClass, implements?: string }, scope: Scope, hasConstructor: boolean) {
         super(className)
         this.entities = entities
+        this.options = options
         this.scope = scope
         this.hasConstructor = hasConstructor
     }
+
+    public get getEntities() { return this.entities }
+    public get getOptions() { return this.options }
+    public get getScope() { return this.scope }
+    public get getHasConstructor() { return this.hasConstructor }
 }

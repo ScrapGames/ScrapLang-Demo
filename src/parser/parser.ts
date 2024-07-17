@@ -573,34 +573,32 @@ export default class Parser {
 
   private parseClass(scope: Scope): exp.ScrapClass {
     this.nextToken() // eat class keyword
-    const classEntities: (ScrapClassProperty | ScrapClassMethod)[] = []
+    const classEntities: ScrapClassEntityProps[] = []
+    const options: { inherits?: exp.ScrapClass, implements?: string } = {}
 
-    if (this.cursor.currentTok.type !== "IdentifierName")
-      this.scrapParseError("Expected a class name")
+    const className = this.expectsType("IdentifierName", "current", "Expected a class name").content
+    const relationalKW = this.nextToken() // eat class name (identifier)
 
-    const className = this.cursor.currentTok.content
-    this.nextToken() // eat class name (identifier)
+    if (relationalKW.content === Keywords.EXTENDS || relationalKW.content === Keywords.IMPLEMENTS) {
+      if (relationalKW.content === Keywords.EXTENDS) {
+        const inheritedClassName = this.expectsType("IdentifierName", "next", "Identifier expected")
+        const inheritedClass = scope.getReference(inheritedClassName.content)
 
-    if (this.cursor.currentTok.content === Keywords.EXTENDS || this.cursor.currentTok.content === Keywords.IMPLEMENTS) {
+        if (!(inheritedClass instanceof exp.ScrapClass))
+          this.scrapParseError("Identifier after extends must be an already declared class")
 
-      // now will parse the possibility of a class to extends and implements or just extends
-      if (this.cursor.currentTok.content === Keywords.EXTENDS) {
-        if (this.nextToken().type !== "IdentifierName")
-          this.scrapParseError("Expected an identifier")
-        
-          this.cursor.currentTok = this.consume() // eats the identifier (class from current parsed class extends)
+        options.inherits = inheritedClass
 
-        if (this.cursor.currentTok.content === Keywords.IMPLEMENTS) {
-          this.nextToken() // eats 'implements' token
-
-          if (this.cursor.currentTok.type !== "IdentifierName")
-            this.scrapParseError("Expected an identifier")
-
-            this.nextToken() // eats the identifier (interface where class is implemeting)
+        if (this.nextToken().content === Keywords.IMPLEMENTS) {
+          const implemetedInterface = this.expectsType("IdentifierName", "next", "Identifier expected")
+          options.implements = implemetedInterface.content
+          this.nextToken() // eat the interface identifier
         }
-      } else if (this.cursor.currentTok.content === Keywords.IMPLEMENTS) {
-        if (this.nextToken().type !== "IdentifierName")
-          this.scrapParseError("Expected an identifier")
+
+      } else if (relationalKW.content === Keywords.IMPLEMENTS) {
+        const implementedInterface = this.expectsType("IdentifierName", "next", "Identifier expected")
+        options.implements = implementedInterface.content
+        this.nextToken() // eat the interface identifier
       }
     }
 
@@ -614,7 +612,7 @@ export default class Parser {
     if (constructor)
       (constructor as exp.DefinedFunction).setReturnType = new exp.ScrapString(className)
 
-    const newClass = new exp.ScrapClass(className, classEntities, cScope, constructor !== undefined)
+    const newClass = new exp.ScrapClass(className, classEntities, options, cScope, constructor !== undefined)
 
     this.ast.pushNode(newClass)
     return newClass
