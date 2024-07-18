@@ -1,5 +1,15 @@
 import { ScrapVariable, DefinedFunction, ScrapEntity, ScrapFunction } from "./lang/expressions.ts"
 
+/**
+ * Converts the type parameter to a possible null type
+ * 
+ * The next example shows how it works with the number type
+ * @example
+ * function showNumberString(num: Nullable<number>) {
+ *   if (num)
+ *     console.log(num.toString())
+ * }
+ */
 export type Nullable<T> = T | null
 
 export type EmptyObject = Record<string | number | symbol, never>
