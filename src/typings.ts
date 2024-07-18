@@ -12,8 +12,11 @@ import { ScrapVariable, DefinedFunction, ScrapEntity, ScrapFunction } from "./la
  */
 export type Nullable<T> = T | null
 
-export type EmptyObject = Record<string | number | symbol, never>
-
+/**
+ * Represents a function parameter
+ * 
+ * A function parameter is util to pass values to a function, allowing a function returns a variable value
+ */
 export interface ScrapParam {
     pName: string,
     pType: string
