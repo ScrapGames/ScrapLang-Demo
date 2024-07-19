@@ -21,15 +21,25 @@ import { Nameable } from "@typings"
  */
 export class ScrapModule extends ScrapEntity {
     private scope: Scope
+    private exports: Set<string>
 
-    public constructor(name: string, scope: Scope) {
+    public constructor(name: string, scope: Scope, exports?: Set<string>) {
         super(name)
         this.scope = scope
+        this.exports = exports ?? new Set()
     }
 
-    public insert(name: string, value: Nameable) {
+    public insert(name: string, value: Nameable, isExported?: true) {
         this.scope.addEntry(name, value)
+        if (isExported)
+            this.exports.add(value.name)
     }
+
+    public isExported(entityName: string) {
+        return this.exports.has(entityName)
+    }
+
+    public get getExports() { return this.exports } 
 
     public get getScope() { return this.scope }
 }
@@ -37,8 +47,8 @@ export class ScrapModule extends ScrapEntity {
 export class DefinedModule extends ScrapModule {
     private body: Nameable[]
 
-    public constructor(name: string, body: Nameable[], scope: Scope) {
-        super(name, scope)
+    public constructor(name: string, body: Nameable[], scope: Scope, exports?: Set<string>) {
+        super(name, scope, exports)
         this.body = body
     }
 
