@@ -1,15 +1,12 @@
-import * as exp from "./expressions.ts"
-import { Token } from "../lexer/lexer.ts"
-import type { Nullable } from "../typings.ts"
-
-export type ValidEntities = exp.Entity | exp.ScrapValue | null
+import { Token } from "@lexer/lexer.ts"
+import type { Nameable, Nullable } from "@typings"
 
 const { ReferenceError } = globalThis
 
 export class Scope {
     private parentScope: Nullable<Scope>
     private belongsTo: string
-    private scopedEntities: Map<string, ValidEntities>
+    private scopedEntities: Map<string, Nameable>
 
     public constructor(parentScope: Nullable<Scope>, belongsTo: string) {
         this.parentScope = parentScope
@@ -32,33 +29,31 @@ export class Scope {
     }
 
     /**
+     * Adds an entry to the current scope object
+     * @param name Name of the entry
+     * @param value Value of the entry
+     * @returns boolean, if the entry already exists, true in other case
+     */
+    public addEntry(name: string, value: Nameable): boolean {
+        if (this.searchReference(name))
+            return false
+        this.scopedEntities.set(name, value)
+        return true
+
+    }
+
+    /**
      * Gets the value stored in `this` scope or parents scopes of `this`
      * @param name Name of the variable (or entity)
      * @returns The variable, if has been stored using `addEntry`, undefined otherwise
      */
-    public getReference(name: string): ValidEntities | undefined {
+    public getReference(name: string): Nameable | undefined {
         if (this.scopedEntities.get(name) !== undefined)
             return this.scopedEntities.get(name)
         else if (this.parentScope !== null)
             return this.parentScope.getReference(name)
         else
             return undefined
-    }
-
-    /**
-     * Adds an entry to the current scope object
-     * @param name Name of the entry
-     * @param value Value of the entry
-     * @returns boolean, if the entry already exists, true in other case
-     */
-    public addEntry(name: string, value: ValidEntities): boolean {
-        if (this.searchReference(name)) {
-            return false
-        }
-
-        this.scopedEntities.set(name, value)
-        return true
-
     }
 
     public get getParentScope() { return this.parentScope }
@@ -76,7 +71,7 @@ export class Scope {
  * @returns A new `Scope` where his `scopedEntities` Map is empty
  */
 export function createEmptyScope(parentScope: Nullable<Scope>, belongsTo: string): Scope {
-    return new Scope(parentScope, belongsTo, new Map())
+    return new Scope(parentScope, belongsTo)
 }
 
 /**
