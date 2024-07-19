@@ -1,9 +1,10 @@
-import { Entity, ScrapValue } from "../lang/expressions.ts"
+import { ScrapEntity, ScrapValue } from "@lang/elements/commons.ts"
 
 export class ASTNode {
-    private nodeValue: ScrapValue | Entity
+    private nodeValue: ScrapValue | ScrapEntity
+    
 
-    public constructor(nodeValue: ScrapValue | Entity) {
+    public constructor(nodeValue: ScrapValue | ScrapEntity) {
         this.nodeValue = nodeValue
     }
 
@@ -17,7 +18,7 @@ export class AST {
         this.program = []
     }
 
-    public pushNode(node: ScrapValue | Entity) {
+    public pushNode(node: ScrapValue | ScrapEntity) {
         this.program.push(new ASTNode(node))
     }
 
