@@ -1,5 +1,5 @@
 import { Scope } from "@lang/scope.ts"
-import { Nameable, ScrapParam } from "@typings"
+import { Nameable, ScrapParam, ValidFunctionBodyValues } from "@typings"
 
 export const BINARY_OPERATORS_PRECEDENCE = {
     '*': 4,
@@ -67,10 +67,10 @@ export class DefinedFunction extends ScrapFunction {
     private scope: Scope
     private returnExpression: ScrapValue
 
-    body: (ScrapValue | ScrapEntity)[]
+    body: ValidFunctionBodyValues[]
 
     public constructor(
-        name: string, params: ScrapParam[], body: (ScrapValue | ScrapEntity)[],
+        name: string, params: ScrapParam[], body: ValidFunctionBodyValues[],
         scope: Scope, returnExpression: ScrapValue
     ) {
         super(name)

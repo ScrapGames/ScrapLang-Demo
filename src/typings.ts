@@ -1,4 +1,6 @@
-import { ScrapVariable, DefinedFunction, ScrapEntity, ScrapFunction } from "./lang/expressions.ts"
+import { ScrapCall } from "@lang/elements/values/call.ts"
+import { ScrapVariable } from "@lang/elements/entities/variable.ts"
+import { DefinedFunction, ScrapEntity } from "@lang/elements/commons.ts"
 
 /**
  * Converts the type parameter to a possible null type
@@ -11,6 +13,7 @@ import { ScrapVariable, DefinedFunction, ScrapEntity, ScrapFunction } from "./la
  * }
  */
 export type Nullable<T> = T | null
+
 /**
  * Represents values which has `name` as a common property
  * 
