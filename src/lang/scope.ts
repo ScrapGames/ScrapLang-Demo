@@ -23,7 +23,7 @@ export class Scope {
      * @returns true, if was already registered, false in other case
      */
     public searchReference(name: string): boolean {
-        if (this.scopedEntities.get(name) !== undefined)
+        if (this.scopedEntities.has(name))
             return true
         else if (this.parentScope !== null)
             return this.parentScope.searchReference(name)
