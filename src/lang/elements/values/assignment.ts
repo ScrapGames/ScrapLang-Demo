@@ -12,13 +12,12 @@ import { ScrapVariable } from "@lang/elements/entities/variable.ts"
  * // The assignment returns the value that has been assigned. In this last case 20.
  */
 export class AssignmentExpression extends ScrapValue {
+    private target: ScrapVariable
 
-    private varCandidate: ScrapVariable
-
-    public constructor(varCandidate: ScrapVariable, assignedValue: ScrapValue) {
-        super(assignedValue)
-        this.varCandidate = varCandidate
+    public constructor(target: ScrapVariable, newValue: ScrapValue) {
+        super(newValue)
+        this.target = target
     }
 
-    public get getVarCandidate() { return this.varCandidate }
+    public get getTarget() { return this.target }
 }
