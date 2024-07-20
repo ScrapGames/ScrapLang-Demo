@@ -2,5 +2,13 @@
   "version": "beta-1.0.0",
   "tasks": {
     "dev": "deno run --allow-read --allow-net --watch tests/index.ts"
+  },
+  "imports": {
+    "@lang/": "./src/lang/",
+    "@typings": "./src/typings.ts",
+    "@lexer/": "./src/lexer/",
+    "@parser/": "./src/parser/",
+    "@utils": "./src/utils.ts",
+    "@ast": "./src/ast.ts"
   }
 }
