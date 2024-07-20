@@ -1,6 +1,7 @@
 import { ScrapCall } from "@lang/elements/values/call.ts"
 import { ScrapVariable } from "@lang/elements/entities/variable.ts"
 import { DefinedFunction, ScrapEntity } from "@lang/elements/commons.ts"
+import { AssignmentExpression } from "@lang/elements/values/assignment.ts"
 
 /**
  * Converts the type parameter to a possible null type
@@ -27,6 +28,8 @@ export interface Nameable extends ScrapEntity {
     name: string
 }
 
+export type ValidFunctionBodyValues = DefinedFunction | ScrapVariable | ScrapCall | AssignmentExpression
+
 /**
  * Represents a function parameter
  * 
@@ -38,11 +41,6 @@ export interface ScrapParam {
 }
 
 export type AccessorModifiers = "public" | "private" | "protected"
-
-export interface ScrapModuleEntity {
-    entityType: ScrapFunction | ScrapEntity
-    exports: boolean
-}
 
 export interface ScrapClassEntityProps {
     accessor: AccessorModifiers,
