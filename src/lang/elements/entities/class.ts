@@ -35,20 +35,24 @@ import { ScrapClassEntityProps } from "@typings"
  */
 export class ScrapClass extends ScrapEntity {
     private entities: ScrapClassEntityProps[]
+    private options: { inherits?: ScrapClass, implements?: string }
     private scope: Scope
     private hasConstructor: boolean
 
     public constructor(
-        className: string, entities: ScrapClassEntityProps[], scope: Scope,
+        className: string, entities: ScrapClassEntityProps[],
+        options: { inherits?: ScrapClass, implements?: string }, scope: Scope,
         hasConstructor: boolean
     ) {
         super(className)
         this.entities = entities
+        this.options = options
         this.scope = scope
         this.hasConstructor = hasConstructor
     }
 
     public get getEntities() { return this.entities }
+    public get getOptions() { return this.options }
     public get getScope() { return this.scope }
     public get getHasConstructor() { return this.hasConstructor }
 }
