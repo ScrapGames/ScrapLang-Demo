@@ -19,5 +19,19 @@
       "body": "console.log(this.cursor.currentTok)",
 	  "description": "Prints the currentTok content",
 	  "prefix": ["curtt"]
-    }
+    },
+
+	"slog": {
+		"body": "std::log($0)",
+		"description": "Log output to console",
+		"prefix": "slog",
+		"scope": "scraplang"
+	},
+	
+	"log": {
+		"body": "std::log($0)",
+		"description": "Log output to console",
+		"prefix": "log",
+		"scope": "scraplang"
+	}
 }
