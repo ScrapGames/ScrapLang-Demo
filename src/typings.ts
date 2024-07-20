@@ -28,7 +28,7 @@ export interface Nameable extends ScrapEntity {
     name: string
 }
 
-export type ValidFunctionBodyValues = DefinedFunction | ScrapVariable | ScrapCall | AssignmentExpression
+export type AllowedBlockEntities = DefinedFunction | ScrapVariable | ScrapCall | AssignmentExpression
 
 /**
  * Represents a function parameter
