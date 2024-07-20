@@ -699,29 +699,18 @@ export default class Parser {
    *
    * @returns A `ReferenceExpression` expression
    */
-  private parseReference(scope: Scope): exp.ScrapReference {
-    this.nextToken() // eat '&'
-    const referenceTo = this.cursor.currentTok
-    if (referenceTo.type !== "IdentifierName")
-      this.scrapParseError("A reference cant only points to an already existent variable")
+  private parseReference(scope: Scope): ScrapReference {
+    const varName = this.expectsType("IdentifierName", "Expected variable name")
+    const target = scope.getReference(varName.content)
+    this.nextToken() // eat variable name (prepare for next parsing element)
 
-    this.parseIdentifier(scope)
+    if (!target)
+      this.scrapReferenceError(varName)
 
-    return new exp.ScrapReference(referenceTo.content)
-  }
+    if (!(target instanceof ScrapVariable))
+      this.scrapParseError("A reference can only points to a variable")
 
-  /**
-   * Parses a return statement
-   * @explain
-   * - A `return` statement is used only inside a function body to indicate that the execution of that variable must stop
-   *
-   * - The `return` statement can be used to return an `Expression` from the function where `return` keyword was placed too.
-   *
-   * @returns An `Expression`
-   */
-  private parseReturn(scope: Scope): exp.ScrapValue {
-    this.nextToken() // eat 'return' keyword
-    return this.parseExpr(scope)
+    return new ScrapReference(target)
   }
 
   private parseArrayAccessor(accessedArray: exp.ScrapArray<exp.ScrapValue>, scope: Scope): exp.ScrapArrayAccess {

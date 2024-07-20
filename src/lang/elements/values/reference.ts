@@ -13,7 +13,9 @@ import { ScrapValue } from "@lang/elements/commons.ts"
  * // now `myNumber` value is 50
  */
 export class ScrapReference extends ScrapValue {
-    public constructor(referenceTo: string) {
+    public constructor(referenceTo: ScrapVariable) {
         super(referenceTo)
     }
+
+    public get getReferencedVar(): ScrapVariable { return this.value as ScrapVariable }
 }
