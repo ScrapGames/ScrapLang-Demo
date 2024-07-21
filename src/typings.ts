@@ -1,7 +1,7 @@
 import { ScrapCall } from "@lang/elements/values/call.ts"
 import { ScrapVariable } from "@lang/elements/entities/variable.ts"
 import { DefinedFunction, ScrapEntity } from "@lang/elements/commons.ts"
-import { AssignmentExpression } from "@lang/elements/values/assignment.ts"
+import { ReassignmentExpression } from "@lang/elements/values/reassignment.ts"
 
 /**
  * Converts the type parameter to a possible null type

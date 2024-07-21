@@ -1,5 +1,5 @@
-import Lexer, { Token } from "../lexer/lexer.ts"
-import { Cursor } from "../utils.ts"
+import Lexer, { Token } from "@lexer/lexer.ts"
+import { Cursor } from "@utils"
 
 export default class ParserCursor extends Cursor<Token> {
 

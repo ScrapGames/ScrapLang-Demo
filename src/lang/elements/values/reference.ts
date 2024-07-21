@@ -1,4 +1,5 @@
 import { ScrapValue } from "@lang/elements/commons.ts"
+import { ScrapVariable } from "@lang/elements/entities/variable.ts"
 
 /**
  * Represent a reference to a variable

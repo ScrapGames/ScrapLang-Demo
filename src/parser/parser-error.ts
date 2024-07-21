@@ -1,4 +1,4 @@
-import { Token } from "../lexer/lexer.ts"
+import { Token } from "@lexer/lexer.ts"
 
 export default class ParsingError extends Error {
     public constructor(reason: string, wrongToken: Token) {
