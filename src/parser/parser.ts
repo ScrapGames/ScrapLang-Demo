@@ -669,27 +669,24 @@ export default class Parser {
     return newVariable
   }
 
-  private parseDataType() {
-    this.expectsType("IdentifierName", "next", "Missing data type after colon ':'")
-
-    return this.nextToken() // eat data type
-  }
-
-  private parseAssignment(varCandidate: ValidEntities, scope: Scope): exp.AssignmentExpression {
-    if (!(varCandidate instanceof exp.ScrapVariable))
+  private parseReassignment(target: ScrapVariable, scope: Scope): ScrapValue {
+    if (!(target instanceof ScrapVariable))
       this.scrapParseError("A value that is not a variable can not be modified")
 
-    if (varCandidate.getVariableType === "constant")
+    if (target.getVariableType === "constant")
       this.scrapParseError("A constant can not change the value which points")
 
     this.nextToken() // eat '='
 
-    const assignedValue = this.parseExpr(scope)
+    const newValue = this.parseExpr(scope)
+    //const assignment = new ReassignmentExpression(target, newValue)
 
-    const assignment = new exp.AssignmentExpression(varCandidate, assignedValue)
+    if (target.getAssignedValue instanceof ScrapReference)
+      target.getAssignedValue.getReferencedVar.setAssignedValue = newValue
 
-    this.ast.pushNode(assignment)
-    return assignment
+    target.setAssignedValue = newValue
+
+    return newValue
   }
 
   /**
