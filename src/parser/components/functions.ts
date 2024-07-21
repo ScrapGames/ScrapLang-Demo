@@ -1,15 +1,14 @@
-import Parser from "@parser/parser.ts"
 
-import { ScrapParam, ValidFunctionBodyValues } from "@typings"
+import { ScrapParam, AllowedBlockEntities } from "@typings"
 
 import { Scope } from "@lang/scope.ts"
+
+import Parser from "@parser/parser.ts"
 import { Keywords, Tokens } from "@lexer/lexer.ts"
 
-import { ScrapCall } from "@lang/elements/values/call.ts"
 import { ScrapUndefined } from "@lang/elements/values/absence.ts"
 import { ScrapVariable } from "@lang/elements/entities/variable.ts"
 import { DefinedFunction, ScrapValue } from "@lang/elements/commons.ts"
-import { AssignmentExpression } from "@lang/elements/values/assignment.ts";
 
 export function parseAsync(parser: Parser, isMethod: boolean, isStatic: boolean, scope: Scope): DefinedFunction {
   parser.expectsContent(Keywords.FN, "'async' keywords is only applicable to functions")
@@ -49,20 +48,18 @@ export function parseParamList(parser: Parser) {
  * @param scope scope where variabled are saved and references are searched
  * @returns An allowed element inside a function body: they can be: other `DefinedFunctions`, `ScrapVariables` or `ScrapCalls` to any function
  */
-function parseFunctionEntity(parser: Parser, scope: Scope): ValidFunctionBodyValues {
+function parseFunctionEntity(parser: Parser, scope: Scope): AllowedBlockEntities {
   const toBeParsedTok = parser.cursor.currentTok
 
   if (toBeParsedTok.type === "IdentifierName") {
     const parsedId = parser.parseIdentifier(scope)
-    if (!(parsedId instanceof AssignmentExpression) && !(parsedId instanceof ScrapCall))
-      parser.scrapParseError("Only identifier which are function calls or assignments are allowed inside a function body")
 
-    return parsedId
+    return parsedId as AllowedBlockEntities //! temporal casting technique, will be removed in the future
   } else {
     switch (toBeParsedTok.content) {
       case Keywords.FN:
       case Keywords.VAR:
-      case Keywords.CONST: return parser.parseStatement(scope) as ValidFunctionBodyValues
+      case Keywords.CONST: return parser.parseStatement(scope) as AllowedBlockEntities
 
       default: parser.scrapParseError("Only 'fn', 'var', 'const', function calls and assignments are allowed inside a function body")
     }
@@ -74,9 +71,9 @@ function parseFunctionEntity(parser: Parser, scope: Scope): ValidFunctionBodyVal
  * @param isMethod
  * @param scope `Scope` where the function can registry variables that has been declared inside his body
  */
-export function parseFunctionBody(parser: Parser, isMethod: boolean, scope: Scope): { body: ValidFunctionBodyValues[], return: ScrapValue } {  
-  const body: ValidFunctionBodyValues[] = []
-  let parsedVal: ValidFunctionBodyValues
+export function parseFunctionBody(parser: Parser, isMethod: boolean, scope: Scope): { body: AllowedBlockEntities[], return: ScrapValue } {  
+  const body: AllowedBlockEntities[] = []
+  let parsedVal: AllowedBlockEntities
 
   while (parser.cursor.currentTok.content !== Tokens.RBRACE) {
     if (parser.cursor.currentTok.content === Keywords.RETURN) {
