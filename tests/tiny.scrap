@@ -1,5 +1,15 @@
-fn main(args: ...String) {
-  var myBruhConstant = 10
+fn test() {
+  return "return"
+}
 
-  myBruhConstant = 20
+fn main() {
+  var num1 = 10
+  var num2 = test
+  var num3 = &num2
+
+  num2 = 60
+
+  num3 = 50
+
+  std::log(num2)
 }
