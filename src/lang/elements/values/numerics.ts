@@ -1,4 +1,4 @@
-import { ScrapValue } from "@lang/elements/commons.ts"
+import { ScrapPrimitive } from "@lang/elements/commons.ts"
 
 /**
  * Represent an integer value
@@ -6,7 +6,7 @@ import { ScrapValue } from "@lang/elements/commons.ts"
  * @example
  * 1000, 0o777112
  */
-export class ScrapInteger extends ScrapValue {
+export class ScrapInteger extends ScrapPrimitive {
     public constructor(val: number) {
         super(val)
     }
@@ -20,7 +20,7 @@ export class ScrapInteger extends ScrapValue {
  * @example
  * 1.1, 2.20, 0xb000.f
  */
-export class ScrapFloat extends ScrapValue {
+export class ScrapFloat extends ScrapPrimitive {
     public constructor(val: number) {
         super(val)
     }

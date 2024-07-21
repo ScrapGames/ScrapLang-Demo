@@ -1,9 +1,9 @@
-import { ScrapValue } from "@lang/elements/commons.ts"
+import { ScrapPrimitive } from "@lang/elements/commons.ts"
 
 /**
  * Represent a char value. Which is a value that stores a single character and require 1 byte
  */
-export class ScrapChar extends ScrapValue {
+export class ScrapChar extends ScrapPrimitive {
     private readonly length: number = 1
     private readonly size: number = 4
 
@@ -20,7 +20,7 @@ export class ScrapChar extends ScrapValue {
  * @example
  * const myString = "Hello, World!"
  */
-export class ScrapString extends ScrapValue {
+export class ScrapString extends ScrapPrimitive {
     private readonly length: number
     private readonly size: number
 

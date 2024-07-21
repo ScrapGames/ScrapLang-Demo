@@ -28,7 +28,9 @@ export interface Nameable extends ScrapEntity {
     name: string
 }
 
-export type AllowedBlockEntities = DefinedFunction | ScrapVariable | ScrapCall | AssignmentExpression
+export type Primitive = number | string | boolean | null | undefined
+
+export type AllowedBlockEntities = DefinedFunction | ScrapVariable | ScrapCall | ReassignmentExpression
 
 /**
  * Represents a function parameter

@@ -1,9 +1,9 @@
-import { ScrapValue } from "@lang/elements/commons.ts"
+import { ScrapPrimitive, ScrapValue } from "@lang/elements/commons.ts"
 
 /**
  * Represent a true value
  */
-export class ScrapTrue extends ScrapValue {
+export class ScrapTrue extends ScrapPrimitive {
     public constructor() {
         super(true)
     }
@@ -14,7 +14,7 @@ export class ScrapTrue extends ScrapValue {
 /**
  * Reprents a false value
  */
-export class ScrapFalse extends ScrapValue {
+export class ScrapFalse extends ScrapPrimitive {
     public constructor() {
         super(false)
     }

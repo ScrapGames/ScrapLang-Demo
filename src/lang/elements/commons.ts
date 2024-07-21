@@ -26,7 +26,17 @@ export class ScrapValue {
     }
 
     public get getValue() { return this.value }
+    public toString() { this.value + "" }
 }
+
+export class ScrapPrimitive extends ScrapValue {    
+    public constructor(value: Primitive) {
+        super(value)
+    }
+
+    public get getValue() { return this.value as Primitive }
+}
+
 
 /**
  * Represents a code entity that can handle / contain blocks of code, it can be:
@@ -43,6 +53,28 @@ export class ScrapEntity implements Nameable {
 }
 
 /**
+ * Represent a literal object expression. Which is a way to write objects in a literal way assigning value to keys
+ * 
+ * @example
+ * const myObject = {
+ *  a: 10,
+ *  b: 20,
+ *  c: "Hello, World!"
+ * }
+ */
+export class ScrapObject extends ScrapValue {
+
+    prototype: Nullable<ScrapObject>
+
+    public constructor(prototype: Nullable<ScrapObject>, keyValuePairs?: Map<string, ScrapValue>) {
+        super(keyValuePairs)
+        this.prototype = prototype
+    }
+
+    public get getValue() { return this.value as Map<string, ScrapValue> }
+}
+
+/**
  * Represent a function value or declaration.
  * 
  * A function can be used as a value. This means that can be assigned to a variable.
@@ -53,11 +85,12 @@ export class ScrapEntity implements Nameable {
  * 
  * const myFunctionInVariable = myFunction
  */
-export class ScrapFunction extends ScrapValue implements Nameable {
+export class ScrapFunction extends ScrapObject implements Nameable {
     name: string
 
+// TODO: gives the constructor a better initial value
     public constructor(name: string) {
-        super(undefined)
+        super(null)
         this.name = name
     }
 }
@@ -86,6 +119,7 @@ export class DefinedFunction extends ScrapFunction {
     public get getReturnType() { return this.returnExpression }
 
     public set setReturnType(returnValue: ScrapValue) { this.returnExpression = returnValue }
+    public toString() { return this.name }
 }
 
 /**
