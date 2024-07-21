@@ -304,51 +304,33 @@ export default class Parser {
    * 
    * @returns A new function statement
    */
-  public parseFunction(_mustAwait: boolean, isMethod: boolean, isStatic: boolean, scope: Scope): exp.DefinedFunction {
-    const params: ScrapParam[] = []
+  public parseFunction(_mustAwait: boolean, isMethod: boolean, _isStatic: boolean, scope: Scope): DefinedFunction {
+    const fName = this.expectsType("IdentifierName", "Missing function name").content
 
-    const fName = this.cursor.currentTok.content
+    this.expectsContent(Tokens.LPAREN, "Missing parameter list")
 
-    // we admit that the name can be only 2 keywords
-    // allowing be possible make constructor and destructor function for classes
-    const isKeywordName = this.cursor.currentTok.content === Keywords.CONSTRUCTOR || this.cursor.currentTok.content === Keywords.DESTRUCTOR
-    if (!isMethod) {
-      if (isKeywordName)
-        this.scrapParseError(`'${fName}' as function name is not allowed outside classes`)
-    } else if (this.cursor.currentTok.type !== "IdentifierName") {
-      this.scrapParseError("Function name expected")
-    }
-
-    if (this.nextToken().content !== Tokens.LPAREN)
-      this.scrapParseError("Missing function parameters")
-
-    if (isMethod && isStatic)
-      params.push({ pName: "this", pType: exp.ScrapUndefined }) //! Provisional value for 'pType'
-
-    if (this.nextToken().content !== Tokens.RPAREN)
-      this.parseParamList(params)
-
-    if (this.cursor.next().content === Tokens.COLON) {
-      do {
-        this.nextToken()
-      } while (this.cursor.currentTok.content !== Tokens.LBRACE)
-    }
-
-    if (this.nextToken().content !== Tokens.LBRACE)
-      this.scrapParseError("Missing function body open")
+    const areParameters = this.cursor.next().content !== Tokens.RPAREN
+    const params: ScrapParam[] = areParameters ? parseParamList(this) : []
     
-    this.nextToken() // eat '{'
+    if (!areParameters) {
+      this.nextToken() // eat '(' if there are not parameters
+    }
     
+    
+    this.expectsContent(Tokens.LBRACE, "Missing function body open")
+
     const fScope = createEmptyScope(scope, fName)
-    const functionBody: (exp.ScrapValue | exp.Entity)[] = []
-    const returnExpression = this.parseFunctionBody(isMethod, functionBody, fScope)
+    //params.forEach(param => fScope.addEntry(param.pName, new ScrapUndefined()))
 
-    this.nextToken() // eat '}'
+    this.nextToken() // eat '{' (function body beings)
 
-    const newFunction = new exp.DefinedFunction(fName, params, functionBody, fScope, returnExpression)
+    const { body, return: returnExpression } = parseFunctionBody(this, isMethod, fScope)
+
+    this.nextToken() // eat '}' (function body ends)
+
+    const newFunction = new DefinedFunction(fName, params, body, fScope, returnExpression)
 
     this.functions.push(newFunction)
-    this.ast.pushNode(newFunction)
     return newFunction
   }
 
