@@ -33,5 +33,16 @@
 		"description": "Log output to console",
 		"prefix": "log",
 		"scope": "scraplang"
+	},
+
+	"main": {
+		"body": [
+			"fn main() {",
+			"    $0",
+			"}"
+		],
+		"description": "Make a program entry point",
+		"prefix": "main",
+		"scope": "scraplang"
 	}
 }
