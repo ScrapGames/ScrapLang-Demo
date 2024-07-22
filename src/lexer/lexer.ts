@@ -56,7 +56,14 @@ export enum Tokens {
   UNDERSCORE    = '_',
 
   // Spacials Tokens (e.g: module accessor)
-  MODULE_ACCESSOR = "::"
+  MODULE_ACCESSOR = "::",
+  INCREMENT       = "++",
+  DECREMENT       = "--",
+
+  ADD_ASSIGN      = "+=",
+  MINUS_ASSIGN    = "-=",
+  MULT_ASSIGN     = "*=",
+  DIV_ASSIGN      = "/="
 }
 
 export enum Keywords {
@@ -243,6 +250,50 @@ export default class Lexer {
 
       this.nextToken()
     }
+  }
+
+  private scanOperationalAssign() {
+    if (this.checkNext(Tokens.EQUAL))
+      return this.createToken("Operator", this.cursor.currentTok + this.nextToken())
+
+    return this.createToken("Operator", this.cursor.currentTok)
+  }
+
+  /**
+   * Analize if the operator is an increment or decrement operator
+   * @returns 
+   */
+  private scanAdjustOperator() {
+    switch (this.cursor.currentTok) {
+      case Tokens.PLUS:
+      case Tokens.MINUS: {
+        if (this.checkNext(this.cursor.currentTok))
+          return this.createToken("Operator", this.cursor.currentTok + this.nextToken())
+      }
+    }
+
+    return this.scanOperationalAssign()
+  }
+
+  /** 
+   * This method inits a call chain of other two methods. These methods analize the type of binary arithmetic operator which correspond to the source
+   * 
+   * 1. The chain starts calling this method, which analize if the current token is `-` and the next token is a '>' token.
+   *    If this condition returns true, then token is a lambda arrow `->`
+   * 
+   * 2. Additionally, also checks for 
+   * 
+   * 2. The second check that performs (if the first fails) is call `scapOperator` method, which will check if the next token has the same content that current tok
+   *    If this condition returns true, then the token is an operator that increment `++` or decrement `--` a value
+   * 
+   * 3. Finally if previous checks fails, simply return the current tok as an operator, e.g: plus `+` or minus `-`
+   * @returns 
+   */
+  private initOperatorScan() {
+    if (this.cursor.currentTok === Tokens.MINUS && this.checkNext(Tokens.GREATER))
+      return this.createToken("Token", this.cursor.currentTok + this.nextToken())
+
+    return this.scanAdjustOperator()
   }
 
   private scanBinary() {
@@ -435,45 +486,32 @@ export default class Lexer {
         } break
   
         case Tokens.GREATER:
-        case Tokens.LESS:
-        case Tokens.PLUS: // Minus char is checked below instead after Tokens.PLUS
-        case Tokens.STAR: {
-          tokens.push({ type: "Operator", content: this.cursor.currentTok, line: this.line, pos: this.cursor.pos })
-        } break
-  
-        
+        case Tokens.LESS: break
+        case Tokens.PLUS:
+        case Tokens.MINUS:
+        case Tokens.STAR:
         case Tokens.SLASH: {
           if (this.checkNext(Tokens.SLASH)) {
             do {
               this.cursor.currentTok = this.consume() // manual assingment instead use `nextToken` to avoid overlaped comparations
             } while (this.cursor.currentTok !== '\n' && !this.cursor.isEOF())
           } else if (this.checkNext(Tokens.STAR)) {
-            for (;;) {
+            let stillIgnoring = true
+            while (stillIgnoring) {
+              this.nextToken()
+
               if (this.cursor.currentTok === Tokens.STAR) {
-                this.cursor.currentTok = this.consume() // manual assignment instead use `nextToken` to avoid overlaped comparations
-                if (this.cursor.currentTok === Tokens.SLASH)
-                  break
-              } else this.nextToken()
+                if (this.checkNext(Tokens.SLASH)) {
+                  this.cursor.currentTok = this.cursor.doubleConsume()
+                  stillIgnoring = false
+                }
+              }
             }
-  
-            if (this.cursor.isEOF())
-              continue // avoid infinite looping
-            else this.nextToken()
-          } else {
-            tokens.push({ type: "Operator", content: this.cursor.currentTok, line: this.line, pos: this.cursor.pos })
           }
-        } break
-  
-        /**
-         * Minus character (-) is checked below all other operators because it can be followed by a greater character ('>')
-         * This means that is a lambda function
-         */
-        case Tokens.MINUS: {
-          if (this.checkNext(Tokens.GREATER)) {
-            this.nextToken()
-            tokens.push({ type: "Token", content: "->", line: this.line, pos: this.cursor.pos })
-          } else
-            tokens.push({ type: "Operator", content: this.cursor.currentTok, line: this.line, pos: this.cursor.pos })
+
+          if (this.cursor.currentTok === "\n")
+            continue
+          tokens.push(this.initOperatorScan())
         } break
   
         case Tokens.QUOTE: {
