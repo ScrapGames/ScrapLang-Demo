@@ -705,36 +705,46 @@ export default class Parser {
     return new exp.ScrapArrayAccess(accessedArray, position)
   }
 
-  /**
-   * Parses if the eated identifier exists as a valid function or variable in the current or upper scope(s)
-   *
-   * @returns must be still resolved
-   * TODO: some logic of this method must be placed at `Interpreter`
-   */
-  private parseIdentifier(scope: Scope): exp.ScrapValue {
-    if (this.cursor.next().content === Tokens.LPAREN) {
+  private parseCall(scope: Scope, moduleScope?: Scope) {
+    const functionName = this.cursor.currentTok
+    const calledFunction = moduleScope ? moduleScope.getReference(functionName.content) : scope.getReference(functionName.content)
 
-      const functionName = this.cursor.currentTok
-      const calledFunction = scope.getReference(functionName.content)
+    if (!calledFunction)
+      this.scrapReferenceError(functionName)
 
-      if (!calledFunction)
-        this.scrapReferenceError(functionName)
+    if (!(calledFunction instanceof ScrapFunction) && !((calledFunction as ScrapVariable).getAssignedValue instanceof ScrapFunction)) {
+      this.scrapParseError(`${functionName.content} is not callable since is not a function`)
+    }
 
-      if (!(calledFunction instanceof exp.ScrapFunction))
-        this.scrapParseError(`${functionName.content} is not callable since is not a function`)
+    this.nextToken() // eat the function name
+    this.nextToken() // eat '('
 
-      this.nextToken() // eat the function name
-      this.nextToken() // eat '('
+    const args: ScrapValue[] = []
 
-      const args: exp.ScrapValue[] = []
+    if (this.cursor.currentTok.content !== Tokens.RPAREN) {
+      do {
+        args.push(this.parseExpr(scope))
+        if (this.cursor.currentTok.content === Tokens.COMMA)
+          this.nextToken()
+      } while (this.cursor.currentTok.content !== Tokens.RPAREN)
+    }
 
-      if (this.cursor.currentTok.content !== Tokens.RPAREN) {
-        do {
-          args.push(this.parseExpr(scope))
-          if (this.cursor.currentTok.content === Tokens.COMMA)
-            this.nextToken()
-        } while (this.cursor.currentTok.content !== Tokens.RPAREN)
-      }
+    if (calledFunction instanceof ScrapNative) {
+      if (calledFunction.getArgsCount !== true && calledFunction.getArgsCount !== args.length)
+        this.scrapParseError(`'${calledFunction.name}' expects ${calledFunction.getArgsCount} arguments, but has received ${args.length}`)
+    }
+
+    this.nextToken() // eat ')'
+
+    let calledResolved: ScrapFunction
+
+    if ((calledFunction as ScrapVariable).getAssignedValue instanceof ScrapFunction)
+      calledResolved = (calledFunction as ScrapVariable).getAssignedValue as ScrapFunction
+    else
+      calledResolved = calledFunction as ScrapFunction
+
+    return new ScrapCall(scope.getOwner, calledResolved, args)
+  }
 
       this.nextToken() // eat ')'
 
@@ -766,17 +776,16 @@ export default class Parser {
       }
   public parseVariableRef(scope: Scope, moduleScope?: Scope): ScrapValue {
     const refName = this.cursor.currentTok
-    const accessor = this.nextToken().content // eat the identifier
+    const accessor = this.nextToken() // eat the identifier
     const ref = moduleScope ? moduleScope.getReference(refName.content) : scope.getReference(refName.content)
-    
+
     if (!ref)
       this.scrapReferenceError(refName)
 
-    switch (accessor) {
-      case Tokens.EQUAL: return this.parseAssignment(ref as ScrapVariable, scope)
+    switch (accessor.content) {
+      case Tokens.EQUAL: return this.parseReassignment(ref as ScrapVariable, scope)
       case Tokens.MODULE_ACCESSOR: return this.parseModuleAccessor(scope, ref as ScrapModule)
     }
-
 
     if (ref instanceof ScrapVariable) {
       // If the referenced variable contains a pritimive value
@@ -795,6 +804,19 @@ export default class Parser {
     // TODO: IMPROVE THE VALUE RETURN WITHOUT CASTING
     // TODO: OR ALMOST DONT CAST IN A NASTY WAY LIKE THIS
     return ref as unknown as ScrapValue
+  }
+
+  /**
+   * `parseIdentifier` consists on two parts, the first, who parses function calls, and the other one, who parses an `IdentifierName meaning that the parsed id is an already existent variable
+   *
+   * @param moduleScope If the accessed variable belongs to a module is neccessary the module scope to access it
+   * @returns must be still resolved
+   */
+  public parseIdentifier(scope: Scope, moduleScope?: Scope): ScrapValue {
+    if (this.cursor.next().content === Tokens.LPAREN)
+      return this.parseCall(scope, moduleScope)
+
+    return this.parseVariableRef(scope, moduleScope)
   }
     switch (this.cursor.currentTok.content) {
       case Tokens.LBRACE: return this.parseLiteralObject(scope)
