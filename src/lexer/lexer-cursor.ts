@@ -16,6 +16,10 @@ export default class LexerCursor extends Cursor<string> {
     return this.source[this.pos++]
   }
 
+  public doubleConsume(): string {
+    return this.source[this.pos += 2]
+  }
+
   public previous(): string {
     return this.source[this.pos - 2]
   }
