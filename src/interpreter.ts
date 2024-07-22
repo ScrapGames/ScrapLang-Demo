@@ -6,8 +6,8 @@ import { ScrapUndefined } from "@lang/elements/values/absence.ts"
 import { DefinedModule } from "@lang/elements/entities/modules.ts"
 import { ScrapVariable } from "@lang/elements/entities/variable.ts"
 import { ScrapReference } from "@lang/elements/values/reference.ts"
-import { ReassignmentExpression } from "./lang/elements/values/reassignment.ts"
 import { ScrapArray, ScrapArrayAccess } from "@lang/elements/values/array.ts"
+import { ReassignmentExpression } from "@lang/elements/values/reassignment.ts"
 import { DefinedFunction, ScrapEntity, ScrapNative, ScrapValue } from "@lang/elements/commons.ts"
 
 export class Interpreter {
