@@ -535,44 +535,35 @@ export default class Parser {
 
     this.nextToken() // eat ')'
 
-    let calledResolved: ScrapFunction
-
-    if ((calledFunction as ScrapVariable).getAssignedValue instanceof ScrapFunction)
-      calledResolved = (calledFunction as ScrapVariable).getAssignedValue as ScrapFunction
-    else
-      calledResolved = calledFunction as ScrapFunction
-
-    return new ScrapCall(scope.getOwner, calledResolved, args)
+    return new ScrapCall(
+      scope.getOwner,
+      calledFunction as ScrapFunction,
+      args
+    )
   }
 
-      this.nextToken() // eat ')'
+  private resolveArrayAccessor(array: ScrapArray<ScrapValue>, scope: Scope) {
+    if (!(array instanceof ScrapArray))
+      this.scrapParseError("Can not apply an accessor expression to a value which is not an Array nor and Object")
 
-      return new exp.ScrapCall(scope.getOwner, calledFunction, args)
+    const newArrayAccessor = this.parseArrayAccessor(array, scope)
 
-    }
+    return newArrayAccessor
+  }
 
-    //* if is a simple variable reference
-    if (!scope.searchReference(this.cursor.currentTok.content))
-      this.scrapReferenceError(this.cursor.currentTok)
+  private parseModuleAccessor(accessedModule: ScrapModule, scope: Scope): ScrapValue {
+    const moduleEntityTok = this.nextToken()
+    const moduleEntity = accessedModule.getScope.getReference(moduleEntityTok.content)
 
-    const variableTok = this.cursor.currentTok
-    this.nextToken() // eat the identifier
+    if (!moduleEntity)
+      this.scrapReferenceError(moduleEntityTok)
 
-    const variable = scope.getReference(variableTok.content)
+    if (!accessedModule.isExported(moduleEntity.name))
+      this.scrapParseError(`Module entity '${moduleEntity.name}' exists but is not exported by '${accessedModule.name}'`)
 
-    if (!variable)
-      this.scrapReferenceError(variableTok)
+    return this.parseIdentifier(scope, accessedModule.getScope)
+  }
 
-    switch (this.cursor.currentTok.content) {
-      case Tokens.EQUAL: return this.parseAssignment(variable, scope)
-      case Tokens.LSQRBR: {
-        if (!((variable as exp.ScrapVariable).getAssignedValue instanceof exp.ScrapArray))
-          this.scrapParseError(`${variable}`)
-
-        const newArrayAccessor = this.parseArrayAccessor((variable as exp.ScrapVariable).getAssignedValue as exp.ScrapArray<exp.ScrapValue>, scope)
-        this.ast.pushNode(newArrayAccessor)
-        return newArrayAccessor
-      }
   public parseVariableRef(scope: Scope, moduleScope?: Scope): ScrapValue {
     const refName = this.cursor.currentTok
     const accessor = this.nextToken() // eat the identifier
