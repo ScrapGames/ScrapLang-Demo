@@ -7,20 +7,41 @@
  * this results on an error, since the const keyword represents a declaration instruction and cant be assigned.
  */
 
-import * as exp from "../lang/expressions.ts"
+import type { Ajustable, Nameable, ScrapClassEntityProps, ScrapParam } from "@typings"
 
-import { UndefinedReferenceError, Scope, createEmptyScope, type ValidEntities } from "../lang/scope.ts"
+import { AST } from "@ast"
+import { inArray } from "@utils"
 
-import Lexer from "../lexer/lexer.ts"
-import { Keywords, Token, Tokens } from "../lexer/lexer.ts"
-import type { ScrapClassMethod, ScrapClassProperty, ScrapParam, AccessorModifiers, ScrapClassEntity } from "../typings.ts"
+import Lexer from "@lexer/lexer.ts"
+import { TokenType } from "@lexer/lexer.ts"
+import { Keywords, Token, Tokens } from "@lexer/lexer.ts"
 
-import * as pUtils from "./parser-utils.ts"
-import ParsingError from "./parser-error.ts"
-import ParserCursor from "./parser-cursor.ts"
+import * as pUtils from "@parser/parser-utils.ts"
+import ParsingError from "@parser/parser-error.ts"
+import ParserCursor from "@parser/parser-cursor.ts"
 
-import { inArray } from "../utils.ts"
-import { AST } from "../ast/ast.ts"
+import { parseClassBody } from "@parser/components/class.ts"
+import { parseModuleBody } from "@parser/components/module.ts"
+import { parseAsync, parseFunctionBody, parseParamList } from "@parser/components/functions.ts"
+
+import { UndefinedReferenceError, Scope, createEmptyScope } from "@lang/scope.ts"
+
+// Elements of ScrapLang
+import { ScrapCall } from "@lang/elements/values/call.ts"
+import { ScrapFunction } from "@lang/elements/commons.ts"
+import { DefinedFunction } from "@lang/elements/commons.ts"
+import { ScrapClass } from "@lang/elements/entities/class.ts"
+import { ScrapString } from "@lang/elements/values/textuals.ts"
+import { ScrapInteger } from "@lang/elements/values/numerics.ts"
+import { ScrapUndefined } from "@lang/elements/values/absence.ts"
+import { ScrapNative, ScrapValue } from "@lang/elements/commons.ts"
+import { ScrapVariable } from "@lang/elements/entities/variable.ts"
+import { ScrapReference } from "@lang/elements/values/reference.ts"
+import { BINARY_OPERATORS_PRECEDENCE } from "@lang/elements/commons.ts"
+import { ScrapArray, ScrapArrayAccess } from "@lang/elements/values/array.ts"
+import { DefinedModule, ScrapModule } from "@lang/elements/entities/modules.ts"
+import { ScrapEntity, ScrapObject } from "@lang/elements/commons.ts"
+
 
 export enum PrimitiveTypes {
   u8      = "u8",
