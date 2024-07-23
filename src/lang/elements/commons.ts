@@ -37,21 +37,6 @@ export class ScrapPrimitive extends ScrapValue {
     public get getValue() { return this.value as Primitive }
 }
 
-
-/**
- * Represents a code entity that can handle / contain blocks of code, it can be:
- *  - Class
- *  - Module
- *  - Variable (or constant) declaration
- */
-export class ScrapEntity implements Nameable {
-    name: string
-
-    public constructor(name: string) {
-        this.name = name
-    }
-}
-
 /**
  * Represent a literal object expression. Which is a way to write objects in a literal way assigning value to keys
  * 
@@ -72,6 +57,20 @@ export class ScrapObject extends ScrapValue {
     }
 
     public get getValue() { return this.value as Map<string, ScrapValue> }
+}
+
+/**
+ * Represents a code entity that can handle / contain blocks of code, it can be:
+ *  - Class
+ *  - Module
+ *  - Variable (or constant) declaration
+ */
+export class ScrapEntity implements Nameable {
+    name: string
+
+    public constructor(name: string) {
+        this.name = name
+    }
 }
 
 /**
