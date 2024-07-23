@@ -428,17 +428,15 @@ export default class Parser {
 
     const varTypeToken = this.nextToken() // eat 'var' or 'const' keyword
 
-
     switch (varTypeToken.content) {
       case Tokens.LSQRBR: this.parseArrayDestructuring(); break
       case Tokens.LBRACE: this.parseLiteralObject(scope); break
     }
-    
-    const name = this.cursor.currentTok.content
-      if (inArray(name, RESERVERD_VAR_NAMES))
-        this.scrapParseError(`'${name}' is not allowed as a variable declaration name.`)
 
-    const typeOrEqToken = this.nextToken()
+    const name = this.cursor.currentTok.content
+    if (inArray(name, RESERVERD_VAR_NAMES))
+      this.scrapParseError(`'${name}' is not allowed as a variable declaration name.`)
+
     if (this.cursor.next().content === Tokens.COLON) {
       this.nextToken()
       this.expectsType("IdentifierName", "Expected data type")
@@ -450,9 +448,8 @@ export default class Parser {
       this.nextToken() // eats data type or name in case variable is not constant
     
     this.nextToken() // eat '='
-    variableExpression = this.parseExpr(scope)
-
-    const newVariable = new exp.ScrapVariable(isConst ? "constant" : "variable", name, variableExpression)
+    
+    value = this.parseExpr(scope)
 
     return new ScrapVariable(isConst ? "constant" : "variable", name, value)
   }
