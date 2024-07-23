@@ -651,36 +651,17 @@ export default class Parser {
     }
   }
 
-  private parseStatement(scope: Scope, isPrimary: boolean): exp.Entity | exp.ScrapFunction {
-    if (isPrimary) {
-      switch (this.cursor.currentTok.content) {
-        case Keywords.ASYNC: {
-          if (this.nextToken().content !== Keywords.FN)
-            this.scrapParseError("'async' keywords is only applicable to functions")
+  public parseStatement(scope: Scope): Nameable {
+    switch (this.cursor.currentTok.content) {
+      case Keywords.VAR:    return this.parseVar(scope)
 
-          return this.parseFunction(true, false, false, scope)
-        }
-        case Keywords.FN: return this.parseFunction(false, false, false, scope)
-        case Keywords.CONST: return this.parseVar(scope)
-        case Keywords.CLASS: return this.parseClass(scope)
-        case Keywords.MODULE: return this.parseModule(scope)
+      case Keywords.ASYNC:  return parseAsync(this, false, false, scope)
+      case Keywords.FN:     return this.parseFunction(false, false, false, scope)
+      case Keywords.CONST:  return this.parseVar(scope)
+      case Keywords.CLASS:  return this.parseClass(scope)
+      case Keywords.MODULE: return this.parseModule(scope)
 
-        default: this.scrapParseError(`'${this.cursor.currentTok.content}' does not appear to be a valid primary statement`)
-      }
-    } else {
-      switch (this.cursor.currentTok.content) {
-        case Keywords.ASYNC: {
-          if (this.nextToken().content !== Keywords.FN)
-            this.scrapParseError("'async' keywords is only applicable to functions")
-
-          return this.parseFunction(true, false, false, scope)
-        }
-        case Keywords.FN: return this.parseFunction(false, false, false, scope)
-        case Keywords.CONST:
-        case Keywords.VAR: return this.parseVar(scope)
-
-        default: this.scrapParseError(`The ${this.cursor.currentTok.type} '${this.cursor.currentTok.content}' is not allowed in '${scope.getOwner}'`)
-      }
+      default: this.scrapParseError(`The ${this.cursor.currentTok.type} '${this.cursor.currentTok.content}' is not allowed in '${scope.getOwner}'`)
     }
   }
 
