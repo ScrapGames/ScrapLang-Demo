@@ -186,14 +186,6 @@ export default class Parser {
     return tokPrec;
   }
 
-  private parseBinaryExpression(_exprPrec: number, _lhs: exp.ScrapValue, _scope: Scope): exp.BinaryExpression {
-    let _tokPrec: number
-    let _binOp: Token
-    let _rsh: exp.ScrapValue
-
-    return new exp.BinaryExpression(new exp.ScrapInteger(1), new exp.ScrapInteger(0), '+')
-  }
-
   /**
    * As many variables will be declared as identifiers appear in the destructuring pattern
    */
