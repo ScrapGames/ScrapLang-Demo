@@ -520,9 +520,11 @@ export default class Lexer {
   
         case Tokens.QUOTE: {
           identifier = this.nextToken()
-          
-          while (this.nextToken() !== Tokens.QUOTE)
-            identifier += this.cursor.currentTok
+
+          if (!this.checkNext(Tokens.QUOTE)) {
+            while (this.nextToken() !== Tokens.QUOTE)
+              identifier += this.cursor.currentTok
+          }
   
           tokens.push({ type: "CharLiteral", content: identifier, line: this.line, pos: this.cursor.pos })
         } break
@@ -530,21 +532,24 @@ export default class Lexer {
         case Tokens.BACKSTICK: {
           identifier = this.nextToken()
   
-          while (this.nextToken() !== Tokens.BACKSTICK)
-            identifier += this.cursor.currentTok
-          
+          if (!this.checkNext(Tokens.BACKSTICK)) {
+            while (this.nextToken() !== Tokens.BACKSTICK)
+              identifier += this.cursor.currentTok
+          }
+
           tokens.push({ type: "StringLiteral", content: identifier, line: this.line, pos: this.cursor.pos })
         } break
   
         case Tokens.DQUOTE: {
-          identifier = this.nextToken()
+          if (!this.checkNext(Tokens.DQUOTE)) {
+            identifier = this.nextToken()
   
-          while (this.nextToken() !== Tokens.DQUOTE)
-            identifier += this.cursor.currentTok
-  
+            while (this.nextToken() !== Tokens.DQUOTE)
+              identifier += this.cursor.currentTok
+          }
           
           tokens.push({ type: "StringLiteral", content: identifier, line: this.line, pos: this.cursor.pos })
-  
+
         } break
   
         case Tokens.COLON: {
@@ -554,7 +559,7 @@ export default class Lexer {
           } else
             tokens.push({ type: "Token", content: this.cursor.currentTok, line: this.line, pos: this.cursor.pos })
         } break
-  
+
         case Tokens.DOT: {
           if (this.checkNext('.')) {
             this.nextToken()
