@@ -868,15 +868,14 @@ export default class Parser {
     switch (this.cursor.currentTok.type) {
       case "IdentifierName": return this.parseIdentifier(scope)
       case "NumericLiteral": return pUtils.parseNumber.call(this)
-      case "BinaryLiteral": return pUtils.parseBinary.call(this)
-      case "OctalLiteral": return pUtils.parseOctal.call(this)
-      case "HexaLiteral": return pUtils.parseHexa.call(this)
-      case "FloatLiteral": return pUtils.parseFloatNumber.call(this)
-      case "CharLiteral": return pUtils.parseChar.call(this)
-      case "StringLiteral": return pUtils.parseString.call(this)
-      case "TemplateString": return pUtils.parseString.call(this) // TODO: Make a parseTemplateString function
-      case "Operator": return new exp.BinaryExpression(new exp.ScrapInteger(20), new exp.ScrapInteger(30), '+')
-      case "Token": return this.parseToken(scope)
+      case "BinaryLiteral":  return pUtils.parseBinary.call(this)
+      case "OctalLiteral":   return pUtils.parseOctal.call(this)
+      case "HexaLiteral":    return pUtils.parseHexa.call(this)
+      case "FloatLiteral":   return pUtils.parseFloatNumber.call(this)
+      case "CharLiteral":    return pUtils.parseChar.call(this)
+      case "StringLiteral":  return pUtils.parseString.call(this)
+      case "Token":          return this.parseToken(scope)
+      //case "TemplateString": return pUtils.parseString.call(this) // TODO: Make a parseTemplateString function
 
       default: this.scrapParseError("Expected expression")
     }
