@@ -515,10 +515,6 @@ export default class Parser {
     if (!calledFunction)
       this.scrapReferenceError(functionName)
 
-    if (!(calledFunction instanceof ScrapFunction) && !((calledFunction as ScrapVariable).getAssignedValue instanceof ScrapFunction)) {
-      this.scrapParseError(`${functionName.content} is not callable since is not a function`)
-    }
-
     this.nextToken() // eat the function name
     this.nextToken() // eat '('
 
