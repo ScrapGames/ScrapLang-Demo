@@ -82,8 +82,8 @@ export default class Parser {
   lexer: Lexer
   cursor: ParserCursor
   warnings: string[]
-  functions: exp.ScrapFunction[]
-  mainModule: exp.ScrapModule
+  functions: ScrapFunction[]
+  mainModule: ScrapModule
   ast: AST
 
   public constructor(lexer: Lexer) {
@@ -91,7 +91,7 @@ export default class Parser {
     this.cursor = new ParserCursor(lexer)
     this.warnings = []
     this.functions = []
-    this.mainModule = new exp.ScrapModule("MainModule", createEmptyScope(null, "MainModule"))
+    this.mainModule = new ScrapModule("MainModule", createEmptyScope(null, "MainModule"))
     this.ast = new AST()
 
     this.cursor.currentTok = this.cursor.consume() // gives an initial value to the parser
@@ -178,7 +178,7 @@ export default class Parser {
    * # Still is an incompleted method
    */
   private getTokPrecedence() {
-    const tokPrec = exp.BINARY_OPERATORS_PRECEDENCE[this.cursor.currentTok.content as keyof typeof exp.BINARY_OPERATORS_PRECEDENCE]
+    const tokPrec = BINARY_OPERATORS_PRECEDENCE[this.cursor.currentTok.content as keyof typeof BINARY_OPERATORS_PRECEDENCE]
 
     if (tokPrec <= 0)
       return -1;
@@ -224,7 +224,7 @@ export default class Parser {
   private parseLiteralObject(scope: Scope) {
     this.nextToken() // eat '{'
     let keyName = ""
-    let valueExpression: exp.ScrapValue
+    let valueExpression: ScrapValue
     const keyValuePairs: [string, exp.ScrapValue][] = []
 
     while (this.cursor.currentTok.content !== Tokens.RBRACE) {
@@ -265,6 +265,8 @@ export default class Parser {
    * @returns A new `ScrapArray`
    */
   private parseLiteralArray(scope: Scope) {
+    const elements: ScrapValue[] = []
+
     this.nextToken() // eat '['
     const elements: exp.ScrapValue[] = []
 
@@ -279,7 +281,7 @@ export default class Parser {
 
     this.nextToken() // eat ']'
 
-    const newArray = new exp.ScrapArray(elements)
+    const newArray = new ScrapArray(elements)
 
     this.ast.pushNode(newArray)
     return newArray
@@ -416,7 +418,7 @@ export default class Parser {
    * A Module is a block of code that recursively can contains other modules or other statements, like function, constants, etc.
    * @returns A Module declaration for the AST
    */
-  private parseModule(scope: Scope): exp.ScrapModule {
+  private parseModule(scope: Scope): ScrapModule {
     this.nextToken() // eat 'module' keyword
 
     if (this.cursor.currentTok.type !== "IdentifierName")
@@ -435,7 +437,7 @@ export default class Parser {
 
     this.nextToken() // eat '}'
 
-    const newModule = new exp.DefinedModule(moduleName, body, mScope)
+    const newModule = new DefinedModule(moduleName, body, mScope, exports)
 
     this.ast.pushNode(newModule)
     return newModule
@@ -587,7 +589,7 @@ export default class Parser {
         const inheritedClassName = this.expectsType("IdentifierName", "next", "Identifier expected")
         const inheritedClass = scope.getReference(inheritedClassName.content)
 
-        if (!(inheritedClass instanceof exp.ScrapClass))
+        if (!(inheritedClass instanceof ScrapClass))
           this.scrapParseError("Identifier after extends must be an already declared class")
 
         options.inherits = inheritedClass
@@ -613,9 +615,9 @@ export default class Parser {
     const constructor = cScope.getReference("constructor")
 
     if (constructor)
-      (constructor as exp.DefinedFunction).setReturnType = new exp.ScrapString(className)
+      (constructor as DefinedFunction).setReturnType = new ScrapString(className)
 
-    const newClass = new exp.ScrapClass(className, classEntities, options, cScope, constructor !== undefined)
+    const newClass = new ScrapClass(className, classEntities, options, cScope, constructor !== undefined)
 
     this.ast.pushNode(newClass)
     return newClass
@@ -639,8 +641,8 @@ export default class Parser {
    *
    * @returns A `ScrapVariable` where the stored value will be `undefined` or an assigned value
    */
-  private parseVar(scope: Scope): exp.ScrapVariable {
-    let variableExpression: exp.ScrapValue = new exp.ScrapUndefined()
+  public parseVar(scope: Scope): ScrapVariable {
+    let value: ScrapValue = new ScrapUndefined()
     const isConst = this.cursor.currentTok.content === Keywords.CONST
 
     const varTypeToken = this.nextToken() // eat 'var' or 'const' keyword
@@ -713,17 +715,17 @@ export default class Parser {
     return new ScrapReference(target)
   }
 
-  private parseArrayAccessor(accessedArray: exp.ScrapArray<exp.ScrapValue>, scope: Scope): exp.ScrapArrayAccess {
+  private parseArrayAccessor(accessedArray: ScrapArray<ScrapValue>, scope: Scope): ScrapArrayAccess {
     this.nextToken() // eat '['
 
     const position = this.parseExpr(scope)
 
-    if (!(position instanceof exp.ScrapInteger))
+    if (!(position instanceof ScrapInteger))
       this.scrapParseError("Numeric value expected")
 
     this.nextToken() // eat ']'
 
-    return new exp.ScrapArrayAccess(accessedArray, position)
+    return new ScrapArrayAccess(accessedArray, position)
   }
 
   private parseCall(scope: Scope, moduleScope?: Scope) {
@@ -923,7 +925,7 @@ export default class Parser {
    * * Not parsed example: A function declared inside another function will not be parsed since `parseRoot` is not invoked inside function body's.
    * * Parsed example: `main` function, since it is not declared inside another entity, `parseRoot` will call the method who parse functions
    */
-  public parseRoot(scope: Scope): exp.ScrapFunction | exp.ScrapEntity {
+  public parseRoot(scope: Scope): ScrapFunction | ScrapEntity {
     switch (this.cursor.currentTok.content) {
       case Keywords.ASYNC:
       case Keywords.FN:
