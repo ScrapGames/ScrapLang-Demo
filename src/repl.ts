@@ -37,7 +37,7 @@ export function repl() {
             lexer.alsoScan("repl", input)
             parser.restart()
             try {
-                console.log(parser.parsePrimary(parser.mainModule.getScope))
+                console.log(parser.parseRoot(parser.mainModule.getScope))
             } catch (error) {
                 console.error("error:\n %s", error)
             }
