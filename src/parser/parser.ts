@@ -578,22 +578,15 @@ export default class Parser {
     }
 
     if (ref instanceof ScrapVariable) {
-      // If the referenced variable contains a pritimive value
-      // then the value is copied
-      if ((ref as ScrapVariable).getAssignedValue instanceof ScrapPrimitive)
-        return new ScrapValue((ref as ScrapVariable).getAssignedValue.getValue)
-      else
-        return ref.getAssignedValue
-      // in the other side, if the variable is an object (so is not an primitive)
-      // the value itself is returned
+      const varValue = ref.getAssignedValue
+
+      if (varValue instanceof ScrapObject)
+        return varValue
+      
+      return new ScrapValue(varValue.getValue)
     }
-    
-    // finally, if the refered value is not stored in a variable
-    // means that the value is an object, like a function.
-    // so the value itself is returned
-    // TODO: IMPROVE THE VALUE RETURN WITHOUT CASTING
-    // TODO: OR ALMOST DONT CAST IN A NASTY WAY LIKE THIS
-    return ref as unknown as ScrapValue
+
+    return ref as ScrapFunction
   }
 
   /**
