@@ -87,7 +87,7 @@ export class ScrapEntity implements Nameable {
 export class ScrapFunction extends ScrapObject implements Nameable {
     name: string
 
-// TODO: gives the constructor a better initial value
+    // TODO: gives the constructor a suitable initial value
     public constructor(name: string) {
         super(null)
         this.name = name
