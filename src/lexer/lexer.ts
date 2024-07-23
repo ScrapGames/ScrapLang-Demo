@@ -129,6 +129,65 @@ const VALID_HEXADECIMAL_END = [
   'A', 'B', 'C', 'D', 'E', 'F'
 ]
 
+function resolveIdentifier(identifier: string, line: number, pos: number): Token {
+  switch (identifier) {
+    case Keywords.FN:
+    case Keywords.VAR:
+    case Keywords.CONST:
+    case Keywords.RETURN:
+    case Keywords.IMPORT:
+    case Keywords.FROM:
+    case Keywords.EXPORT:
+    case Keywords.CLASS:
+    case Keywords.TYPE:
+    case Keywords.INTERFACE:
+    case Keywords.ENUM:
+    case Keywords.EXTENDS:
+    case Keywords.IMPLEMENTS:
+    case Keywords.MODULE:
+    case Keywords.FOR:
+    case Keywords.WHILE:
+    case Keywords.DO:
+    case Keywords.BREAK:
+    case Keywords.SKIP: // same as continue in other languages
+    case Keywords.IF:
+    case Keywords.ELSE:
+    case Keywords.ELIF:
+    case Keywords.SWITCH:
+    case Keywords.CASE:
+    case Keywords.DEFAULT:
+    case Keywords.IN:
+    case Keywords.OF:
+    case Keywords.AND:
+    case Keywords.OR:
+    case Keywords.NOT:
+    case Keywords.TRY:
+    case Keywords.CATCH:
+    case Keywords.AS:
+    case Keywords.NEW:
+    case Keywords.DROP:
+    case Keywords.PUBLIC:
+    case Keywords.PRIVATE:
+    case Keywords.PROTECTED:
+    case Keywords.STATIC:
+    case Keywords.OVERRIDE:
+    case Keywords.SETTER:
+    case Keywords.GETTER:
+    case Keywords.ASYNC:
+    case Keywords.AWAIT: {
+      return { type: "Statement", content: identifier, line, pos }
+    }
+
+    case "instanceof": {
+      return { type: "Operator", content: identifier, line, pos }
+    }
+
+    default: {
+      return { type: "IdentifierName", content: identifier, line, pos }
+    }
+  }
+}
+
 export default class Lexer {
   cursor: LexerCursor
   fileName: string
@@ -140,6 +199,10 @@ export default class Lexer {
     this.line = 0
   }
 
+  private createToken(type: TokenType, content: string): Token {
+    return { type, content, line: this.line, pos: this.cursor.pos }
+  }
+
   /**
    * Sets the a lexer object ready to read a new file and tokenize his content
    * @param otherFileName Name of the new file to be scanned
@@ -147,13 +210,13 @@ export default class Lexer {
    */
   public alsoScan(otherFileName: string, otherSource: string) {
     // Configure the lexer
-    this.line = 0
+    this.line = 1
     this.fileName = otherFileName
 
     // configure the cursor
     this.cursor.source = otherSource
     this.cursor.currentTok = otherSource.at(0)!
-    this.cursor.pos = 0
+    this.cursor.pos = 1
   }
 
   /**
@@ -171,65 +234,6 @@ export default class Lexer {
    */
   private checkNext(char: string): boolean {
     return this.cursor.next() === char
-  }
-
-  private resolveIdentifier(identifier: string): Token {
-    switch (identifier) {
-      case Keywords.FN:
-      case Keywords.VAR:
-      case Keywords.CONST:
-      case Keywords.RETURN:
-      case Keywords.IMPORT:
-      case Keywords.FROM:
-      case Keywords.EXPORT:
-      case Keywords.CLASS:
-      case Keywords.TYPE:
-      case Keywords.INTERFACE:
-      case Keywords.ENUM:
-      case Keywords.EXTENDS:
-      case Keywords.IMPLEMENTS:
-      case Keywords.MODULE:
-      case Keywords.FOR:
-      case Keywords.WHILE:
-      case Keywords.DO:
-      case Keywords.BREAK:
-      case Keywords.SKIP: // same as continue in other languages
-      case Keywords.IF:
-      case Keywords.ELSE:
-      case Keywords.ELIF:
-      case Keywords.SWITCH:
-      case Keywords.CASE:
-      case Keywords.DEFAULT:
-      case Keywords.IN:
-      case Keywords.OF:
-      case Keywords.AND:
-      case Keywords.OR:
-      case Keywords.NOT:
-      case Keywords.TRY:
-      case Keywords.CATCH:
-      case Keywords.AS:
-      case Keywords.NEW:
-      case Keywords.DROP:
-      case Keywords.PUBLIC:
-      case Keywords.PRIVATE:
-      case Keywords.PROTECTED:
-      case Keywords.STATIC:
-      case Keywords.OVERRIDE:
-      case Keywords.SETTER:
-      case Keywords.GETTER:
-      case Keywords.ASYNC:
-      case Keywords.AWAIT: {
-        return { type: "Statement", content: identifier, line: this.line, pos: this.cursor.pos }
-      }
-
-      case "instanceof": {
-        return { type: "Operator", content: identifier, line: this.line, pos: this.cursor.pos }
-      }
-
-      default: {
-        return { type: "IdentifierName", content: identifier, line: this.line, pos: this.cursor.pos }
-      }
-    }
   }
 
   /**
@@ -378,7 +382,7 @@ export default class Lexer {
           identifier += this.cursor.currentTok
         } while (!this.cursor.isEOF() && isAlphaNum(this.nextToken()))
   
-        tokens.push(this.resolveIdentifier(identifier))
+        tokens.push(resolveIdentifier(identifier, this.line, this.cursor.pos))
       }
   
       if (isNumeric(this.cursor.currentTok)) {
