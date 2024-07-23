@@ -156,7 +156,7 @@ export default class Parser {
   public nextToken() { return this.cursor.currentTok = this.consume() }
 
   
-  public shouldBeLike(shouldBeLike: string, message: string) {
+  public expectsContent(shouldBeLike: string, message: string) {
     const nextToken = this.nextToken()
 
     if (nextToken.content !== shouldBeLike)
@@ -165,7 +165,7 @@ export default class Parser {
     return nextToken
   }
 
-  public shouldBeOf(shouldBeOf: TokenType) {
+  public expectsType(shouldBeOf: TokenType, message: string) {
     const nextToken = this.nextToken()
 
     if (nextToken.content !== shouldBeOf)
