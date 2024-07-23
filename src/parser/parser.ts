@@ -129,10 +129,9 @@ export default class Parser {
     throw new UndefinedReferenceError(undefinedVariable)
   }
 
-  public addToScope(scope: Scope, key: string, value: ValidEntities) {
-    if (!scope.addEntry(key, value)) {
+  public addToScope(scope: Scope, key: string, value: Nameable) {
+    if (!scope.addEntry(key, value))
       this.scrapParseError("Duplicate identifier '" + key + "' at '" + scope.getOwner + "'")
-    }
   }
 
   public build(): this {
