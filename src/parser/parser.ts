@@ -166,12 +166,12 @@ export default class Parser {
   }
 
   public expectsType(shouldBeOf: TokenType, message: string) {
-    const nextToken = this.nextToken()
+    const tok = this.nextToken()
 
-    if (nextToken.content !== shouldBeOf)
-      this.scrapParseError(shouldBeOf)
+    if (tok.type !== shouldBeOf)
+      this.scrapParseError(message)
 
-    return nextToken
+    return tok
   }
 
   /**
