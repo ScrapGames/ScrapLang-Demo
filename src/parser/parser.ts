@@ -678,8 +678,8 @@ export default class Parser {
       case Keywords.CONST:
       case Keywords.CLASS:
       case Keywords.MODULE: {
-        const parsedStatement = this.parseStatement(scope, true)
-        this.addToScope(scope, parsedStatement.getName, parsedStatement)
+        const parsedStatement = this.parseStatement(scope)
+        this.addToScope(scope, parsedStatement.name, parsedStatement)
 
         return parsedStatement
       }
