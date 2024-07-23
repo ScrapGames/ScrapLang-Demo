@@ -340,8 +340,7 @@ export default class Parser {
     this.nextToken() // eat '{'
 
     const mScope = createEmptyScope(scope, moduleName)
-    const body: (exp.Entity | exp.ScrapFunction)[] = []
-    this.parseModuleBody(mScope, body)
+    const { body, exports } = parseModuleBody(this, mScope)
 
     this.nextToken() // eat '}'
 
