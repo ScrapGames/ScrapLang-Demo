@@ -324,61 +324,6 @@ export default class Parser {
   }
 
   /**
-   * Same as `parseBody`, in this case, a module could contains another module.
-   * By this reason, this reason, the body module parsing is separated from the normal `parseBody`
-   */
-  private parseModuleBody(scope: Scope, body: (exp.Entity | exp.ScrapFunction)[]) {
-    while (this.cursor.currentTok.content !== Tokens.RBRACE) {
-      body.push(this.parsePrimary(scope)) // does not need to explcitly add to the scope, because parsePrimary already adds to the passed scope
-    }
-  }
-
-  /**
-   * Fills the array passed as parameter `param` with the parameters of the parsed function
-   * @param param Array of params that the function receive
-   */
-  private parseParamList(params: ScrapParam[]) {
-    let pName, _pType
-
-    do {
-      if (this.cursor.currentTok.type !== "IdentifierName")
-        this.scrapParseError("Missing parameter name")
-      pName = this.cursor.currentTok.content
-
-      if (this.nextToken().content !== Tokens.COLON)
-        this.scrapParseError("Missing colon ':' after parameter name indicating data type")
-
-      this.nextToken()
-      if (this.cursor.currentTok.content === "...") {
-        if (this.nextToken().type !== "IdentifierName") {
-          this.scrapParseError("Missing parameter data type")
-        } else {
-          // Variable args is taked as an array by the compiler and must be managed in the same way by the user in the function body
-          _pType = this.cursor.currentTok.content + "[]"
-          params.push({ pName, pType: exp.ScrapUndefined }) //! provisional value for 'pType'
-        }
-
-        if (this.cursor.next().content === Tokens.COMMA) {
-          this.scrapParseError("Variable arguments using elipsis \"...\" must be the last parameter in the list")
-        }
-      } else
-        if (this.cursor.currentTok.type !== "IdentifierName")
-          this.scrapParseError("Missing parameter data type")
-        else {
-          _pType = this.cursor.currentTok.content
-          params.push({ pName, pType: exp.ScrapUndefined }) //! provisional value for 'pType'
-        }
-
-      if (this.nextToken().content === Tokens.COMMA) {
-        pName = ""
-        _pType = ""
-        this.nextToken()
-      }
-
-    } while (this.cursor.currentTok.content !== Tokens.RPAREN)
-  }
-
-  /**
    * Parse a module declaration.
    * 
    * A Module is a block of code that recursively can contains other modules or other statements, like function, constants, etc.
