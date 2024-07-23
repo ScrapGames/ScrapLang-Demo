@@ -225,7 +225,7 @@ export default class Parser {
     this.nextToken() // eat '{'
     let keyName = ""
     let valueExpression: ScrapValue
-    const keyValuePairs: [string, exp.ScrapValue][] = []
+    const keyValuePairs: Map<string, ScrapValue> = new Map()
 
     while (this.cursor.currentTok.content !== Tokens.RBRACE) {
       if (
@@ -235,6 +235,9 @@ export default class Parser {
         this.scrapParseError("object key from a key-value pair must be an identifier or a string")
       }
       keyName = this.cursor.currentTok.content
+
+      if (keyValuePairs.has(keyName))
+        this.scrapParseError(`${keyName} already exists in the literal object`)
 
       if (this.nextToken().content !== Tokens.COLON)
         this.scrapParseError("Missing colon ':'")
@@ -248,7 +251,7 @@ export default class Parser {
         } else this.nextToken() // eat the comma
       }
 
-      keyValuePairs.push([keyName, valueExpression])
+      keyValuePairs.set(keyName, valueExpression)
     }
 
     this.nextToken() // eat '}'
