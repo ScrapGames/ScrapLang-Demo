@@ -845,6 +845,14 @@ export default class Parser {
       default: this.scrapParseError(`The token '${this.cursor.currentTok.content}' is not implemented yet`)
     }
   }
+
+  private parseOperator(operableVal: Ajustable, _scope: Scope) {
+    const operator = this.cursor.currentTok
+    switch (operator.content) {
+      case Tokens.INCREMENT: return operableVal.increment()
+      case Tokens.DECREMENT: return operableVal.decrement()
+
+      default: this.scrapParseError("Token not implemented yet")
     }
   }
 
