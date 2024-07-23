@@ -1,6 +1,7 @@
+import { ScrapValue } from "@lang/elements/commons.ts"
 import { ScrapCall } from "@lang/elements/values/call.ts"
+import { DefinedFunction } from "@lang/elements/commons.ts"
 import { ScrapVariable } from "@lang/elements/entities/variable.ts"
-import { DefinedFunction, ScrapEntity } from "@lang/elements/commons.ts"
 import { ReassignmentExpression } from "@lang/elements/values/reassignment.ts"
 
 /**
@@ -26,6 +27,19 @@ export type Nullable<T> = T | null
  */
 export interface Nameable {
     name: string
+}
+
+export interface Accessible<T> {
+    get(from: T): ScrapValue
+}
+
+export interface Operable {
+    operator(operator: string): ScrapValue
+}
+
+export interface Ajustable {
+    increment(): ScrapValue
+    decrement(): ScrapValue
 }
 
 export type Primitive = number | string | boolean | null | undefined
