@@ -268,7 +268,6 @@ export default class Parser {
     const elements: ScrapValue[] = []
 
     this.nextToken() // eat '['
-    const elements: exp.ScrapValue[] = []
 
     while (this.cursor.currentTok.content !== Tokens.RSQRBR) {
       elements.push(this.parseExpr(scope))
@@ -280,39 +279,7 @@ export default class Parser {
 
     this.nextToken() // eat ']'
 
-    const newArray = new ScrapArray(elements)
-
-    this.ast.pushNode(newArray)
-    return newArray
-  }
-
-  /**
-   * Parse the block of code that correspond with a function. Which is represented by contain code between '{' and a '}'
-   * @param isMethod
-   * @param scope `Scope` where the function can registry variables that has been declared inside his body
-   */
-  private parseFunctionBody(isMethod: boolean, body: (exp.ScrapValue | exp.Entity)[], scope: Scope): exp.ScrapValue {
-    let returnExpression: exp.ScrapValue = new exp.ScrapUndefined()
-    let parsedVal: exp.ScrapValue | exp.Entity
-    while (this.cursor.currentTok.content !== Tokens.RBRACE) {
-      if (this.cursor.currentTok.content === Keywords.RETURN)
-        if (isMethod)
-          this.scrapParseError("A constructor can not have a return statement")
-        else
-          returnExpression = this.parseReturn(scope)
-      else {
-        if (this.cursor.currentTok.type === "IdentifierName") {
-          parsedVal = this.parseIdentifier(scope)
-        } else {
-          parsedVal = this.parseStatement(scope, false)
-          this.addToScope(scope, (parsedVal as exp.Entity | exp.ScrapFunction).getName, parsedVal)
-        }
-
-        body.push(parsedVal)
-      }
-    }
-
-    return returnExpression
+    return new ScrapArray(elements)
   }
 
   /**
