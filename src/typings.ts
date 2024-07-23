@@ -24,7 +24,7 @@ export type Nullable<T> = T | null
  *  * Any type that extends from `ScrapEntity`, like: variables, classes, modules, etc
  *  * Any type that extends from `ScrapFunction`
  */
-export interface Nameable extends ScrapEntity {
+export interface Nameable {
     name: string
 }
 
