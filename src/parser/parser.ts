@@ -150,8 +150,8 @@ export default class Parser {
   protected consume() { return this.cursor.consume() }
 
   /**
-   * Assign to `Cursor.currentTok` the value of the next position getted by using `this.consume`
-   * @returns The new value for `this.cursor.currentTok`
+   * Assign to `Cursor.currentTok` the value of the next position by using `Cursor.consume`
+   * @returns The new value for `Cursor.currentTok`
    */
   public nextToken() { return this.cursor.currentTok = this.consume() }
 
@@ -327,6 +327,7 @@ export default class Parser {
    * Parse a module declaration.
    * 
    * A Module is a block of code that recursively can contains other modules or other statements, like function, constants, etc.
+   * @param scope scope of the parsed module
    * @returns A Module declaration for the AST
    */
   private parseModule(scope: Scope): ScrapModule {
@@ -666,10 +667,10 @@ export default class Parser {
   }
 
   /**
-   * `parseRoot` calls the methods which parses entities allowed the be declared at the file root.
+   * `parseRoot` calls the methods which parses entities allowed the be declared at the file root or modules.
    * 
-   * * Not parsed example: A function declared inside another function will not be parsed since `parseRoot` is not invoked inside function body's.
-   * * Parsed example: `main` function, since it is not declared inside another entity, `parseRoot` will call the method who parse functions
+   * * Not parsed example: A function declared inside another function wont be parsed since `parseRoot` is not invoked inside function body's.
+   * * Parsed example: `main` function, since it is not declared inside another entity, `parseRoot` will call a method who resolve the function that parses the statament
    */
   public parseRoot(scope: Scope): ScrapFunction | ScrapEntity {
     switch (this.cursor.currentTok.content) {
