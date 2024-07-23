@@ -136,7 +136,8 @@ export default class Parser {
 
   public build(): this {
     while (!this.cursor.isEOF()) {
-      this.parsePrimary(this.mainModule.getScope)
+      const parsedRootEntity = this.parseRoot(this.mainModule.getScope)
+      this.ast.pushNode(parsedRootEntity)
     }
 
     return this
@@ -255,10 +256,7 @@ export default class Parser {
 
     this.nextToken() // eat '}'
 
-    const newObject = new exp.ScrapLitObject(keyValuePairs)
-
-    this.ast.pushNode(newObject)
-    return newObject
+    return new ScrapObject(null, keyValuePairs)
   }
 
   /**
@@ -619,10 +617,7 @@ export default class Parser {
     if (constructor)
       (constructor as DefinedFunction).setReturnType = new ScrapString(className)
 
-    const newClass = new ScrapClass(className, classEntities, options, cScope, constructor !== undefined)
-
-    this.ast.pushNode(newClass)
-    return newClass
+    return new ScrapClass(className, classEntities, options, cScope, constructor !== undefined)
   }
 
   /**
@@ -672,8 +667,7 @@ export default class Parser {
 
     const newVariable = new exp.ScrapVariable(isConst ? "constant" : "variable", name, variableExpression)
 
-    this.ast.pushNode(newVariable)
-    return newVariable
+    return new ScrapVariable(isConst ? "constant" : "variable", name, value)
   }
 
   private parseReassignment(target: ScrapVariable, scope: Scope): ScrapValue {
