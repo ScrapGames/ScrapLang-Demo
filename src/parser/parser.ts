@@ -802,7 +802,7 @@ export default class Parser {
 
     switch (accessor.content) {
       case Tokens.EQUAL: return this.parseReassignment(ref as ScrapVariable, scope)
-      case Tokens.MODULE_ACCESSOR: return this.parseModuleAccessor(scope, ref as ScrapModule)
+      case Tokens.MODULE_ACCESSOR: return this.parseModuleAccessor(ref as ScrapModule, scope)
     }
 
     if (ref instanceof ScrapVariable) {
