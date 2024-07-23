@@ -626,7 +626,7 @@ export default class Parser {
    * @param scope Scope where the parsed expression or declaration belongs to
    * @returns A parsed expression
    */
-  private parseExpr(scope: Scope): exp.ScrapValue {
+  public parseExpr(scope: Scope): ScrapValue {
     if (this.cursor.currentTok.type === "Statement" && this.cursor.currentTok.content === Keywords.FN)
       return this.parseFunction(false, false, false, scope)
 
