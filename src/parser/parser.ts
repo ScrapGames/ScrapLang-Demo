@@ -350,143 +350,9 @@ export default class Parser {
     return newModule
   }
 
-  private parseClassEntity(isStatic: boolean, scope: Scope): exp.ScrapVariable | exp.ScrapFunction {
-    switch (this.cursor.currentTok.content) {
-      case Keywords.ASYNC: {
-        if (this.nextToken().content !== Keywords.FN)
-          this.scrapParseError("'async' keywords is only applicable to functions")
-
-        return this.parseFunction(true, false, false, scope)
-      }
-      case Keywords.FN: return this.parseFunction(false, true, isStatic, scope)
-      case Keywords.CONST: {
-        let name = ""
-        this.nextToken() // eat 'const' keyword
-        if (this.cursor.currentTok.type !== "IdentifierName")
-          this.scrapParseError("Invalid class property declaration, expected an identifier")
-
-          name = this.cursor.currentTok.content
-          this.nextToken() // eats identifier variable name
-
-        //@ts-ignore: ???
-        if (this.cursor.currentTok.content === Tokens.COLON) {
-          if (this.nextToken().type !== "IdentifierName")
-            this.scrapParseError("Missing data type after colon ':'")
-          else this.nextToken() // consume the data type
-        }
-
-        //@ts-ignore: ???
-        if (this.cursor.currentTok.content !== Tokens.EQUAL)
-          this.scrapParseError("Missing assignment operator '=' after const declaration. A constant must be initialized since his value can not change")
-
-        this.nextToken() // eat '='
-
-        return new exp.ScrapVariable("constant", name, this.parseExpr(scope))
-      }
-
-      case Keywords.VAR: {
-        let name = ""
-        let variableExpression: exp.ScrapValue = new exp.ScrapUndefined()
-
-        this.nextToken() // eat 'var' keyword
-        if (this.cursor.currentTok.type !== "IdentifierName")
-          this.scrapParseError("Invalid variable declaration, expected an identifier, '[' or '{'")
-
-          name = this.cursor.currentTok.content
-          this.cursor.currentTok
-          this.nextToken() // eats identifier variable name
-
-        //@ts-ignore: ???
-        if (this.cursor.currentTok.content === Tokens.COLON) {
-          if (this.nextToken().type !== "IdentifierName") {
-            this.scrapParseError("Missing data type after colon ':'")
-          } else this.nextToken() // consume the data type
-        }
-
-        //@ts-ignore: ???
-        if (this.cursor.currentTok.content === Tokens.EQUAL) {
-          this.nextToken() // eat '='
-      
-          variableExpression = this.parseExpr(scope)
-        }
-
-        return new exp.ScrapVariable("variable", name, variableExpression)
-      }
-
-      default: this.scrapParseError("Unknown class entity")
-    }
-  }
-
-  /**
-   * Same as `parseBody`, but since there are specific keywords inside a class body
-   * like: public, private, protected or static. Parsing the content is different
-   */
-  private parseClassBody(
-    classEntities: (ScrapClassProperty | ScrapClassMethod)[], scope: Scope
-  ): (ScrapClassEntity | ScrapClassMethod)[] {
-    this.nextToken() // eat '{'
-    // unlike `parseFunction`, a class could not contains a body
-    // so this method is only called when a class have one
-
-    let accessor: AccessorModifiers = "private"
-    let isStatic = false
-    let canOverride = false
-
-
-    while (this.cursor.currentTok.content !== Tokens.RBRACE) {
-      switch (this.cursor.currentTok.content) {
-        case Keywords.PUBLIC:
-        case Keywords.PRIVATE:
-        case Keywords.PROTECTED: {
-          accessor = this.cursor.currentTok.content
-          this.nextToken() // eat accessor modifier
-        }
-      }
-
-      if (this.cursor.currentTok.content === Keywords.STATIC) {
-        this.nextToken() // eat 'static'
-        isStatic = true
-
-        // @ts-ignore: this.nextToken() has already advanced the position of the cursor
-        // so the comparation is correct
-        if (this.cursor.currentTok.content === Keywords.OVERRIDE) {
-          this.nextToken() // eat 'override'
-          canOverride = true
-        }
-      }
-
-      if (this.cursor.currentTok.content === Keywords.OVERRIDE) {
-        this.nextToken() // place currentTok to 'override'
-        canOverride = true
-
-        const nextToken = this.cursor.next()
-        if (
-          nextToken.content === Keywords.FN ||
-          nextToken.content === Keywords.CONST ||
-          nextToken.content === Keywords.VAR
-        ) {
-          this.scrapParseError("'override' keyword must be preceeded only by a function or variable declaration")          
-        }
-      }
-
-      const parsedClassEntity = this.parseClassEntity(isStatic, scope)
-      classEntities.push({ accessor, isStatic, canOverride, nodeType: parsedClassEntity })
-
-      this.addToScope(scope, parsedClassEntity.getName, parsedClassEntity)
-      
-      isStatic = false
-      canOverride = false
-    }
-
-    this.nextToken() // eat '}'
-
-    return classEntities
-  }
-
-  private parseClass(scope: Scope): exp.ScrapClass {
-    this.nextToken() // eat class keyword
+  private parseClass(scope: Scope): ScrapClass {
     const classEntities: ScrapClassEntityProps[] = []
-    const options: { inherits?: exp.ScrapClass, implements?: string } = {}
+    const options: { inherits?: ScrapClass, implements?: string } = {}
 
     const className = this.expectsType("IdentifierName", "Expected a class name").content
     const relationalKW = this.nextToken() // eat class name (identifier)
@@ -515,10 +381,21 @@ export default class Parser {
     }
 
     const cScope = createEmptyScope(scope, className)
+
+    const checkEmptyBody = this.cursor.next().content === Tokens.RBRACE
     if (this.cursor.currentTok.content === Tokens.LBRACE) {
-      this.parseClassBody(classEntities, cScope)
+      if (checkEmptyBody) {
+        const tokenForWarning = this.nextToken() // eats '}' if the body is empty
+        this.scrapGenerateWarn("Empty class body at line: " + tokenForWarning.line + ", pos: " + tokenForWarning.pos)
+      }else
+        parseClassBody(this, classEntities, cScope)
     }
 
+
+    if (checkEmptyBody)
+      this.nextToken() // eats '}'
+
+    
     const constructor = cScope.getReference("constructor")
 
     if (constructor)
