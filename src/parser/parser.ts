@@ -273,9 +273,8 @@ export default class Parser {
     while (this.cursor.currentTok.content !== Tokens.RSQRBR) {
       elements.push(this.parseExpr(scope))
       if (this.cursor.currentTok.content !== Tokens.RSQRBR) {
-        if (this.cursor.currentTok.content !== Tokens.COMMA) {
-          this.scrapParseError("Expected comma after item")
-        } else this.nextToken() // consume the comma
+        this.expectsContent(Tokens.COMMA, "Expected comma after item")
+        this.nextToken() // consume the comma
       }
     }
 
@@ -421,10 +420,7 @@ export default class Parser {
   private parseModule(scope: Scope): ScrapModule {
     this.nextToken() // eat 'module' keyword
 
-    if (this.cursor.currentTok.type !== "IdentifierName")
-      this.scrapParseError("Missing module name")
-
-    const moduleName = this.cursor.currentTok.content
+    const moduleName = this.expectsType("IdentifierName", "Missing module name").content
 
     if (this.nextToken().content !== Tokens.LBRACE)
       this.scrapParseError("Missing module body opening '{'")
@@ -581,12 +577,12 @@ export default class Parser {
     const classEntities: ScrapClassEntityProps[] = []
     const options: { inherits?: exp.ScrapClass, implements?: string } = {}
 
-    const className = this.expectsType("IdentifierName", "current", "Expected a class name").content
+    const className = this.expectsType("IdentifierName", "Expected a class name").content
     const relationalKW = this.nextToken() // eat class name (identifier)
 
     if (relationalKW.content === Keywords.EXTENDS || relationalKW.content === Keywords.IMPLEMENTS) {
       if (relationalKW.content === Keywords.EXTENDS) {
-        const inheritedClassName = this.expectsType("IdentifierName", "next", "Identifier expected")
+        const inheritedClassName = this.expectsType("IdentifierName", "Identifier expected")
         const inheritedClass = scope.getReference(inheritedClassName.content)
 
         if (!(inheritedClass instanceof ScrapClass))
@@ -595,13 +591,13 @@ export default class Parser {
         options.inherits = inheritedClass
 
         if (this.nextToken().content === Keywords.IMPLEMENTS) {
-          const implemetedInterface = this.expectsType("IdentifierName", "next", "Identifier expected")
+          const implemetedInterface = this.expectsType("IdentifierName", "Identifier expected")
           options.implements = implemetedInterface.content
           this.nextToken() // eat the interface identifier
         }
 
       } else if (relationalKW.content === Keywords.IMPLEMENTS) {
-        const implementedInterface = this.expectsType("IdentifierName", "next", "Identifier expected")
+        const implementedInterface = this.expectsType("IdentifierName", "Identifier expected")
         options.implements = implementedInterface.content
         this.nextToken() // eat the interface identifier
       }
@@ -655,13 +651,16 @@ export default class Parser {
         this.scrapParseError(`'${name}' is not allowed as a variable declaration name.`)
 
     const typeOrEqToken = this.nextToken()
-    if (typeOrEqToken.content === Tokens.COLON) {
-      const _typeName =  this.parseDataType() // consume the data type
+    if (this.cursor.next().content === Tokens.COLON) {
+      this.nextToken()
+      this.expectsType("IdentifierName", "Expected data type")
     }
 
     if (isConst)
-      this.expectsContent(Tokens.EQUAL, "current", "A constant must have a assigned value")
-
+      this.expectsContent(Tokens.EQUAL, "A constant must have a assigned value")
+    else if (this.cursor.next().content === Tokens.EQUAL)
+      this.nextToken() // eats data type or name in case variable is not constant
+    
     this.nextToken() // eat '='
     variableExpression = this.parseExpr(scope)
 
@@ -837,15 +836,15 @@ export default class Parser {
 
     return this.parseVariableRef(scope, moduleScope)
   }
+
+  private parseToken(scope: Scope): ScrapValue {
     switch (this.cursor.currentTok.content) {
       case Tokens.LBRACE: return this.parseLiteralObject(scope)
       case Tokens.LSQRBR: return this.parseLiteralArray(scope)
       case Tokens.AMPER: return this.parseReference(scope)
-      case Tokens.PLUS:
-      case Tokens.MINUS:
-      case Tokens.STAR:
-      case Tokens.SLASH: return this.parseBinaryExpression(0, this.parseExpr(scope), scope)
-      default: this.scrapParseError("Token is not implemented yet")
+      default: this.scrapParseError(`The token '${this.cursor.currentTok.content}' is not implemented yet`)
+    }
+  }
     }
   }
 
@@ -859,9 +858,7 @@ export default class Parser {
       return this.parseFunction(false, false, false, scope)
 
     if (this.cursor.currentTok.content === Keywords.ASYNC) {
-      if (this.nextToken().content !== Keywords.FN)
-        this.scrapParseError("'async' keywords is only applicable to functions")
-
+      this.expectsContent(Keywords.FN, "'async' keywords is only applicable to functions")
       return this.parseFunction(true, false, false, scope)
     }
 
