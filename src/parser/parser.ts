@@ -7,40 +7,27 @@
  * this results on an error, since the const keyword represents a declaration instruction and cant be assigned.
  */
 
-import type { Ajustable, Nameable, ScrapClassEntityProps, ScrapParam } from "@typings"
+import type { ScrapClassEntityProps, ScrapParam } from "@typings"
 
-import { AST } from "@ast"
 import { inArray } from "@utils"
+import { AST, ASTEntityNode, ASTNode, ASTValueNode, NodeEntityType, NodeValueType } from "@ast/ast.ts"
 
 import Lexer from "@lexer/lexer.ts"
 import { TokenType } from "@lexer/lexer.ts"
-import { Keywords, Token, Tokens } from "@lexer/lexer.ts"
+import { Keywords, Tokens } from "@lexer/lexer.ts"
 
 import * as pUtils from "@parser/parser-utils.ts"
 import ParsingError from "@parser/parser-error.ts"
 import ParserCursor from "@parser/parser-cursor.ts"
 
-import { parseClassBody } from "@parser/components/class.ts"
-import { parseModuleBody } from "@parser/components/module.ts"
-import { parseAsync, parseFunctionBody, parseParamList } from "@parser/components/functions.ts"
+import * as ast from "@ast/nodes.ts"
 
-import { UndefinedReferenceError, Scope, createEmptyScope } from "@lang/scope.ts"
+import { parseClassBody } from "@parser/components/classes.ts"
+import { parseModuleAccessor, parseModuleBody } from "@parser/components/modules.ts"
+import { parseAsyncFn, parseFunctionBody, parseParamList } from "@parser/components/functions.ts"
 
 // Elements of ScrapLang
-import { ScrapCall } from "@lang/elements/values/call.ts"
-import { ScrapFunction } from "@lang/elements/commons.ts"
-import { DefinedFunction } from "@lang/elements/commons.ts"
-import { ScrapClass } from "@lang/elements/entities/class.ts"
-import { ScrapString } from "@lang/elements/values/textuals.ts"
-import { ScrapInteger } from "@lang/elements/values/numerics.ts"
-import { ScrapUndefined } from "@lang/elements/values/absence.ts"
-import { ScrapNative, ScrapValue } from "@lang/elements/commons.ts"
-import { ScrapVariable } from "@lang/elements/entities/variable.ts"
-import { ScrapReference } from "@lang/elements/values/reference.ts"
-import { BINARY_OPERATORS_PRECEDENCE } from "@lang/elements/commons.ts"
-import { ScrapArray, ScrapArrayAccess } from "@lang/elements/values/array.ts"
-import { DefinedModule, ScrapModule } from "@lang/elements/entities/modules.ts"
-import { ScrapEntity, ScrapObject } from "@lang/elements/commons.ts"
+import { BINARY_OPERATORS_PRECEDENCE as _ } from "@lang/elements/commons.ts"
 
 
 export enum PrimitiveTypes {
@@ -79,19 +66,13 @@ const RESERVERD_VAR_NAMES = [
  * In this way, the logic between components is modulable and easily scalable.
  */
 export default class Parser {
-  lexer: Lexer
-  cursor: ParserCursor
-  warnings: string[]
-  functions: ScrapFunction[]
-  mainModule: ScrapModule
-  ast: AST
+  private lexer: Lexer
+  private cursor: ParserCursor
+  private ast: AST
 
   public constructor(lexer: Lexer) {
     this.lexer = lexer
     this.cursor = new ParserCursor(lexer)
-    this.warnings = []
-    this.functions = []
-    this.mainModule = new ScrapModule("MainModule", createEmptyScope(null, "MainModule"))
     this.ast = new AST()
 
     this.cursor.currentTok = this.cursor.consume() // gives an initial value to the parser
@@ -118,44 +99,30 @@ export default class Parser {
    * @param message Warning message
    */
   private scrapGenerateWarn(message: string): void {
-    this.warnings.push(message)
+    console.warn(message)
   }
 
-  /**
-   * Causes the program stop by a undefined referenced
-   * @param undefinedVariable Token which is a undefined reference
-   */
-  private scrapReferenceError(undefinedVariable: Token): never {
-    throw new UndefinedReferenceError(undefinedVariable)
-  }
-
-  public addToScope(scope: Scope, key: string, value: Nameable) {
-    if (!scope.addEntry(key, value))
-      this.scrapParseError("Duplicate identifier '" + key + "' at '" + scope.getOwner + "'")
-  }
-
-  public build(): this {
+  public build(): AST {
     while (!this.cursor.isEOF()) {
-      const parsedRootEntity = this.parseRoot(this.mainModule.getScope)
+      const parsedRootEntity = this.parseRoot()
       this.ast.pushNode(parsedRootEntity)
     }
 
-    return this
+    return this.ast
   }
 
   /**
    * Advance the cursor one position on `Cursor.source`
    * @returns The new value where `Cursor.pos` is placed
    */
-  protected consume() { return this.cursor.consume() }
+  protected pConsume() { return this.cursor.consume() }
 
   /**
    * Assign to `Cursor.currentTok` the value of the next position by using `Cursor.consume`
    * @returns The new value for `Cursor.currentTok`
    */
-  public nextToken() { return this.cursor.currentTok = this.consume() }
+  public nextToken() { return this.cursor.currentTok = this.pConsume() }
 
-  
   public expectsContent(shouldBeLike: string, message: string) {
     const nextToken = this.nextToken()
 
@@ -175,106 +142,6 @@ export default class Parser {
   }
 
   /**
-   * # Still is an incompleted method
-   */
-  private getTokPrecedence() {
-    const tokPrec = BINARY_OPERATORS_PRECEDENCE[this.cursor.currentTok.content as keyof typeof BINARY_OPERATORS_PRECEDENCE]
-
-    if (tokPrec <= 0)
-      return -1;
-    
-    return tokPrec;
-  }
-
-  /**
-   * As many variables will be declared as identifiers appear in the destructuring pattern
-   */
-  private parseArrayDestructuring() {
-    this.nextToken() // eat '['
-
-    if (this.cursor.currentTok.content !== Tokens.RSQRBR) {
-      do {
-        if (this.cursor.currentTok.type !== "IdentifierName")
-          this.scrapParseError("Expecting variable identifier")
-
-        this.nextToken() // eat the identifier (variable)
-        if (this.cursor.currentTok.content === Tokens.COMMA)
-          if (this.cursor.next().type !== "IdentifierName")
-            this.scrapParseError("Expected identifier name after comma")
-          else
-            this.nextToken() // eats the comma, then in the next iteration the currentTok should be an identifier
-      } while (this.cursor.currentTok.content !== Tokens.RSQRBR)
-    } else
-      this.scrapGenerateWarn("A destructuring pattern should have at least a variable")
-  }
-
-  /**
-   * Parses the literal form of create an object
-   * @param scope Scope where the values of the object may be found
-   * @returns A new `ScrapLitObject`
-   */
-  private parseLiteralObject(scope: Scope) {
-    this.nextToken() // eat '{'
-    let keyName = ""
-    let valueExpression: ScrapValue
-    const keyValuePairs: Map<string, ScrapValue> = new Map()
-
-    while (this.cursor.currentTok.content !== Tokens.RBRACE) {
-      if (
-        this.cursor.currentTok.type !== "IdentifierName" &&
-        this.cursor.currentTok.type !== "StringLiteral"
-      ) {
-        this.scrapParseError("object key from a key-value pair must be an identifier or a string")
-      }
-      keyName = this.cursor.currentTok.content
-
-      if (keyValuePairs.has(keyName))
-        this.scrapParseError(`${keyName} already exists in the literal object`)
-
-      if (this.nextToken().content !== Tokens.COLON)
-        this.scrapParseError("Missing colon ':'")
-
-      this.nextToken() // eat the colon ':'
-      valueExpression = this.parseExpr(scope)
-      
-      if (this.cursor.currentTok.content !== Tokens.RBRACE) {
-        if (this.cursor.currentTok.content !== Tokens.COMMA) {
-          this.scrapParseError("Missing comma after key-value")
-        } else this.nextToken() // eat the comma
-      }
-
-      keyValuePairs.set(keyName, valueExpression)
-    }
-
-    this.nextToken() // eat '}'
-
-    return new ScrapObject(null, keyValuePairs)
-  }
-
-  /**
-   * Parses the literal form of create an array
-   * @param scope Scope where the elements of the array may be found
-   * @returns A new `ScrapArray`
-   */
-  private parseLiteralArray(scope: Scope) {
-    const elements: ScrapValue[] = []
-
-    this.nextToken() // eat '['
-
-    while (this.cursor.currentTok.content !== Tokens.RSQRBR) {
-      elements.push(this.parseExpr(scope))
-      if (this.cursor.currentTok.content !== Tokens.RSQRBR) {
-        this.expectsContent(Tokens.COMMA, "Expected comma after item")
-        this.nextToken() // consume the comma
-      }
-    }
-
-    this.nextToken() // eat ']'
-
-    return new ScrapArray(elements)
-  }
-
-  /**
    * A function is a block of code that can be accessed by type the name given to the function.
    * In this way, we avoid to repeat the same code simultaneously over the program.
    * 
@@ -285,34 +152,30 @@ export default class Parser {
    * 
    * @returns A new function statement
    */
-  public parseFunction(_mustAwait: boolean, isMethod: boolean, _isStatic: boolean, scope: Scope): DefinedFunction {
+  public parseFunction(isAsync: boolean, isMethod: boolean, _isStatic: boolean, isExpression: boolean): ast.FunctionNode {
     const fName = this.expectsType("IdentifierName", "Missing function name").content
 
     this.expectsContent(Tokens.LPAREN, "Missing parameter list")
 
-    const areParameters = this.cursor.next().content !== Tokens.RPAREN
-    const params: ScrapParam[] = areParameters ? parseParamList(this) : []
-    
-    if (!areParameters) {
+    const existsParams = this.cursor.next().content !== Tokens.RPAREN
+    const params: ScrapParam[] = existsParams ? parseParamList(this) : []
+
+    if (isMethod)
+      params.unshift({ pName: "this", pType: "this" }) // TODO: pType as `"this"` is a temporal value, in the future, the type will be the object of the instanced class
+
+    if (!existsParams) {
       this.nextToken() // eat '(' if there are not parameters
     }
-    
-    
-    this.expectsContent(Tokens.LBRACE, "Missing function body open")
 
-    const fScope = createEmptyScope(scope, fName)
-    //params.forEach(param => fScope.addEntry(param.pName, new ScrapUndefined()))
+    this.expectsContent(Tokens.LBRACE, "Missing function body open")
 
     this.nextToken() // eat '{' (function body beings)
 
-    const { body, return: returnExpression } = parseFunctionBody(this, isMethod, fScope)
+    const { body, return: returnExpression } = parseFunctionBody(this, fName)
 
     this.nextToken() // eat '}' (function body ends)
 
-    const newFunction = new DefinedFunction(fName, params, body, fScope, returnExpression)
-
-    this.functions.push(newFunction)
-    return newFunction
+    return new ast.FunctionNode(isExpression ? NodeValueType.Function : NodeEntityType.Function, fName, params, body, returnExpression, isAsync)
   }
 
   /**
@@ -322,9 +185,7 @@ export default class Parser {
    * @param scope scope of the parsed module
    * @returns A Module declaration for the AST
    */
-  private parseModule(scope: Scope): ScrapModule {
-    this.nextToken() // eat 'module' keyword
-
+  private parseModule(): ast.ModuleNode {
     const moduleName = this.expectsType("IdentifierName", "Missing module name").content
 
     if (this.nextToken().content !== Tokens.LBRACE)
@@ -332,33 +193,24 @@ export default class Parser {
 
     this.nextToken() // eat '{'
 
-    const mScope = createEmptyScope(scope, moduleName)
-    const { body, exports } = parseModuleBody(this, mScope)
+    const { body, exports } = parseModuleBody(this)
 
     this.nextToken() // eat '}'
 
-    const newModule = new DefinedModule(moduleName, body, mScope, exports)
-
-    this.ast.pushNode(newModule)
-    return newModule
+    return new ast.ModuleNode(moduleName, body, exports)
   }
 
-  private parseClass(scope: Scope): ScrapClass {
+  private parseClass(): ast.ClassNode {
     const classEntities: ScrapClassEntityProps[] = []
-    const options: { inherits?: ScrapClass, implements?: string } = {}
+    const options: { inherits?: string, implements?: string } = {}
 
     const className = this.expectsType("IdentifierName", "Expected a class name").content
     const relationalKW = this.nextToken() // eat class name (identifier)
 
     if (relationalKW.content === Keywords.EXTENDS || relationalKW.content === Keywords.IMPLEMENTS) {
       if (relationalKW.content === Keywords.EXTENDS) {
-        const inheritedClassName = this.expectsType("IdentifierName", "Identifier expected")
-        const inheritedClass = scope.getReference(inheritedClassName.content)
-
-        if (!(inheritedClass instanceof ScrapClass))
-          this.scrapParseError("Identifier after extends must be an already declared class")
-
-        options.inherits = inheritedClass
+        const inheritedClassName = this.expectsType("IdentifierName", "Identifier expected").content
+        options.inherits = inheritedClassName
 
         if (this.nextToken().content === Keywords.IMPLEMENTS) {
           const implemetedInterface = this.expectsType("IdentifierName", "Identifier expected")
@@ -373,28 +225,19 @@ export default class Parser {
       }
     }
 
-    const cScope = createEmptyScope(scope, className)
-
     const checkEmptyBody = this.cursor.next().content === Tokens.RBRACE
     if (this.cursor.currentTok.content === Tokens.LBRACE) {
       if (checkEmptyBody) {
         const tokenForWarning = this.nextToken() // eats '}' if the body is empty
         this.scrapGenerateWarn("Empty class body at line: " + tokenForWarning.line + ", pos: " + tokenForWarning.pos)
-      }else
-        parseClassBody(this, classEntities, cScope)
+      } else
+        parseClassBody(this, classEntities)
     }
-
 
     if (checkEmptyBody)
       this.nextToken() // eats '}'
 
-    
-    const constructor = cScope.getReference("constructor")
-
-    if (constructor)
-      (constructor as DefinedFunction).setReturnType = new ScrapString(className)
-
-    return new ScrapClass(className, classEntities, options, cScope, constructor !== undefined)
+    return new ast.ClassNode(className, options, classEntities)
   }
 
   /**
@@ -415,16 +258,10 @@ export default class Parser {
    *
    * @returns A `ScrapVariable` where the stored value will be `undefined` or an assigned value
    */
-  public parseVar(scope: Scope): ScrapVariable {
-    let value: ScrapValue = new ScrapUndefined()
+  public parseVar(): ast.VariableNode {
     const isConst = this.cursor.currentTok.content === Keywords.CONST
 
-    const varTypeToken = this.nextToken() // eat 'var' or 'const' keyword
-
-    switch (varTypeToken.content) {
-      case Tokens.LSQRBR: this.parseArrayDestructuring(); break
-      case Tokens.LBRACE: this.parseLiteralObject(scope); break
-    }
+    this.nextToken() // eat 'var' or 'const' keyword
 
     const name = this.cursor.currentTok.content
     if (inArray(name, RESERVERD_VAR_NAMES))
@@ -441,195 +278,181 @@ export default class Parser {
       this.nextToken() // eats data type or name in case variable is not constant
     
     this.nextToken() // eat '='
+
+    const value = this.parseExpr()
     
-    value = this.parseExpr(scope)
-
-    return new ScrapVariable(isConst ? "constant" : "variable", name, value)
-  }
-
-  private parseReassignment(target: ScrapVariable, scope: Scope): ScrapValue {
-    if (!(target instanceof ScrapVariable))
-      this.scrapParseError("A value that is not a variable can not be modified")
-
-    if (target.getVariableType === "constant")
-      this.scrapParseError("A constant can not change the value which points")
-
-    this.nextToken() // eat '='
-
-    const newValue = this.parseExpr(scope)
-    //const assignment = new ReassignmentExpression(target, newValue)
-
-    if (target.getAssignedValue instanceof ScrapReference)
-      target.getAssignedValue.getReferencedVar.setAssignedValue = newValue
-
-    target.setAssignedValue = newValue
-
-    return newValue
+    return new ast.VariableNode(name, isConst, value)
   }
 
   /**
-   * Parses a reference to a variable
-   * @explain
-   * - A reference is a variable (variable or constant) which points to the data allocated in the variable which has been assigned
-   *
-   * @returns A `ReferenceExpression` expression
+   * Parses the literal form of create an object
+   * @param scope Scope where the values of the object may be found
+   * @returns A new `ScrapLitObject`
    */
-  private parseReference(scope: Scope): ScrapReference {
-    const varName = this.expectsType("IdentifierName", "Expected variable name")
-    const target = scope.getReference(varName.content)
-    this.nextToken() // eat variable name (prepare for next parsing element)
+  private parseLiteralObject() {
+    this.nextToken() // eat '{'
+    let keyName = ""
+    let value: ASTValueNode
+    const keyValuePairs: Map<string, ASTValueNode> = new Map()
 
-    if (!target)
-      this.scrapReferenceError(varName)
+    while (this.cursor.currentTok.content !== Tokens.RBRACE) {
+      if (
+        this.cursor.currentTok.type !== "IdentifierName" &&
+        this.cursor.currentTok.type !== "StringLiteral"
+      ) {
+        this.scrapParseError("object key from a key-value pair must be an identifier or a string")
+      }
+      keyName = this.cursor.currentTok.content
 
-    if (!(target instanceof ScrapVariable))
-      this.scrapParseError("A reference can only points to a variable")
+      if (keyValuePairs.has(keyName))
+        this.scrapParseError(`${keyName} already exists in the literal object`)
 
-    return new ScrapReference(target)
+      if (this.nextToken().content !== Tokens.COLON)
+        this.scrapParseError("Missing colon ':'")
+
+      this.nextToken() // eat the colon ':'
+      value = this.parseExpr()
+      
+      if (this.cursor.currentTok.content !== Tokens.RBRACE) {
+        if (this.cursor.currentTok.content !== Tokens.COMMA) {
+          this.scrapParseError("Missing comma after key-value")
+        } else this.nextToken() // eat the comma
+      }
+
+      keyValuePairs.set(keyName, value)
+    }
+
+    this.nextToken() // eat '}'
+
+    return new ast.LiteralObjectNode(keyValuePairs)
   }
 
-  private parseArrayAccessor(accessedArray: ScrapArray<ScrapValue>, scope: Scope): ScrapArrayAccess {
+  /**
+   * Parses the literal form of create an array
+   * @param scope Scope where the elements of the array may be found
+   * @returns A new `ScrapArray`
+   */
+  private parseLiteralArray(): ast.LiteralArrayNode<ASTNode> {
+    const elements: ASTNode[] = []
+
     this.nextToken() // eat '['
 
-    const position = this.parseExpr(scope)
-
-    if (!(position instanceof ScrapInteger))
-      this.scrapParseError("Numeric value expected")
+    while (this.cursor.currentTok.content !== Tokens.RSQRBR) {
+      elements.push(this.parseExpr())
+      if (this.cursor.currentTok.content !== Tokens.RSQRBR) {
+        this.expectsContent(Tokens.COMMA, "Expected comma after item")
+        this.nextToken() // consume the comma
+      }
+    }
 
     this.nextToken() // eat ']'
 
-    return new ScrapArrayAccess(accessedArray, position)
+    return new ast.LiteralArrayNode(elements)
   }
 
-  private parseCall(scope: Scope, moduleScope?: Scope) {
-    const functionName = this.cursor.currentTok
-    const calledFunction = moduleScope ? moduleScope.getReference(functionName.content) : scope.getReference(functionName.content)
+  private parseReassignment(target: string): ast.ReassignmentNode {
+    this.nextToken() // eat equal token (=)
+    return new ast.ReassignmentNode(target, this.parseExpr())
+  }
 
-    if (!calledFunction)
-      this.scrapReferenceError(functionName)
+  /**
+   * Parses a reference to a variable*
+   * @returns A `ReferenceNode` expression
+   */
+  private parseReference(): ast.ReferenceNode {
+    const varName = this.expectsType("IdentifierName", "Expected variable name")
+    this.nextToken() // eat variable name (prepare for next parsing element)
 
-    this.nextToken() // eat the function name
-    this.nextToken() // eat '('
+    return new ast.ReferenceNode(varName.content)
+  }
 
-    const args: ScrapValue[] = []
+  /**
+   * Parses a function call toghether his arguments
+   * @returns A `CallNode`
+   */
+  private parseCall(): ast.CallNode {
+    const functionName = this.cursor.currentTok.content
+
+    this.nextToken() // eat fn name
+    this.nextToken() // '('
+
+    const args: ASTValueNode[] = []
 
     if (this.cursor.currentTok.content !== Tokens.RPAREN) {
       do {
-        args.push(this.parseExpr(scope))
+        args.push(this.parseExpr())
         if (this.cursor.currentTok.content === Tokens.COMMA)
           this.nextToken()
       } while (this.cursor.currentTok.content !== Tokens.RPAREN)
     }
 
-    if (calledFunction instanceof ScrapNative) {
-      if (calledFunction.getArgsCount !== true && calledFunction.getArgsCount !== args.length)
-        this.scrapParseError(`'${calledFunction.name}' expects ${calledFunction.getArgsCount} arguments, but has received ${args.length}`)
-    }
-
     this.nextToken() // eat ')'
 
-    return new ScrapCall(
-      scope.getOwner,
-      calledFunction as ScrapFunction,
-      args
-    )
-  }
-
-  private resolveArrayAccessor(array: ScrapArray<ScrapValue>, scope: Scope) {
-    if (!(array instanceof ScrapArray))
-      this.scrapParseError("Can not apply an accessor expression to a value which is not an Array nor and Object")
-
-    const newArrayAccessor = this.parseArrayAccessor(array, scope)
-
-    return newArrayAccessor
-  }
-
-  private parseModuleAccessor(accessedModule: ScrapModule, scope: Scope): ScrapValue {
-    const moduleEntityTok = this.nextToken()
-    const moduleEntity = accessedModule.getScope.getReference(moduleEntityTok.content)
-
-    if (!moduleEntity)
-      this.scrapReferenceError(moduleEntityTok)
-
-    if (!accessedModule.isExported(moduleEntity.name))
-      this.scrapParseError(`Module entity '${moduleEntity.name}' exists but is not exported by '${accessedModule.name}'`)
-
-    return this.parseIdentifier(scope, accessedModule.getScope)
-  }
-
-  public parseVariableRef(scope: Scope, moduleScope?: Scope): ScrapValue {
-    const refName = this.cursor.currentTok
-    const accessor = this.nextToken() // eat the identifier
-    const ref = moduleScope ? moduleScope.getReference(refName.content) : scope.getReference(refName.content)
-
-    if (!ref)
-      this.scrapReferenceError(refName)
-
-    switch (accessor.content) {
-      case Tokens.EQUAL: return this.parseReassignment(ref as ScrapVariable, scope)
-      case Tokens.MODULE_ACCESSOR: return this.parseModuleAccessor(ref as ScrapModule, scope)
-    }
-
-    if (ref instanceof ScrapVariable) {
-      const varValue = ref.getAssignedValue
-
-      if (varValue instanceof ScrapObject)
-        return varValue
-      
-      return new ScrapValue(varValue.getValue)
-    }
-
-    return ref as ScrapFunction
+    return new ast.CallNode(functionName, args)
   }
 
   /**
-   * `parseIdentifier` consists on two parts, the first, who parses function calls, and the other one, who parses an `IdentifierName meaning that the parsed id is an already existent variable
-   *
-   * @param moduleScope If the accessed variable belongs to a module is neccessary the module scope to access it
-   * @returns must be still resolved
+   * As an extension of `parseIdentifier`, this method omits that the current token being parsed is not a function call
+   * 
+   * Between the possibles elements parsed by this method are:
+   *  - object accessors
+   *  - module accessors
+   *  - simply variable references
+   *  - reassigned value of variables
+   * 
+   * @returns A value node
    */
-  public parseIdentifier(scope: Scope, moduleScope?: Scope): ScrapValue {
-    if (this.cursor.next().content === Tokens.LPAREN)
-      return this.parseCall(scope, moduleScope)
+  public parseIdReference(): ASTValueNode {
+    const refName = this.cursor.currentTok
+    const accessor = this.nextToken() // eat the identifier
 
-    return this.parseVariableRef(scope, moduleScope)
+    switch (accessor.content) {
+      case Tokens.EQUAL: return this.parseReassignment(refName.content)
+      case Tokens.MODULE_ACCESSOR: return parseModuleAccessor(this, refName.content)
+      case Tokens.DOT: this.scrapParseError("Object accessor isn't still implemented")
+      
+    }
+
+    return new ast.IdentifierNode(refName.content)
   }
 
-  private parseToken(scope: Scope): ScrapValue {
+  /**
+   * Parses an identifier. Parsing an single identifier allows to detect calls to functions or simple variable references
+   */
+  public parseIdentifier(): ASTValueNode {
+    if (this.cursor.next().content === Tokens.LPAREN)
+      return this.parseCall()
+
+    return this.parseIdReference()
+  }
+
+  private parseToken(): ASTValueNode {
     switch (this.cursor.currentTok.content) {
-      case Tokens.LBRACE: return this.parseLiteralObject(scope)
-      case Tokens.LSQRBR: return this.parseLiteralArray(scope)
-      case Tokens.AMPER: return this.parseReference(scope)
+      case Tokens.LBRACE: return this.parseLiteralObject()
+      case Tokens.LSQRBR: return this.parseLiteralArray()
+      case Tokens.AMPER: return this.parseReference()
       default: this.scrapParseError(`The token '${this.cursor.currentTok.content}' is not implemented yet`)
     }
   }
 
-  private parseOperator(operableVal: Ajustable, _scope: Scope) {
-    const operator = this.cursor.currentTok
-    switch (operator.content) {
-      case Tokens.INCREMENT: return operableVal.increment()
-      case Tokens.DECREMENT: return operableVal.decrement()
-
-      default: this.scrapParseError("Token not implemented yet")
-    }
-  }
-
   /**
-   * Parse the different type of expressions of ScrapLang
-   * @param scope Scope where the parsed expression or declaration belongs to
-   * @returns A parsed expression
+   * Parses an expression, an expression is a value which can be assigned as value of a receives, likes variable values or arguments (also called 'rhs value' in other languages like C++)
+   * The list of valid expressions are:
+   *  - Any primitive value
+   *  - An instance or any class (object)
+   *  - A function (because they are first class citizens)
+   * @returns The parsed expression
    */
-  public parseExpr(scope: Scope): ScrapValue {
+  public parseExpr(): ASTValueNode {
+    // check for 'Statement' type is needed, because this method can be called 
     if (this.cursor.currentTok.type === "Statement" && this.cursor.currentTok.content === Keywords.FN)
-      return this.parseFunction(false, false, false, scope)
+      return this.parseFunction(false, false, false, true) as ASTValueNode
 
-    if (this.cursor.currentTok.content === Keywords.ASYNC) {
-      this.expectsContent(Keywords.FN, "'async' keywords is only applicable to functions")
-      return this.parseFunction(true, false, false, scope)
-    }
+    if (this.cursor.currentTok.content === Keywords.ASYNC)
+      return parseAsyncFn(this, false, false, true) as ASTValueNode
 
     switch (this.cursor.currentTok.type) {
-      case "IdentifierName": return this.parseIdentifier(scope)
+      case "IdentifierName": return this.parseIdentifier()
       case "NumericLiteral": return pUtils.parseNumber.call(this)
       case "BinaryLiteral":  return pUtils.parseBinary.call(this)
       case "OctalLiteral":   return pUtils.parseOctal.call(this)
@@ -637,53 +460,58 @@ export default class Parser {
       case "FloatLiteral":   return pUtils.parseFloatNumber.call(this)
       case "CharLiteral":    return pUtils.parseChar.call(this)
       case "StringLiteral":  return pUtils.parseString.call(this)
-      case "Token":          return this.parseToken(scope)
-      //case "TemplateString": return pUtils.parseString.call(this) // TODO: Make a parseTemplateString function
+      case "Token":          return this.parseToken()
 
       default: this.scrapParseError("Expected expression")
     }
   }
 
-  public parseStatement(scope: Scope): Nameable {
+  /**
+   * Parses a statement, indifferently it is placed at the root of the module or inside another entity, like a function or a class
+   * @returns 
+   */
+  public parseStatement(): ASTEntityNode {
     switch (this.cursor.currentTok.content) {
-      case Keywords.VAR:    return this.parseVar(scope)
+      case Keywords.VAR:    return this.parseVar()
 
-      case Keywords.ASYNC:  return parseAsync(this, false, false, scope)
-      case Keywords.FN:     return this.parseFunction(false, false, false, scope)
-      case Keywords.CONST:  return this.parseVar(scope)
-      case Keywords.CLASS:  return this.parseClass(scope)
-      case Keywords.MODULE: return this.parseModule(scope)
+      //case Keywords.EXPORT: this.nextToken(); break
+      case Keywords.ASYNC:  return parseAsyncFn(this, false, false, false) as ASTEntityNode
+      case Keywords.FN:     return this.parseFunction(false, false, false, false) as ASTEntityNode
+      case Keywords.CONST:  return this.parseVar()
+      case Keywords.CLASS:  return this.parseClass()
+      case Keywords.MODULE: return this.parseModule()
 
-      default: this.scrapParseError(`The ${this.cursor.currentTok.type} '${this.cursor.currentTok.content}' is not allowed in '${scope.getOwner}'`)
+      default: this.scrapParseError(`The ${this.cursor.currentTok.type} '${this.cursor.currentTok.content}' is not allowed here'`)
     }
   }
 
   /**
-   * `parseRoot` calls the methods which parses entities allowed the be declared at the file root or modules.
-   * 
-   * * Not parsed example: A function declared inside another function wont be parsed since `parseRoot` is not invoked inside function body's.
-   * * Parsed example: `main` function, since it is not declared inside another entity, `parseRoot` will call a method who resolve the function that parses the statament
+   * Parses a primary entity
    */
-  public parseRoot(scope: Scope): ScrapFunction | ScrapEntity {
+  public parseRoot(): ASTEntityNode {
     switch (this.cursor.currentTok.content) {
       case Keywords.ASYNC:
       case Keywords.FN:
       case Keywords.CONST:
       case Keywords.CLASS:
-      case Keywords.MODULE: {
-        const parsedStatement = this.parseStatement(scope)
-        this.addToScope(scope, parsedStatement.name, parsedStatement)
-
-        return parsedStatement
-      }
+      case Keywords.EXPORT:
+      case Keywords.MODULE: return this.parseStatement()
 
       default: {
-        const invalidTokenHereErrorStringMessage = `The token '${this.cursor.currentTok.content}' is not allowed here`
+        const invalidTokenMessage = `The token '${this.cursor.currentTok.content}' is not allowed here`
 
         this.scrapParseError(
-          `${invalidTokenHereErrorStringMessage}. Only: 'fn', 'const', 'class', 'module', 'interface', 'enum', 'import' and 'export' keywords are allowed as primary statements.
+          `${invalidTokenMessage}. Only: 'fn', 'const', 'class', 'module', 'interface', 'enum', 'import' and 'export' keywords are allowed as primary statements.
             Learn more at: https://lang.scrapgames.com/tutorial/primary_statements`)
       }
     }
   }
+
+  
+  /* GETTERS & SETTERS */
+  public get hasFinish(): boolean { return this.cursor.isEOF() }
+
+  public get getLexer()    { return this.lexer }
+  public get getCursor()   { return this.cursor }
+  public get getAST()      { return this.ast }
 }
