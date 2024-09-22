@@ -13,12 +13,16 @@ export class ScrapInteger extends ScrapPrimitive implements Ajustable {
     }
 
     public increment() {
-        return new ScrapInteger((this.value as number)++)
+        (this.getValue as number)++
+        return this
     }
 
     public decrement() {
-      return new ScrapInteger((this.value as number)--)
+        (this.getValue as number)--
+        return this
     }
+
+
 
     public get getValue() { return this.value as number }
 }
