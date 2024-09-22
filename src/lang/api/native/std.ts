@@ -13,29 +13,36 @@
  */
 
 import { createEmptyScope } from "@lang/scope.ts"
-import { ScrapModule } from "@lang/elements/entities/modules.ts"
+import { ScrapNativeFn, ScrapValue } from "@lang/elements/commons.ts"
+
 import { ScrapInteger } from "@lang/elements/values/numerics.ts"
 import { ScrapUndefined } from "@lang/elements/values/absence.ts"
-import { ScrapVariable } from "@lang/elements/entities/variable.ts"
-import { ScrapNative, ScrapValue } from "@lang/elements/commons.ts"
 import { ScrapFalse, ScrapTrue } from "@lang/elements/values/booleans.ts"
 
-const stdModule = new ScrapModule("std", createEmptyScope(null, "std"))
+import { ScrapModule } from "@lang/elements/entities/modules.ts"
+import { ScrapVariable } from "@lang/elements/entities/variables.ts"
 
-const SCRAP_LOG_FUNCTION = new ScrapNative("log", true, (...args: ScrapValue[]) => {
+export const SCRAP_PRINT_FUNCTION = new ScrapNativeFn("print", undefined, (...args: ScrapValue[]) => {
     const argsValue = args.map(arg => arg.getValue)
     console.log(...argsValue)
     return new ScrapUndefined()
 })
-stdModule.insert("log", SCRAP_LOG_FUNCTION, true)
 
-const SCRAP_PARSEINT_FUNCTION = new ScrapNative("parseint", 1, (...args: ScrapValue[]) => {
+const SCRAP_PARSEINT_FUNCTION = new ScrapNativeFn("parseInt", 1, (...args: ScrapValue[]) => {
     return new ScrapInteger(parseInt(args[0].getValue as string))
 })
 
-stdModule.insert("parseInt", SCRAP_PARSEINT_FUNCTION, true)
-stdModule.insert("true", new ScrapVariable("constant", "true", new ScrapTrue()), true)
-stdModule.insert("false", new ScrapVariable("constant", "false", new ScrapFalse()), true)
-stdModule.insert("null", new ScrapVariable("constant", "null", new ScrapValue(null)), true)
+export function makeStdModule() {
+    const stdModule = new ScrapModule("std", createEmptyScope(null, "std"))
 
-export default stdModule
+    // firstly, inserts functions
+    stdModule.insert("print", SCRAP_PRINT_FUNCTION, true)
+    stdModule.insert("parseInt", SCRAP_PARSEINT_FUNCTION, true)
+
+    // then, inserts variables / values
+    stdModule.insert("true", new ScrapVariable(true, "true", new ScrapTrue()), true)
+    stdModule.insert("false", new ScrapVariable(true, "false", new ScrapFalse()), true)
+    stdModule.insert("null", new ScrapVariable(true, "null", new ScrapValue(null)), true)
+
+    return stdModule
+}
