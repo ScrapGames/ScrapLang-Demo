@@ -1,11 +1,11 @@
 import { ScrapTrue } from "@lang/elements/values/booleans.ts"
-import { ScrapEntity, ScrapValue } from "@lang/elements/commons.ts"
+import { Instructions } from "@typings"
 
 export class ScrapControlBlock {
     private expression: ScrapTrue
-    private body: (ScrapValue | ScrapEntity)[]
+    private body: Instructions[]
 
-    public constructor(expression: ScrapTrue, body: (ScrapValue | ScrapEntity)[]) {
+    public constructor(expression: ScrapTrue, body: Instructions[]) {
         this.expression = expression
         this.body = body
     }
