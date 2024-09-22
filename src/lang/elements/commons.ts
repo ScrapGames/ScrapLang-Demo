@@ -95,29 +95,27 @@ export class ScrapFunction extends ScrapObject implements Nameable {
 }
 
 export class DefinedFunction extends ScrapFunction {
-    private params: ScrapParam[]
     private scope: Scope
-    private returnExpression: ScrapValue
-
-    body: AllowedBlockEntities[]
+    private params: ScrapParam[]
+    private returnValue: ASTValueNode
+    private body: Instructions[]
 
     public constructor(
-        name: string, params: ScrapParam[], body: AllowedBlockEntities[],
-        scope: Scope, returnExpression: ScrapValue
+        name: string, scope: Scope, params: ScrapParam[],
+        body: Instructions[], returnValue: ASTValueNode
     ) {
         super(name)
-        this.params = params
         this.scope = scope
+        this.params = params
         this.body = body
-        this.returnExpression = returnExpression
+        this.returnValue = returnValue
     }
 
-
+    public get getScope()  { return this.scope }
     public get getParams() { return this.params }
-    public get getScope() { return this.scope }
-    public get getReturnType() { return this.returnExpression }
+    public get getReturnValue() { return this.returnValue }
+    public get getBody() { return this.body }
 
-    public set setReturnType(returnValue: ScrapValue) { this.returnExpression = returnValue }
     public toString() { return this.name }
 }
 
