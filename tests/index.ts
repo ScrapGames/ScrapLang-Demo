@@ -17,8 +17,9 @@ async function main() {
         const file = await Deno.readTextFile(fileName)
     
         const lex = new Lexer(file, fileName)
+
         if (lex.cursor.isEOF()) {
-            console.warn(`Empty file, nothing to parse in ${lex.cursor.source}`)
+            console.warn(`Empty file, nothing to parse in '${lex.fileName}'`)
         } else {
             const globalMod = new ScrapModule("MainModule", createEmptyScope(null, "MainModule"))
             globalMod.insert("std", makeStdModule())
