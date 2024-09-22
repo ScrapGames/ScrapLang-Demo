@@ -36,7 +36,7 @@ export function isSpace(token: string) {
  * @param array Array where `item` will be searched
  * @returns true, if `item` exists, false in other case
  */
-export function inArray(item: unknown, array: unknown[]): boolean {
+export function inArray<T>(item: T, array: T[]): boolean {
     return array.some(e => e === item)
 }
 
