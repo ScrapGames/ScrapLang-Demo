@@ -21,20 +21,10 @@ async function main() {
         if (lex.cursor.isEOF()) {
             console.warn(`Empty file, nothing to parse in ${lex.cursor.source}`)
         } else {
-            const parser = new Parser(lex)
-            addSTD(parser.mainModule.getScope)
+            const globalMod = new ScrapModule("MainModule", createEmptyScope(null, "MainModule"))
+            globalMod.insert("std", makeStdModule())
 
-            const interpreter = new Interpreter(parser.build())
-            interpreter.run() // runs the program
-
-            const mainFunction = parser.functions.find(func => func.getName === "main")
-            
-            if (!mainFunction)
-                throw new RuntimeError("Missing program entrypoint (main function)")
-
-            interpreter.execScrapFunction(mainFunction, new ScrapCall(parser.mainModule.getName, mainFunction, Deno.args.map(arg => new ScrapString(arg))))
-            
-            parser.warnings.forEach(warning => console.warn("Warning: %s", warning))
+            new Interpreter(new Parser(lex), globalMod).run()
         }
     }
 }
