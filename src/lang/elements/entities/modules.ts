@@ -35,6 +35,10 @@ export class ScrapModule extends ScrapEntity {
             this.exports.add(value.name)
     }
 
+    public getEntity(name: string) {
+        return this.scope.getReference(name)
+    }
+
     public isExported(entityName: string) {
         return this.exports.has(entityName)
     }
