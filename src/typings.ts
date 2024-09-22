@@ -44,7 +44,7 @@ export interface Ajustable {
 
 export type Primitive = number | string | boolean | null | undefined
 
-export type AllowedBlockEntities = DefinedFunction | ScrapVariable | ScrapCall | ReassignmentExpression
+export type Instructions = FunctionNode | CallNode | ReassignmentNode | VariableNode
 
 /**
  * Represents a function parameter
