@@ -30,5 +30,7 @@ export class ScrapString extends ScrapPrimitive {
         this.size = new Blob([literal]).size
     }
 
-    public get getValue() { return this.value as string }
+    public get getLength() { return this.length }
+    public get getSize()   { return this.size }
+    public get getValue()  { return this.value as string }
 }
