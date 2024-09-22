@@ -10,10 +10,9 @@ import { makeStdModule } from "@lang/api/native/std.ts"
 import { ScrapModule } from "@lang/elements/entities/modules.ts"
 
 async function main() {
-    if (inArray("--repl", args)) {
+    if (inArray("--repl", Deno.args)) {
         repl()
     } else {
-
         const fileName = "./tests/tiny.scrap"
         const file = await Deno.readTextFile(fileName)
     
