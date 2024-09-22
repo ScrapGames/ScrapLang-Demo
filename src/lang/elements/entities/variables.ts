@@ -17,19 +17,17 @@ import { ScrapEntity, ScrapValue } from "@lang/elements/commons.ts"
  * myVariable = 10 // this will not cause an error because is a variable value
  */
 export class ScrapVariable extends ScrapEntity {
-    private declarationType: "variable" | "constant"
+    public isConst: boolean
     private assignedValue: ScrapValue
 
     public constructor(
-        declarationType: "variable" | "constant", name: string,
+        isConst: boolean, name: string,
         assignedValue: ScrapValue
     ) {
         super(name)
-        this.declarationType = declarationType
+        this.isConst = isConst
         this.assignedValue = assignedValue
     }
-
-    public get getVariableType() { return this.declarationType }
 
     public get getAssignedValue() { return this.assignedValue }
 
