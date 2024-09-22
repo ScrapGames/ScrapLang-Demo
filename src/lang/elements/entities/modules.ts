@@ -47,14 +47,3 @@ export class ScrapModule extends ScrapEntity {
 
     public get getScope() { return this.scope }
 }
-
-export class DefinedModule extends ScrapModule {
-    private body: Nameable[]
-
-    public constructor(name: string, body: Nameable[], scope: Scope, exports?: Set<string>) {
-        super(name, scope, exports)
-        this.body = body
-    }
-
-    public get getBody() { return this.body }
-}
