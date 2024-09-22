@@ -3,9 +3,9 @@ import { ScrapEntity } from "@lang/elements/commons.ts"
 import { Nameable } from "@typings"
 
 /**
- * Represents a Module. Which is a accessible block of code that can be accessed via his accessor token. `::` in this case.
+ * Represents a Module. Which is block which contains multiple entities that can be accessed via his accessor token `::`.
  * 
- * Not all the Module members are accessible. Only the members that was declared with `export` keywords.
+ * Only the entity members that was declared with `export` keywords can be accessed outside a module.
  * 
  * @example
  * 
@@ -44,6 +44,5 @@ export class ScrapModule extends ScrapEntity {
     }
 
     public get getExports() { return this.exports } 
-
     public get getScope() { return this.scope }
 }
