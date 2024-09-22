@@ -1,14 +1,13 @@
-import Lexer from "../src/lexer/lexer.ts"
-import Parser from "../src/parser/parser.ts"
+import Lexer from "@lexer/lexer.ts"
+import Parser from "@parser/parser.ts"
+import { Interpreter } from "@interpreter"
 
-import { inArray } from "../src/utils.ts"
-import { repl } from "../src/repl.ts"
-import { addSTD } from "../src/lang/std.ts"
-import { RuntimeError } from "../src/lang/lang-errors.ts"
-import { ScrapCall, ScrapString } from "../src/lang/expressions.ts"
-import { Interpreter } from "../src/interpreter.ts"
+import { repl } from "@repl"
+import { inArray } from "@utils"
 
-const args = Deno.args
+import { createEmptyScope } from "@lang/scope.ts"
+import { makeStdModule } from "@lang/api/native/std.ts"
+import { ScrapModule } from "@lang/elements/entities/modules.ts"
 
 async function main() {
     if (inArray("--repl", args)) {
