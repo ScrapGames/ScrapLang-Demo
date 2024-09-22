@@ -1,18 +1,18 @@
-import Parser from "@parser/parser.ts"
-import { Keywords, Tokens } from "@lexer/lexer.ts"
-import { parseAsync } from "@parser/components/functions.ts"
+import { ASTEntityNode } from "@ast/ast.ts"
 import { AccessorModifiers, ScrapClassEntityProps } from "@typings"
 
-import { Scope } from "@lang/scope.ts"
-import { DefinedFunction } from "@lang/elements/commons.ts"
-import { ScrapVariable } from "@lang/elements/entities/variable.ts"
+import { Keywords, Tokens } from "@lexer/lexer.ts"
 
-function parseClassEntity(parser: Parser, isStatic: boolean, scope: Scope): ScrapVariable | DefinedFunction {
-  switch (parser.cursor.currentTok.content) {
-    case Keywords.ASYNC: return parseAsync(parser, true, isStatic, scope)
-    case Keywords.FN: return parser.parseFunction(false, true, isStatic, scope)
+import Parser from "@parser/parser.ts"
+import { parseAsyncFn } from "@parser/components/functions.ts"
+
+function parseClassEntity(parser: Parser, isStatic: boolean): ASTEntityNode {
+  switch (parser.getCursor.currentTok.content) {
+    case Keywords.ASYNC: return parseAsyncFn(parser, true, isStatic)
+    case Keywords.FN: return parser.parseFunction(false, true, isStatic)
+
     case Keywords.CONST:
-    case Keywords.VAR: return parser.parseVar(scope)
+    case Keywords.VAR: return parser.parseVar()
   }
 
   parser.scrapParseError("Unknown class entity")
@@ -23,9 +23,7 @@ function canStaticOrOverride(parser: Parser): { isStatic: boolean, canOverride: 
   const isStatic = true
   let canOverride = false
 
-  // @ts-ignore: parser.nextToken() has already advanced the position of the cursor
-  // so the comparation is correct
-  if (parser.cursor.currentTok.content === Keywords.OVERRIDE) {
+  if (parser.getCursor.currentTok.content === Keywords.OVERRIDE) {
     parser.nextToken() // eat 'override'
     canOverride = true
   }
@@ -33,11 +31,11 @@ function canStaticOrOverride(parser: Parser): { isStatic: boolean, canOverride: 
   return { isStatic, canOverride }
 }
 
-function canOverrideF(parser: Parser): boolean {
+function canOverrideFunc(parser: Parser): boolean {
   parser.nextToken() // place currentTok to 'override'
   const canOverride = true
 
-  const nextToken = parser.cursor.next()
+  const nextToken = parser.getCursor.next()
 
   switch (nextToken.content) {
     case Keywords.FN:
@@ -55,19 +53,19 @@ function canOverrideF(parser: Parser): boolean {
  * like: public, private, protected or static. Parsing the content is different
  */
 export function parseClassBody(
-    parser: Parser, classEntities: ScrapClassEntityProps[], scope: Scope
+    parser: Parser, classEntities: ScrapClassEntityProps[]
   ): ScrapClassEntityProps[] {
     parser.nextToken() // eat '{'
     let accessor: AccessorModifiers = "private"
     let isStatic = false
     let canOverride = false
 
-    while (parser.cursor.currentTok.content !== Tokens.RBRACE) {
-      switch (parser.cursor.currentTok.content) {
+    while (parser.getCursor.currentTok.content !== Tokens.RBRACE) {
+      switch (parser.getCursor.currentTok.content) {
         case Keywords.PUBLIC:
         case Keywords.PRIVATE:
         case Keywords.PROTECTED: {
-          accessor = parser.cursor.currentTok.content
+          accessor = parser.getCursor.currentTok.content
           
           parser.nextToken() // eat accessor modifier
         } break
@@ -76,24 +74,26 @@ export function parseClassBody(
           const entityProps = canStaticOrOverride(parser)
           isStatic = entityProps.isStatic
           canOverride = entityProps.canOverride
+
+          parser.nextToken()
         } break
   
         case Keywords.OVERRIDE: {
-          canOverride = canOverrideF(parser)
+          canOverride = canOverrideFunc(parser)
+
+          parser.nextToken()
         } break
       }
 
-      const parsedClassScrapEntity = parseClassEntity(parser, isStatic, scope)
+      const parsedClassScrapEntity = parseClassEntity(parser, isStatic)
       classEntities.push({ accessor, isStatic, canOverride, entitiyType: parsedClassScrapEntity })
   
-      parser.addToScope(scope, parsedClassScrapEntity.name, parsedClassScrapEntity)
-      
       isStatic = false
       canOverride = false
     }
 
 
-    parser.nextToken() // eat '}'
+  parser.nextToken() // eat '}'
 
-    return classEntities
-  }
+  return classEntities
+}

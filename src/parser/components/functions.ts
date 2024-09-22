@@ -1,19 +1,14 @@
+import { ASTValueNode } from "@ast/ast.ts"
+import { ScrapParam, Instructions } from "@typings"
 
-import { ScrapParam, AllowedBlockEntities } from "@typings"
-
-import { Scope } from "@lang/scope.ts"
-
-import Parser from "@parser/parser.ts"
 import { Keywords, Tokens } from "@lexer/lexer.ts"
 
-import { ScrapUndefined } from "@lang/elements/values/absence.ts"
-import { ScrapVariable } from "@lang/elements/entities/variable.ts"
-import { DefinedFunction, ScrapValue } from "@lang/elements/commons.ts"
+import Parser from "@parser/parser.ts"
+import { FunctionNode, UndefinedNode } from "@ast/nodes.ts"
 
-export function parseAsync(parser: Parser, isMethod: boolean, isStatic: boolean, scope: Scope): DefinedFunction {
+export function parseAsyncFn(parser: Parser, isMethod: boolean, isStatic: boolean, isExpression: boolean): FunctionNode {
   parser.expectsContent(Keywords.FN, "'async' keywords is only applicable to functions")
-
-  return parser.parseFunction(true, isMethod, isStatic, scope)
+  return parser.parseFunction(true, isMethod, isStatic, isExpression)
 }
 
 function parseParameter(parser: Parser): ScrapParam {
@@ -28,9 +23,9 @@ function parseParameter(parser: Parser): ScrapParam {
  * Fills the array passed as parameter `param` with the parameters of the parsed function
  * @param param Array of params that the function receive
  */
-export function parseParamList(parser: Parser) {
+export function parseParamList(parser: Parser): ScrapParam[] {
   const params: ScrapParam[] = []
-  while (parser.cursor.currentTok.content !== Tokens.RPAREN) {
+  while (parser.getCursor.currentTok.content !== Tokens.RPAREN) {
     params.push(parseParameter(parser))
 
     if (parser.nextToken().content === Tokens.COMMA) {
@@ -48,20 +43,22 @@ export function parseParamList(parser: Parser) {
  * @param scope scope where variabled are saved and references are searched
  * @returns An allowed element inside a function body: they can be: other `DefinedFunctions`, `ScrapVariables` or `ScrapCalls` to any function
  */
-function parseFunctionEntity(parser: Parser, scope: Scope): AllowedBlockEntities {
-  const toBeParsedTok = parser.cursor.currentTok
+function parseFunctionEntity(parser: Parser): Instructions {
+  const toBeParsedTok = parser.getCursor.currentTok
 
   if (toBeParsedTok.type === "IdentifierName") {
-    const parsedId = parser.parseIdentifier(scope)
+    const parsedId = parser.parseIdentifier()
 
-    return parsedId as AllowedBlockEntities //! temporal casting technique, will be removed in the future
+    return parsedId as Instructions
   } else {
     switch (toBeParsedTok.content) {
       case Keywords.FN:
       case Keywords.VAR:
-      case Keywords.CONST: return parser.parseStatement(scope) as AllowedBlockEntities
+      case Keywords.CONST: return parser.parseStatement() as Instructions
 
-      default: parser.scrapParseError("Only 'fn', 'var', 'const', function calls and assignments are allowed inside a function body")
+      default: {
+        parser.scrapParseError("Only 'fn', 'var', 'const', function calls and reassignments are allowed inside a function body")
+      }
     }
   }
 }
@@ -71,26 +68,21 @@ function parseFunctionEntity(parser: Parser, scope: Scope): AllowedBlockEntities
  * @param isMethod
  * @param scope `Scope` where the function can registry variables that has been declared inside his body
  */
-export function parseFunctionBody(parser: Parser, isMethod: boolean, scope: Scope): { body: AllowedBlockEntities[], return: ScrapValue } {  
-  const body: AllowedBlockEntities[] = []
-  let parsedVal: AllowedBlockEntities
+export function parseFunctionBody(parser: Parser, fName: string) {  
+  const body: Instructions[] = []
 
-  while (parser.cursor.currentTok.content !== Tokens.RBRACE) {
-    if (parser.cursor.currentTok.content === Keywords.RETURN) {
-      if (isMethod)
+  while (parser.getCursor.currentTok.content !== Tokens.RBRACE) {
+    if (parser.getCursor.currentTok.content === Keywords.RETURN) {
+      if (fName === "constructor")
         parser.scrapParseError("A constructor can not have a return statement")
       
-      return { body, return: parseReturn(parser, scope) }
+      return { body, return: parseReturn(parser) }
     } else {
-      parsedVal = parseFunctionEntity(parser, scope)
-      if ((parsedVal instanceof DefinedFunction) || (parsedVal instanceof ScrapVariable))
-        parser.addToScope(scope, parsedVal.name, parsedVal)
-
-      body.push(parsedVal)
+      body.push(parseFunctionEntity(parser))
     }
   }
 
-  return { body, return: new ScrapUndefined() }
+  return { body, return: new UndefinedNode() }
 }
 
 /**
@@ -102,7 +94,7 @@ export function parseFunctionBody(parser: Parser, isMethod: boolean, scope: Scop
  *
  * @returns An `Expression`
  */
-export function parseReturn(parser: Parser, scope: Scope): ScrapValue {
+export function parseReturn(parser: Parser): ASTValueNode {
   parser.nextToken() // eat 'return' keyword
-  return parser.parseExpr(scope)
+  return parser.parseExpr()
 }
