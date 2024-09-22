@@ -32,7 +32,7 @@ export class Scope {
      * Adds an entry to the current scope object
      * @param name Name of the entry
      * @param value Value of the entry
-     * @returns boolean, if the entry already exists, true in other case
+     * @returns false, if the entry already exists, true in other case
      */
     public addEntry(name: string, value: Nameable): boolean {
         if (this.searchReference(name))
@@ -56,12 +56,17 @@ export class Scope {
             return undefined
     }
 
-    public get getParentScope() { return this.parentScope }
+    /**
+     * Calls 'Map.clear()' to clean the scope
+     * 
+     * This is useful for example: once a function has finish its execution
+     */
+    public clean() {
+        this.getScopedEntities.clear()
+    }
 
-    public set setParentScope(newParentScope: Scope) { this.parentScope = newParentScope }
-
-    public get getOwner() { return this.belongsTo }
-
+    public get getParentScope()    { return this.parentScope }
+    public get getOwner()          { return this.belongsTo }
     public get getScopedEntities() { return this.scopedEntities }
 }
 
