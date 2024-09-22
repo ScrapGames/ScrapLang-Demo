@@ -1,4 +1,4 @@
-import { Cursor } from "../utils.ts"
+import { Cursor } from "@utils"
 
 export default class LexerCursor extends Cursor<string> {
   source: string

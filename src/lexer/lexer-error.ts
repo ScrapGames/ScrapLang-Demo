@@ -1,4 +1,4 @@
-import Lexer from "./lexer.ts"
+import Lexer from "@lexer/lexer.ts"
 
 export default class LexingError extends Error {
     public constructor(lexer: Lexer, message: string) {
