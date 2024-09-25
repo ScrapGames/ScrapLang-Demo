@@ -1,6 +1,6 @@
 import { Scope } from "@lang/scope.ts"
 import { ScrapEntity } from "@lang/elements/commons.ts"
-import { ScrapClassEntityProps } from "@typings"
+import type { ClassEntity, ClassMetadata } from "@typings"
 
 /**
  * Represent a class
@@ -35,24 +35,24 @@ import { ScrapClassEntityProps } from "@typings"
  */
 export class ScrapClass extends ScrapEntity {
     private scope: Scope
-    private entities: ScrapClassEntityProps[]
-    private options: { inherits?: string, implements?: string }
+    private entities: ClassEntity[]
+    private metadata: ClassMetadata
     private hasConstructor: boolean
 
     public constructor(
         className: string, isExported: boolean, scope: Scope,
-        options: { inherits?: string, implements?: string },
+        entities: ClassEntity[], metadata: ClassMetadata,
         hasConstructor: boolean
     ) {
-        super(className)
+        super(className, isExported)
         this.scope = scope
         this.entities = entities
-        this.options = options
+        this.metadata = metadata
         this.hasConstructor = hasConstructor
     }
 
     public get getScoe()           { return this.scope }
     public get getEntities()       { return this.entities }
-    public get getOptions()        { return this.options }
+    public get getMetadata()        { return this.metadata }
     public get getHasConstructor() { return this.hasConstructor }
 }
