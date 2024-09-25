@@ -40,7 +40,7 @@ import { ScrapFloat, ScrapInteger } from "@lang/elements/values/numerics.ts"
 import * as mods from "./modules.ts"
 import * as fns from "./functions.ts"
 import * as vars from "./variables.ts"
-import { VERSION } from "@scrap";
+import { VERSION } from "@scrap"
 
 /**
  * The interpreter is the responsible of finally execute the code and register the declared entites
