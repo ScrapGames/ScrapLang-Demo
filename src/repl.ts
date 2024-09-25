@@ -1,5 +1,9 @@
-import Lexer from "./lexer/lexer.ts"
-import Parser from "./parser/parser.ts"
+import Lexer from "@lexer/lexer.ts"
+import Parser from "@parser/parser.ts"
+import { Interpreter } from "@interpreter"
+import { ScrapModule } from "@lang/elements/entities/modules.ts"
+import { makeStdModule } from "@lang/api/native/std.ts"
+import { createEmptyScope } from "@lang/scope.ts"
 
 /**
  * Prints the info about the ScrapLang REPL in the console
@@ -23,8 +27,6 @@ const REPL_COMMANDS = {
  */
 export function repl() {
     printReplInfo()
-    const lexer = new Lexer("", "repl")
-    const parser = new Parser(lexer)
     let input
 
     while (true) {
@@ -32,15 +34,15 @@ export function repl() {
         if (input === ".exit")
             REPL_COMMANDS[input](Deno.exitCode)
         else if (input === ".help" || input === ".license")
-            console.log(REPL_COMMANDS[input])
+            console.info(REPL_COMMANDS[input])
         else {
-            lexer.alsoScan("repl", input)
-            parser.restart()
-            try {
-                console.log(parser.parseRoot(parser.mainModule.getScope))
-            } catch (error) {
-                console.error("error:\n %s", error)
-            }
+            const fileName = "REPL"
+            const lex = new Lexer(input, fileName)
+
+            const globalMod = new ScrapModule("MainModule", false, createEmptyScope(null, "MainModule"))
+            globalMod.insert("std", makeStdModule())
+
+            Interpreter.run(new Parser(lex), globalMod)
         }
     }
 }
