@@ -43,48 +43,36 @@ import * as vars from "./variables.ts"
 import { VERSION } from "@scrap"
 
 /**
+ * Causes the program stop by a undefined referenced
+ */
+export function scrapReferenceError(parser: Parser): never {
+  throw new UndefinedReferenceError(parser.getCursor.currentTok)
+}
+
+export function addToScope(entity: Nameable & Exportable, scope: Scope) {
+  if (!scope.addEntry(entity.name, entity))
+    scrapRuntimeError(`'${entity.name}' is already defined at '${scope.getOwner}'`)
+
+  return entity
+}
+
+/**
+ * Causese the program to stop cause an error at runtime
+ * @param message Informational error message that will be printed in the console
+ */
+export function scrapRuntimeError(message: string): never {
+  throw new RuntimeError(message)
+}
+
+  /**
  * The interpreter is the responsible of finally execute the code and register the declared entites
  * It's like the engine of the language
  */
 export class Interpreter {
-  private parser: Parser
-  private globalMod: ScrapModule
+  parser: Parser
 
-  public constructor(parser: Parser, globalMod: ScrapModule) {
+  public constructor(parser: Parser) {
     this.parser = parser
-    this.globalMod = globalMod
-  }
-
-  /**
-   * Causese the program to stop cause an error at runtime
-   * @param message Informational error message that will be printed in the console
-   */
-  public scrapRuntimeError(message: string): never {
-    throw new RuntimeError(message)
-  }
-
-  /**
-   * Causes the program stop by a undefined referenced
-   */
-  public scrapReferenceError(): never {
-    throw new UndefinedReferenceError(this.parser.getCursor.currentTok)
-  }
-
-  private addToScope(entity: Nameable, scope: Scope) {
-    if (!scope.addEntry(entity.name, entity))
-      this.scrapRuntimeError(`'${entity.name}' is already defined at '${scope.getOwner}'`)
-    
-    return entity
-  }
-
-  /**
-   * Computes the value assigned to a `VariableNode`
-   * @param variable `VariableNode` which contains the future SCrapValue
-   * @param scope Scope where the assigned value can be found
-   * @returns A new `ScrapVariable` which contains the value stored in `variable` node
-   */
-  private computeVar(variable: VariableNode, scope: Scope): ScrapVariable {
-    return new ScrapVariable(variable.isConst, variable.name, this.computeValue(variable.getAssginedValue as ASTValueNode, scope))
   }
 
   private computeReference(ref: ReferenceNode, scope: Scope) {
