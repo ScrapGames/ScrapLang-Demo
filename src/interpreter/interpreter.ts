@@ -92,6 +92,9 @@ export class Interpreter {
     for (const instruction of callee.getBody)
       this.inferFnInstruction(instruction, scope)
 
+    if (guardsV.isIdentifier(callee.getReturnValue) && callee.getScope.getScopedEntities.has(callee.getReturnValue.getSymbol))
+      scrapRuntimeError(`You returned a locally scoped entity in '${callee.name}', which will be destroyed after the execution ends`)
+
     callee.getScope.clean() // cleanup the scope, freeing memory
     return this.computeValue(callee.getReturnValue, scope) // The return value is deleted by the JavaScript garbage collector itself, since it's not part of the function scope, ins't necessary to explictly delete it
   }
