@@ -193,11 +193,11 @@ export default class Parser {
 
     this.nextToken() // eat '{'
 
-    const { body, exports } = parseModuleBody(this)
+    const body = parseModuleBody(this)
 
     this.nextToken() // eat '}'
 
-    return new ast.ModuleNode(moduleName, body, exports)
+    return new ast.ModuleNode(moduleName, body)
   }
 
   private parseClass(): ast.ClassNode {
@@ -474,7 +474,6 @@ export default class Parser {
     switch (this.cursor.currentTok.content) {
       case Keywords.VAR:    return this.parseVar()
 
-      //case Keywords.EXPORT: this.nextToken(); break
       case Keywords.ASYNC:  return parseAsyncFn(this, false, false, false) as ASTEntityNode
       case Keywords.FN:     return this.parseFunction(false, false, false, false) as ASTEntityNode
       case Keywords.CONST:  return this.parseVar()
@@ -485,16 +484,12 @@ export default class Parser {
     }
   }
 
-  /**
-   * Parses a primary entity
-   */
-  public parseRoot(): ASTEntityNode {
+  private parseRootEntity() {
     switch (this.cursor.currentTok.content) {
       case Keywords.ASYNC:
       case Keywords.FN:
       case Keywords.CONST:
       case Keywords.CLASS:
-      case Keywords.EXPORT:
       case Keywords.MODULE: return this.parseStatement()
 
       default: {
@@ -507,10 +502,29 @@ export default class Parser {
     }
   }
 
+  public parseExportedRoot() {
+    this.nextToken() // eat 'export' keyword
+    const exported = this.parseRootEntity()
+    exported.isExported = true
+
+    return exported
+  }
+
+  /**
+   * Parses a primary entity
+   */
+  public parseRoot() {
+    if (this.cursor.currentTok.content === Keywords.EXPORT) {
+      const exported = this.parseExportedRoot()
+      return exported
+    }
+
+    return this.parseRootEntity()
+  }
+
   
   /* GETTERS & SETTERS */
-  public get hasFinish(): boolean { return this.cursor.isEOF() }
-
+  public get hasFinish()   { return this.cursor.isEOF() }
   public get getLexer()    { return this.lexer }
   public get getCursor()   { return this.cursor }
   public get getAST()      { return this.ast }

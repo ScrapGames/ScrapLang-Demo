@@ -29,6 +29,9 @@ export interface Nameable {
     name: string
 }
 
+export interface Exportable {
+    isExported: boolean
+}
 export interface Accessible<T> {
     get(from: T): ScrapValue
 }

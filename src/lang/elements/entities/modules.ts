@@ -1,6 +1,7 @@
 import { Scope } from "@lang/scope.ts"
 import { ScrapEntity } from "@lang/elements/commons.ts"
-import { Nameable } from "@typings"
+
+import type { Nameable, Exportable } from "@typings"
 
 /**
  * Represents a Module. Which is block which contains multiple entities that can be accessed via his accessor token `::`.
@@ -17,32 +18,34 @@ import { Nameable } from "@typings"
  * 
  * MyModule::PI // correct syntax, PI constant has been exported
  * 
- * MyModule::privateConstant // error: privateConstant was not exported from his module. Is only accessible inside the module it has been declared
+ * MyModule::privateConstant // error: privateConstant is not exported from his module. Is only accessible inside the module it has been declared
  */
 export class ScrapModule extends ScrapEntity {
     private scope: Scope
-    private exports: Set<string>
 
-    public constructor(name: string, scope: Scope, exports?: Set<string>) {
-        super(name)
+    public constructor(name: string, isExported: boolean, scope: Scope) {
+        super(name, isExported)
         this.scope = scope
-        this.exports = exports ?? new Set()
     }
 
-    public insert(name: string, value: Nameable, isExported?: true) {
+    /**
+     * Stores an entity in the scope of `this` module and optionally, exports it
+     * @param name Name of the inserted entity
+     * @param value Stored entity
+     * @param isExported flags which indicate if `value` entity is exported by `this` module
+     */
+    public insert(name: string, value: Nameable & Exportable) {
         this.scope.addEntry(name, value)
-        if (isExported)
-            this.exports.add(value.name)
     }
 
-    public getEntity(name: string) {
+    /**
+     * Checks if an entity exists in `this` module
+     * @param name of searched entity
+     * @returns a reference to the searched entity if exists, `undefined` in other way
+     */
+    public getEntity(name: string): Nameable & Exportable | undefined {
         return this.scope.getReference(name)
     }
 
-    public isExported(entityName: string) {
-        return this.exports.has(entityName)
-    }
-
-    public get getExports() { return this.exports } 
     public get getScope() { return this.scope }
 }

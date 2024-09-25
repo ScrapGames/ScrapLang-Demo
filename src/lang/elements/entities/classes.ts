@@ -40,7 +40,7 @@ export class ScrapClass extends ScrapEntity {
     private hasConstructor: boolean
 
     public constructor(
-        className: string, scope: Scope, entities: ScrapClassEntityProps[],
+        className: string, isExported: boolean, scope: Scope,
         options: { inherits?: string, implements?: string },
         hasConstructor: boolean
     ) {

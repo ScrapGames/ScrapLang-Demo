@@ -65,11 +65,13 @@ export class ScrapObject extends ScrapValue {
  *  - Module
  *  - Variable (or constant) declaration
  */
-export class ScrapEntity implements Nameable {
+export class ScrapEntity implements Nameable, Exportable {
     name: string
+    isExported: boolean
 
-    public constructor(name: string) {
+    public constructor(name: string, isExported: boolean) {
         this.name = name
+        this.isExported = isExported
     }
 }
 
@@ -84,13 +86,15 @@ export class ScrapEntity implements Nameable {
  * 
  * const myFunctionInVariable = myFunction
  */
-export class ScrapFunction extends ScrapObject implements Nameable {
+export class ScrapFunction extends ScrapObject implements Nameable, Exportable {
     name: string
+    isExported: boolean
 
     // TODO: gives the constructor a suitable initial value
-    public constructor(name: string) {
+    public constructor(name: string, isExported: boolean) {
         super(null)
         this.name = name
+        this.isExported = isExported
     }
 }
 
@@ -101,10 +105,10 @@ export class DefinedFunction extends ScrapFunction {
     private body: Instructions[]
 
     public constructor(
-        name: string, scope: Scope, params: ScrapParam[],
-        body: Instructions[], returnValue: ASTValueNode
+        name: string, isExported: boolean, scope: Scope, params: ScrapParam[],
+        body: Instruction[], returnValue: ASTValueNode
     ) {
-        super(name)
+        super(name, isExported)
         this.scope = scope
         this.params = params
         this.body = body
@@ -127,10 +131,10 @@ export class ScrapNative extends ScrapFunction {
     private argsCount: number | true
 
     public constructor(
-        name: string, argsCount: number | true,
+        name: string, isExported: boolean,
         action: (...args: ScrapValue[]) => ScrapValue
     ) {
-        super(name)
+        super(name, isExported)
         this.argsCount = argsCount
         this.action = action
     }

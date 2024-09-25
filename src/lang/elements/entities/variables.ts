@@ -22,9 +22,9 @@ export class ScrapVariable extends ScrapEntity {
 
     public constructor(
         isConst: boolean, name: string,
-        assignedValue: ScrapValue
+        assignedValue: ScrapValue, isExported: true
     ) {
-        super(name)
+        super(name, isExported)
         this.isConst = isConst
         this.assignedValue = assignedValue
     }
