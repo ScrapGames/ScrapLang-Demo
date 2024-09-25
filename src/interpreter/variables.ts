@@ -1,9 +1,9 @@
 import { ReassignmentNode } from "@ast/nodes.ts"
 import { Scope } from "@lang/scope.ts"
 import { ScrapValue } from "@lang/elements/commons.ts"
-import { ASTValueNode } from "@ast/ast.ts"
-import { Interpreter } from "@interpreter"
 import { ScrapVariable } from "@lang/elements/entities/variables.ts"
+
+import { Interpreter, scrapReferenceError, scrapRuntimeError } from "@interpreter"
 
 /**
  * Performs a reassignment to the targeted variable as long as the target isn't a variable
@@ -11,19 +11,34 @@ import { ScrapVariable } from "@lang/elements/entities/variables.ts"
  * @param scope Scope where the needed contents for the reassignment can be found
  * @returns The new reassigned value
  */
-export function computeReassignment(this: Interpreter, reassingment: ReassignmentNode, scope: Scope): ScrapValue {
+export function computeReassignment(interpreter: Interpreter, reassingment: ReassignmentNode, scope: Scope): ScrapValue {
     const target = scope.getReference(reassingment.getLHS)
-    const newVal = this.computeValue(reassingment.getRHS as ASTValueNode, scope)
+    const newVal = interpreter.computeValue(reassingment.getRHS as ASTValueNode, scope)
 
     if (!target)
-      this.scrapReferenceError()
+      scrapReferenceError(interpreter.parser)
 
     if (!(target instanceof ScrapVariable))
-      this.scrapRuntimeError("Only variables can be reassigned")
+      scrapRuntimeError("Only variables can be reassigned")
 
     if (target.isConst)
-      this.scrapRuntimeError("A constant can not change its value")
+      scrapRuntimeError("A constant can not change its value")
 
     target.setAssignedValue = newVal
     return newVal
   }
+
+/**
+ * Computes the value assigned to a `VariableNode`
+ * @param variable `VariableNode` which contains the future SCrapValue
+ * @param scope Scope where the assigned value can be found
+ * @returns A new `ScrapVariable` which contains the value stored in `variable` node
+ */
+export function computeVar(interpreter: Interpreter, variable: VariableNode, scope: Scope): ScrapVariable {
+  return new ScrapVariable(
+    variable.isConst,
+    variable.name,
+    interpreter.computeValue(variable.getAssginedValue as ASTValueNode, scope),
+    variable.isExported
+  )
+}
