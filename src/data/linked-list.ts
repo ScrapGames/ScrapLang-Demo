@@ -1,4 +1,4 @@
-import { Nullable } from "../typings.ts";
+import { Nullable } from "@typings"
 
 export interface INode<T> {
   index: number,
