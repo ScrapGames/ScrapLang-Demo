@@ -196,7 +196,7 @@ export default class Lexer {
   public constructor(source: string, fileName: string) {
     this.cursor = new LexerCursor(source)
     this.fileName = fileName
-    this.line = 0
+    this.line = 1
   }
 
   private createToken(type: TokenType, content: string): Token {
