@@ -1,12 +1,12 @@
 import { Token } from "@lexer/lexer.ts"
-import type { Nameable, Nullable } from "@typings"
+import type { Exportable, Nameable, Nullable } from "@typings"
 
 const { ReferenceError } = globalThis
 
 export class Scope {
     private parentScope: Nullable<Scope>
     private belongsTo: string
-    private scopedEntities: Map<string, Nameable>
+    private scopedEntities: Map<string, Nameable & Exportable>
 
     public constructor(parentScope: Nullable<Scope>, belongsTo: string) {
         this.parentScope = parentScope
@@ -26,6 +26,17 @@ export class Scope {
             return this.parentScope.searchReference(name)
         else
             return false
+
+    /**
+     * Gets the value stored in `this` scope or parents scopes of `this`
+     * @param name Name of the variable (or entity)
+     * @returns The variable, if has been stored using `addEntry`, undefined otherwise
+     */
+    public getReference(name: string): (Nameable & Exportable) | undefined {
+        const ref = this.scopedEntities.get(name)
+        if (ref) return ref
+
+        return this.parentScope !== null ? this.parentScope.getReference(name) : undefined
     }
 
     /**
@@ -34,26 +45,11 @@ export class Scope {
      * @param value Value of the entry
      * @returns false, if the entry already exists, true in other case
      */
-    public addEntry(name: string, value: Nameable): boolean {
+    public addEntry(name: string, value: Nameable & Exportable) {
         if (this.searchReference(name))
             return false
         this.scopedEntities.set(name, value)
         return true
-
-    }
-
-    /**
-     * Gets the value stored in `this` scope or parents scopes of `this`
-     * @param name Name of the variable (or entity)
-     * @returns The variable, if has been stored using `addEntry`, undefined otherwise
-     */
-    public getReference(name: string): Nameable | undefined {
-        if (this.scopedEntities.get(name) !== undefined)
-            return this.scopedEntities.get(name)
-        else if (this.parentScope !== null)
-            return this.parentScope.getReference(name)
-        else
-            return undefined
     }
 
     /**
