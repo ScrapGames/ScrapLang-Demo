@@ -45,9 +45,10 @@ export class Scope {
      * @returns false, if the entry already exists, true in other case
      */
     public addEntry(name: string, value: Nameable & Exportable) {
-        if (this.searchReference(name))
+        if (this.entries.has(name))
             return false
-        this.scopedEntities.set(name, value)
+
+        this.entries.set(name, value)
         return true
     }
 
