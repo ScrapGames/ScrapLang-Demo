@@ -43,7 +43,7 @@ export function computeModuleAccess(this: Interpreter, node: ModuleAccessNode, s
   if (!mod.isExported(entityName))
     this.scrapRuntimeError(`The module '${node.getAccessedMod}', defines '${entityName}' but doesn't exports it`)
 
-  if (node.getAccessedEntity.kind === NodeValueType.Call) {
+  if (guardsV.isCall(node.getTarget)) {
     // module scope is only used 
     const callee = this.findCallee(node.getAccessedEntity as CallNode, mod.getScope)
     return this.execCallee(node.getAccessedEntity as CallNode, callee, scope)
