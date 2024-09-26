@@ -7,10 +7,10 @@
  * If Lexer founds a keyword or another token that is invalid, will throw an error
  */
 
-import { isAlpha, isNumeric, isAlphaNum, isSpace, isHexadecimal, inArray } from "../utils.ts"
+import { isAlpha, isNumeric, isAlphaNum, isSpace, isHexadecimal, inArray } from "@utils"
 
-import LexingError from "./lexer-error.ts"
-import LexerCursor from "./lexer-cursor.ts"
+import LexingError from "@lexer/lexer-error.ts"
+import LexerCursor from "@lexer/lexer-cursor.ts"
 
 export type TokenType = |
   "IdentifierName"      |
