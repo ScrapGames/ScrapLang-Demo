@@ -5,13 +5,13 @@ const { ReferenceError } = globalThis
 
 export class Scope {
     private parentScope: Nullable<Scope>
-    private belongsTo: string
-    private scopedEntities: Map<string, Nameable & Exportable>
+    private owner: string
+    private entries: Map<string, Nameable & Exportable>
 
-    public constructor(parentScope: Nullable<Scope>, belongsTo: string) {
+    public constructor(parentScope: Nullable<Scope>, owner: string) {
         this.parentScope = parentScope
-        this.belongsTo = belongsTo
-        this.scopedEntities = new Map()
+        this.owner = owner
+        this.entries = new Map()
     }
 
     /**
@@ -64,8 +64,8 @@ export class Scope {
     }
 
     public get getParentScope()    { return this.parentScope }
-    public get getOwner()          { return this.belongsTo }
-    public get getScopedEntities() { return this.scopedEntities }
+    public get getOwner()       { return this.owner }
+    public get getEntries()     { return this.entries }
 }
 
 /**
