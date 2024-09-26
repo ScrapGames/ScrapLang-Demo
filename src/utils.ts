@@ -1,3 +1,7 @@
+import { Nullable } from "@typings"
+import { createEmptyScope, Scope } from "@lang/scope.ts"
+import { ScrapModule } from "@lang/elements/entities/modules.ts"
+
 /// Detects alphabetic characters (ignoring Cases)
 export function isAlpha(token: string) {
     const alphaRegex = /[a-zA-Z_]/
@@ -38,6 +42,10 @@ export function isSpace(token: string) {
  */
 export function inArray<T>(item: T, array: T[]): boolean {
     return array.some(e => e === item)
+}
+
+export function createNativeModule(name: string, parent: Nullable<Scope>, isExported: boolean): ScrapModule {
+    return new ScrapModule(name, isExported, createEmptyScope(parent, name))
 }
 
 /**
