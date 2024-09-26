@@ -19,24 +19,23 @@ export class Scope {
      * @param name Name of the variable, which is unique
      * @returns true, if was already registered, false in other case
      */
-    public searchReference(name: string): boolean {
-        if (this.scopedEntities.has(name))
-            return true
-        else if (this.parentScope !== null)
-            return this.parentScope.searchReference(name)
-        else
-            return false
+    public exists(name: string): boolean {
+        const exists = this.entries.has(name)
+        if (exists) return exists
+
+        return this.parentScope !== null ? this.parentScope.exists(name) : false
+    }
 
     /**
      * Gets the value stored in `this` scope or parents scopes of `this`
      * @param name Name of the variable (or entity)
      * @returns The variable, if has been stored using `addEntry`, undefined otherwise
      */
-    public getReference(name: string): (Nameable & Exportable) | undefined {
-        const ref = this.scopedEntities.get(name)
+    public get(name: string): (Nameable & Exportable) | undefined {
+        const ref = this.entries.get(name)
         if (ref) return ref
 
-        return this.parentScope !== null ? this.parentScope.getReference(name) : undefined
+        return this.parentScope !== null ? this.parentScope.get(name) : undefined
     }
 
     /**
@@ -60,10 +59,10 @@ export class Scope {
      *  * A control block ends (if block, for loop, etc)
      */
     public clean() {
-        this.getScopedEntities.clear()
+        this.entries.clear()
     }
 
-    public get getParentScope()    { return this.parentScope }
+    public get getParent()      { return this.parentScope }
     public get getOwner()       { return this.owner }
     public get getEntries()     { return this.entries }
 }
