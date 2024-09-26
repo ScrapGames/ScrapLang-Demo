@@ -54,8 +54,10 @@ export class Scope {
 
     /**
      * Calls 'Map.clear()' to clean the scope
-     * 
-     * This is useful for example: once a function has finish its execution
+     * This is useful in cases where a scope is no longer needed nor used.
+     * For example:
+     *  * Function who ends its execution
+     *  * A control block ends (if block, for loop, etc)
      */
     public clean() {
         this.getScopedEntities.clear()
