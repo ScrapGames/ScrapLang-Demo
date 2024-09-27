@@ -4,8 +4,8 @@ import { ScrapParam, Instructions } from "@typings"
 import { Keywords, Tokens } from "@lexer/lexer.ts"
 
 import Parser from "@parser/parser.ts"
-import { FunctionNode, UndefinedNode } from "@ast/nodes.ts"
 
+import type { ScrapParam, Instruction } from "@typings"
 export function parseAsyncFn(parser: Parser, isMethod: boolean, isStatic: boolean, isExpression: boolean): FunctionNode {
   parser.expectsContent(Keywords.FN, "'async' keywords is only applicable to functions")
   return parser.parseFunction(true, isMethod, isStatic, isExpression)
@@ -43,18 +43,18 @@ export function parseParamList(parser: Parser): ScrapParam[] {
  * @param scope scope where variabled are saved and references are searched
  * @returns An allowed element inside a function body: they can be: other `DefinedFunctions`, `ScrapVariables` or `ScrapCalls` to any function
  */
-function parseFunctionEntity(parser: Parser): Instructions {
+function parseFunctionEntity(parser: Parser): Instruction {
   const toBeParsedTok = parser.getCursor.currentTok
 
   if (toBeParsedTok.type === "IdentifierName") {
     const parsedId = parser.parseIdentifier()
 
-    return parsedId as Instructions
+    return parsedId as Instruction
   } else {
     switch (toBeParsedTok.content) {
       case Keywords.FN:
       case Keywords.VAR:
-      case Keywords.CONST: return parser.parseStatement() as Instructions
+      case Keywords.CONST: return parser.parseStatement() as Instruction
 
       default: {
         parser.scrapParseError("Only 'fn', 'var', 'const', function calls and reassignments are allowed inside a function body")
@@ -69,7 +69,7 @@ function parseFunctionEntity(parser: Parser): Instructions {
  * @param scope `Scope` where the function can registry variables that has been declared inside his body
  */
 export function parseFunctionBody(parser: Parser, fName: string) {  
-  const body: Instructions[] = []
+  const body: Instruction[] = []
 
   while (parser.getCursor.currentTok.content !== Tokens.RBRACE) {
     if (parser.getCursor.currentTok.content === Keywords.RETURN) {
