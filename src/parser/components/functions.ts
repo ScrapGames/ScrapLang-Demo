@@ -6,6 +6,15 @@ import { Keywords, Tokens } from "@lexer/lexer.ts"
 import Parser from "@parser/parser.ts"
 
 import type { ScrapParam, Instruction } from "@typings"
+
+/**
+ * Parses an asynchronous function
+ * @param parser Parses used to _parse_ the function
+ * @param isMethod Determines if `this` argument need to be added to the function
+ * @param isStatic Determines if the function can be accessed througth a class object
+ * @param isExpression Determines if an function is defined as a expression
+ * @returns 
+ */
 export function parseAsyncFn(parser: Parser, isMethod: boolean, isStatic: boolean, isExpression: boolean): FunctionNode {
   parser.expectsContent(Keywords.FN, "'async' keywords is only applicable to functions")
   return parser.parseFunction(true, isMethod, isStatic, isExpression)
