@@ -1,107 +1,118 @@
-import type { ClassAccessorModifier, ClassEntityMetadata, ClassEntity } from "@typings"
+import { ASTControlNode } from "@ast/ast.ts"
+import { CallNode, FunctionNode, IdentifierNode, ModuleAccessNode, ObjectAccessNode, ReassignmentNode, VariableNode } from "@ast/nodes.ts"
 
-import { Keywords, Tokens } from "@lexer/lexer.ts"
+import { ScrapValue } from "@lang/elements/commons.ts"
 
-import Parser from "@parser/parser.ts"
-import { parseAsyncFn } from "@parser/components/functions.ts"
+/**
+ * Converts the type parameter to a possible null value
+ * 
+ * The next example shows how it works with the number type
+ * @example
+ * function showNumberString(num: Nullable<number>) {
+ *   if (num)
+ *     console.log(num.toString())
+ * }
+ */
+export type Nullable<T> = T | null
 
-function parseClassEntity(parser: Parser, isStatic: boolean): ASTEntityNode {
-  switch (parser.getCursor.currentTok.content) {
-    case Keywords.ASYNC: return parseAsyncFn(parser, true, isStatic)
-    case Keywords.FN: return parser.parseFunction(false, true, isStatic)
-
-    case Keywords.CONST:
-    case Keywords.VAR: return parser.parseVar()
-  }
-
-  parser.scrapParseError("Unknown class entity")
-}
-
-function checkStaticAccessOrOverride(parser: Parser): ClassEntityMetadata {
-  parser.nextToken() // eat 'static'
-  const isStatic = true
-  let canOverride = false
-
-  if (parser.getCursor.currentTok.content === Keywords.OVERRIDE) {
-    parser.nextToken() // eat 'override'
-    canOverride = true
-  }
-
-  return { isStatic, canOverride }
-}
-
-function checkOveride(parser: Parser): boolean {
-  parser.nextToken() // place currentTok to 'override'
-  const canOverride = true
-
-  const classEntityKW = parser.getCursor.next() // eat 'override' keyword
-
-  // Here just check if the next token is a valid keyword to be preceed by 'override' keyword
-  switch (classEntityKW.content) {
-    case Keywords.FN:
-    case Keywords.CONST:
-    case Keywords.VAR: break
-    default: parser.scrapParseError("'override' keyword must be preceeded only by a function or variable declaration")   
-  }
-
-  return canOverride
+/**
+ * Represents values which has `name` as a common property
+ * 
+ * The `name` property is util and fundamental to search and save items in scopes or other data structured
+ * 
+ * These values can include:
+ *  * Any type that extends from `ScrapEntity`, like: variables, classes, modules, etc
+ *  * Any type that extends from `ScrapFunction`
+ */
+export interface Nameable {
+    name: string
 }
 
 /**
- * Same as `parseBody`, but since there are specific keywords inside a class body
- * like: public, private, protected or static. Parsing the content is different
+ * Makes the class who implements to define a method which
+ * 
  */
-export function parseClassBody(
-    parser: Parser, classEntities: ScrapClassEntityProps[]
-  ): ScrapClassEntityProps[] {
-    parser.nextToken() // eat '{'
-    let accessor: AccessorModifiers = "private"
-    let isStatic = false
-    let canOverride = false
+export interface Exportable {
+    isExported: boolean
+}
 
-    while (parser.getCursor.currentTok.content !== Tokens.RBRACE) {
-      switch (parser.getCursor.currentTok.content) {
-        case Keywords.PUBLIC:
-        case Keywords.PRIVATE:
-        case Keywords.PROTECTED: {
-          accessor = parser.getCursor.currentTok.content
-          
-          parser.nextToken() // eat accessor modifier
-        } break
+/**
+ * Makes the class who implements to define a method which
+ * represents the info about the value
+ */
+export interface Formattable {
+    format(): string
+}
 
-        case Keywords.STATIC: {
-          const entityProps = canStaticOrOverride(parser)
-          isStatic = entityProps.isStatic
-          canOverride = entityProps.canOverride
+export type AccessOperators = "[]" | "::" | "."
 
-          parser.nextToken()
-        } break
-  
-        case Keywords.OVERRIDE: {
-          canOverride = canOverrideFunc(parser)
+/**
+ * Defines 
+ */
+export interface Accessible<T> {
+    //accessOperators: Record<AccessOperators, () => ScrapValue>
+    get(from: T): ScrapValue
+}
 
-          parser.nextToken()
-        } break
-      }
+export interface Operable {
+    operator(operator: string): ScrapValue
+}
 
-      const parsedClassScrapEntity = parseClassEntity(parser, isStatic)
-    // Reset value to his initial values
-    entityFlags.isStatic = false
-    entityFlags.canOverride = false
-  }
+export interface Ajustable {
+    increment(): ScrapValue
+    decrement(): ScrapValue
+}
 
+export type Primitive = number | string | boolean | null | undefined
 
-  parser.nextToken() // eat '}'
+/**
+ * Represents allowable nodes to appear inside a function body
+ */
+export type Instruction = FunctionNode | CallNode | ReassignmentNode | VariableNode | ASTControlNode
 
-  return classEntities
-}      classEntities.push({ accessor, isStatic, canOverride, entitiyType: parsedClassScrapEntity })
-  
-      isStatic = false
-      canOverride = false
-    }
+export type AccesibleTarget<T extends ModuleAccessNode | ObjectAccessNode> = CallNode | IdentifierNode | T
 
+/**
+ * Represents a function parameter
+ * 
+ * A function parameter is util to pass values to a function, allowing a function returns a variable value
+ */
+export interface ScrapParam {
+    pName: string,
+    pType: string
+}
 
-  parser.nextToken() // eat '}'
+/**
+ * Represents possible values for accessor modifiers of a class entity
+ */
+export type ClassAccessorModifier = "public" | "private" | "protected"
 
-  return classEntities
+/**
+ * Represents flags for a class implementation of from where 
+ */
+export interface ClassMetadata {
+    inherits?: string,
+    implements?: string
+}
+
+/**
+ * Flags which indicate if a class entity is static or overrides another entity
+ */
+export interface ClassEntityMetadata {
+    isStatic: boolean,
+    canOverride: boolean
+}
+
+/**
+ * Represents metadata for a class entity
+ */
+export interface ClassEntity {
+    accessor: ClassAccessorModifier,
+    entityFlags: ClassEntityMetadata,
+    entity: FunctionNode | VariableNode
+}
+
+interface ExecutionContext {
+    callee: string,
+    instructions: Instruction[]
 }
