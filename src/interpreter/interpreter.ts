@@ -186,30 +186,29 @@ export class Interpreter {
 
   /**
    * Returns a ScrapValue based on `node.kind`
-   * @param node Node who contains the value of the new ScrapValue
+   * @param node Node containing the value of the new ScrapValue
    * @param scope Scope where the data of some nodes, like 'identifiers' can be founded
    * @returns A new ScrapValue based on the received `node`
    */
   public computeValue(node: ASTValueNode, scope: Scope): ScrapValue {
-    switch (node.kind) {
-      case NodeValueType.Function:     return fns.computeFn.call(this, node as FunctionNode, scope) // functions can also be assigned as values
-      case NodeValueType.Reassignment: return vars.computeReassignment.call(this, node as ReassignmentNode, scope)
-      case NodeValueType.ModAccess:    return mods.computeModuleAccess.call(this, node as ModuleAccessNode, scope)
-      case NodeValueType.Call:         return this.computeCall(node as CallNode, scope)
-      case NodeValueType.Identifier:   return this.computeIdentifier(node as IdentifierNode, scope)
-      case NodeValueType.LiteralObj:   return this.computeLitObj(node as LiteralObjectNode, scope)
-      case NodeValueType.LiteralArray: return this.computeLitArr(node as LiteralArrayNode<ASTValueNode>, scope)
+    // switch statement is weird af using type guards, add match to js pls :)
+    if (node.kind === NodeValueType.Function)           return fns.computeFn(node as FunctionNode, scope)
+    if (guardsNodeV.isReassignment(node))               return vars.computeReassignment(this, node, scope)
+    if (guardsNodeV.isModuleAccess(node))               return mods.computeModuleAccess(this, node, scope)
+    if (guardsNodeV.isObjectDestruction(node))          return objs.computeObjectDestruction(this, node, scope)
+    if (guardsNodeV.isObjectAccess(node))               return objs.computeObjAccess(this, node, scope)
+    if (guardsNodeV.isCall(node))                       return this.computeCall(node, scope)
+    if (guardsNodeV.isIdentifier(node))                 return this.computeIdentifier(node, scope)
+    if (guardsNodeV.isLiteralObject(node))              return this.computeLitObj(node, scope)
+    if (guardsNodeV.isLiteralArray<ASTValueNode>(node)) return this.computeLitArr(node, scope)
+    if (guardsNodeV.isString(node))                     return new ScrapString(node.getValue)
+    if (guardsNodeV.isNumeric(node))                    return new ScrapInteger(node.getValue)
+    if (guardsNodeV.isFloat(node))                      return new ScrapFloat(node.getValue)
+    if (guardsNodeV.isChar(node))                       return new ScrapChar(node.getValue)
+    
+    scrapRuntimeError(`ScrapLang ${VERSION} still doesn't support '${node.constructor.name}' interpreting`)
+    
 
-      // for cleanest code, values who simply needs a casting are separated from values which needs to be processed
-      case NodeValueType.String:        return new ScrapString((node as StringNode).getValue)
-      case NodeValueType.Numeric:       return new ScrapInteger((node as NumericNode).getValue)
-      case NodeValueType.Float:         return new ScrapFloat((node as FloatNode).getValue)
-      case NodeValueType.Char:          return new ScrapChar((node as CharNode).getValue)
-      case NodeValueType.Undefined:     return new ScrapUndefined()
-
-      case NodeValueType.ObjAccess:
-      case NodeValueType.Reference: this.scrapRuntimeError(`ScrapLang ${VERSION} still doesn't support '${node.constructor.name}' interpreting`)
-    }
   }
 
   /**
@@ -219,13 +218,15 @@ export class Interpreter {
    * @returns A new ScrapEntity containing the data stored at `node`
    */
   public computeEntity(node: ASTEntityNode, scope: Scope): ScrapEntity {
-    switch (node.kind) {
-      case NodeEntityType.Module:   return mods.computeMod.call(this, node as ModuleNode, scope)
-      case NodeEntityType.Function: return fns.computeFn.call(this, node as FunctionNode, scope)
-      case NodeEntityType.Variable: return this.computeVar(node as VariableNode, scope)
+    if (node.kind === NodeEntityType.Function) return fns.computeFn(node as FunctionNode, scope)
+    if (guardsNodeE.isModule(node))   return mods.computeMod(this, node, scope)
+    if (guardsNodeE.isVariable(node)) return vars.computeVar(this, node, scope)
 
-      case NodeEntityType.Class: this.scrapRuntimeError(`${node.constructor.name} still isn't supported`)
-    }
+    scrapRuntimeError(`ScrapLang ${VERSION} still doesn't support '${node.constructor.name}' interpreting`)
+  }
+
+  public computeControl(node: ASTControlNode, scope: Scope) {
+    if (guardsNodeC.isIf(node)) ctrls.computeIf(this, node, scope)
   }
 
   /**
