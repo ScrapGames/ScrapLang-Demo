@@ -26,7 +26,7 @@ class Stack<T> extends LinkedList<T> implements IStack<T> {
     return super.count()
   }
 
-  public beautyPrint() {
+  public beauty() {
     let stackContent = ""
     const nodes = super.traverse()
 
