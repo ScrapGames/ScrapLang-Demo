@@ -18,18 +18,18 @@ import { ScrapEntity, ScrapValue } from "@lang/elements/commons.ts"
  */
 export class ScrapVariable extends ScrapEntity {
     public isConst: boolean
-    private assignedValue: ScrapValue
+    private val: ScrapValue
 
     public constructor(
         isConst: boolean, name: string,
-        assignedValue: ScrapValue, isExported: true
+        assignedValue: ScrapValue, isExported: boolean
     ) {
         super(name, isExported)
         this.isConst = isConst
-        this.assignedValue = assignedValue
+        this.val = assignedValue
     }
 
-    public get getAssignedValue() { return this.assignedValue }
+    public get getVal() { return this.val }
 
-    public set setAssignedValue(newValue: ScrapValue) { this.assignedValue = newValue }
+    public set setVal(newVal: ScrapValue) { this.val = newVal }
 }
