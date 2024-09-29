@@ -35,12 +35,12 @@ export const SCRAP_PRINT_FUNCTION = new ScrapNativeFn("print", true, undefined, 
     return new ScrapUndefined()
 })
 
-const SCRAP_PARSEINT_FUNCTION = new ScrapNativeFn("parseInt", 1, (...args: ScrapValue[]) => {
+const SCRAP_PARSEINT_FUNCTION = new ScrapNativeFn("parseInt", true, 1, (...args: ScrapValue[]) => {
     return new ScrapInteger(parseInt(args[0].getValue as string))
 })
 
 export function makeStdModule() {
-    const stdModule = new ScrapModule("std", createEmptyScope(null, "std"))
+    const stdModule = new ScrapModule("std", true, createEmptyScope(null, "std"))
 
     // firstly, inserts functions
     stdModule.insert("print", SCRAP_PRINT_FUNCTION, true)
