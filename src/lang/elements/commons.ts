@@ -18,7 +18,7 @@ export const BINARY_OPERATORS_PRECEDENCE = {
     "in": 2
 }
 
-export class ScrapValue {
+export class ScrapValue implements Formattable {
     protected value: unknown
 
     public constructor(value: unknown) {
@@ -26,7 +26,7 @@ export class ScrapValue {
     }
 
     public get getValue() { return this.value }
-    public toString() { this.value + "" }
+    public format() { return String(this.value) }
 }
 
 export class ScrapPrimitive extends ScrapValue {    
@@ -120,7 +120,7 @@ export class DefinedFunction extends ScrapFunction {
     public get getReturnValue() { return this.returnValue }
     public get getBody() { return this.body }
 
-    public toString() { return this.name }
+    public format() { return `fn ${this.name}(${this.params.length} params) []` }
 }
 
 /**
@@ -141,4 +141,5 @@ export class ScrapNative extends ScrapFunction {
 
     public get getArgsCount() { return this.argsCount }
     public get getAction() { return this.action }
+    public format() { return `fn ${this.name}(${this.argsCount ? this.argsCount : "..."}) [ native code ]` }
 }
