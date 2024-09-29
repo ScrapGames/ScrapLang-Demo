@@ -22,9 +22,16 @@ import { ScrapFalse, ScrapTrue } from "@lang/elements/values/booleans.ts"
 import { ScrapModule } from "@lang/elements/entities/modules.ts"
 import { ScrapVariable } from "@lang/elements/entities/variables.ts"
 
-export const SCRAP_PRINT_FUNCTION = new ScrapNativeFn("print", undefined, (...args: ScrapValue[]) => {
-    const argsValue = args.map(arg => arg.getValue)
-    console.log(...argsValue)
+export const SCRAP_PRINT_FUNCTION = new ScrapNativeFn("print", true, undefined, (...args: ScrapValue[]) => {
+    // PROVISIONAL: weird support for white spaces (under the hood, in JavaScript, them are writed to output as new lines)
+    if (args.length < 1) {
+        console.log()
+        return new ScrapUndefined()
+    }
+    
+    for (const arg of args)
+        console.log(arg.format())
+
     return new ScrapUndefined()
 })
 
