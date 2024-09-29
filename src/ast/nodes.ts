@@ -76,17 +76,31 @@ export class ObjectDestructuringNode extends ASTValueNode {
  * Represents a module access in the AST
  */
 export class ModuleAccessNode extends ASTValueNode {
-    private accessedMod: string
-    private accessType: CallNode | IdentifierNode
+    private modName: string
+    private target: AccesibleTarget<ModuleAccessNode>
 
-    public constructor(accessedMod: string, access: CallNode | IdentifierNode) {
+    public constructor(modName: string, target: AccesibleTarget<ModuleAccessNode>) {
         super(NodeValueType.ModAccess)
-        this.accessedMod = accessedMod
-        this.accessType = access
+        this.modName = modName
+        this.target = target
     }
 
-    public get getAccessedMod()    { return this.accessedMod }
-    public get getAccessedEntity() { return this.accessType }
+    /**
+     * Gets the name of the wrapped accessed entity
+     * @returns The name of the wrapped acccessed entity
+     */
+    public getTargetName(): string {
+        if (TypeGuardsNodeValues.isCall(this.target))
+            return this.target.getCallee
+        else if (TypeGuardsNodeValues.isIdentifier(this.target))
+            return this.target.getSymbol
+        else {
+            return this.target.getTargetName()
+        }
+    }
+
+    public get getModName() { return this.modName }
+    public get getTarget()  { return this.target }
 }
 
 export class ObjectAccessNode extends ASTValueNode {
