@@ -51,11 +51,15 @@ export class CharNode extends ASTValueNode  {
 }
 
 export class LiteralObjectNode extends ASTValueNode {
-    private keyValuePairs: Map<string, ASTValueNode>
+    private entries: Map<string, ASTValueNode>
 
-    public constructor(keyValuePairs: Map<string, ASTValueNode>) {
+    public constructor(entries: Map<string, ASTValueNode>) {
         super(NodeValueType.LiteralObj)
-        this.keyValuePairs = keyValuePairs
+        this.entries = entries
+    }
+
+    public get getEntries() { return this.entries }
+}
     }
 
     public get getPairs() { return this.keyValuePairs }
