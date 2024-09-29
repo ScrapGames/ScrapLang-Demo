@@ -165,7 +165,9 @@ export class UndefinedNode extends ASTValueNode {
  * This is why, unlike other entities, which extends from `ASTEntityNode` or
  * values from `ASTValueNode`, `FunctionNode` extends from `ASTNode` directly
  */
-export class FunctionNode extends ASTNode {
+export class FunctionNode extends ASTNode implements Nameable, Exportable {
+    public name: string
+    public isExported: boolean = false
     public kind: NodeValueType | NodeEntityType
     public name: string
     private params: ScrapParam[]
@@ -174,13 +176,13 @@ export class FunctionNode extends ASTNode {
     private async: boolean
 
     public constructor(
-        kind: NodeValueType | NodeEntityType, name: string, params: ScrapParam[],
-        body: Instructions[], returnValue: ASTValueNode,
-        async: boolean
+        name: string, kind: NodeValueType | NodeEntityType,
+        params: ScrapParam[], body: Instruction[],
+        returnValue: ASTValueNode, async: boolean
     ) {
         super()
-        this.kind = kind
         this.name = name
+        this.kind = kind
         this.params = params
         this.body = body
         this.returnValue = returnValue
@@ -212,16 +214,16 @@ export class VariableNode extends ASTEntityNode {
 
 export class ModuleNode extends ASTEntityNode {
     private body: ASTEntityNode[]
-    private exports: Set<string>
+    private defaultExport?: ASTEntityNode
 
-    public constructor(name: string, body: ASTEntityNode[], exports: Set<string>) {
+    public constructor(name: string, body: ASTEntityNode[], defaultExport?: ASTEntityNode) {
         super(name, NodeEntityType.Module)
         this.body = body
-        this.exports = exports
+        this.defaultExport = defaultExport
     }
 
-    public get getBody()    { return this.body }
-    public get getExports() { return this.exports }
+    public get getBody()          { return this.body }
+    public get getDefaultExport() { return this.defaultExport }
 }
 
 export class ClassNode extends ASTEntityNode {

@@ -1,3 +1,4 @@
+import type { Nameable, Exportable, Instruction } from "@typings"
 export class ASTNode {}
 
 /**
@@ -33,8 +34,9 @@ export enum NodeValueType {
 /**
  * Represents an entity, like classes or modules in the AST
  */
-export class ASTEntityNode extends ASTNode {
-    public name: string
+export class ASTEntityNode extends ASTNode implements Nameable, Exportable {
+    name: string
+    isExported: boolean = false
     public kind: NodeEntityType
 
     public constructor(name: string, kind: NodeEntityType) {
