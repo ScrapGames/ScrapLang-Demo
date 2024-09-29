@@ -22,10 +22,12 @@ import type { Nameable, Exportable } from "@typings"
  */
 export class ScrapModule extends ScrapEntity {
     private scope: Scope
+    private defaultExport?: ScrapEntity
 
-    public constructor(name: string, isExported: boolean, scope: Scope) {
+    public constructor(name: string, isExported: boolean, scope: Scope, defaultExport?: ScrapEntity) {
         super(name, isExported)
         this.scope = scope
+        this.defaultExport = defaultExport
     }
 
     /**
@@ -44,8 +46,9 @@ export class ScrapModule extends ScrapEntity {
      * @returns a reference to the searched entity if exists, `undefined` in other way
      */
     public getEntity(name: string): Nameable & Exportable | undefined {
-        return this.scope.getReference(name)
+        return this.scope.get(name)
     }
 
-    public get getScope() { return this.scope }
+    public get getScope()         { return this.scope }
+    public get getDefaultExport() { return this.defaultExport }
 }
