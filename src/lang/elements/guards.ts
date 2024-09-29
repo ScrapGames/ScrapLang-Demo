@@ -1,46 +1,105 @@
-import { ScrapVariable } from "@lang/elements/entities/variables.ts"
-import { DefinedFunction, ScrapFunction, ScrapNativeFn, ScrapObject, ScrapPrimitive, ScrapValue } from "@lang/elements/commons.ts"
+import { ASTValueNode, NodeValueType } from "@ast/ast.ts"
+import * as ast from "@ast/nodes.ts"
 
-import type { Nameable, Exportable } from "@typings"
-import { ScrapReference } from "@lang/elements/values/reference.ts"
-import { ScrapString } from "@lang/elements/values/textuals.ts"
-import { ScrapInteger } from "@lang/elements/values/numerics.ts"
-
-
-export default class TypeGuards {
-    public static isVariable(variable: Nameable & Exportable): variable is ScrapVariable {
-        return variable instanceof ScrapVariable
+export default class TypeGuardsNodeValues {
+    public static isNumeric(node: ASTValueNode): node is ast.NumericNode {
+        return node.kind === NodeValueType.Numeric
     }
-
-    public static isPrimitive(val: ScrapValue): val is ScrapPrimitive {
-        return val instanceof ScrapPrimitive
+    
+    public static isFloat(node: ASTValueNode): node is ast.FloatNode {
+        return node.kind === NodeValueType.Float
     }
-
-    public static isObject(obj: ScrapValue): obj is ScrapObject {
-        return obj instanceof ScrapObject
+    
+    public static isString(node: ASTValueNode): node is ast.StringNode {
+        return node.kind === NodeValueType.String
     }
-
-    public static isReference(ref: ScrapValue): ref is ScrapReference {
-        return ref instanceof ScrapReference
+    
+    public static isChar(node: ASTValueNode): node is ast.CharNode {
+        return node.kind === NodeValueType.Char
     }
-
-    public static isString(str: ScrapValue): str is ScrapString {
-        return str instanceof ScrapString
+    
+    public static isLiteralObject(node: ASTValueNode): node is ast.LiteralObjectNode {
+        return node.kind === NodeValueType.LiteralObj
     }
-
-    public static isNumber(num: ScrapValue): num is ScrapInteger {
-        return num instanceof ScrapInteger
+    
+    public static isObjectDestruction(node: ASTValueNode): node is ast.ObjectDestructuringNode {
+        return node.kind === NodeValueType.ObjDestruction
     }
-
-    public static isFunction(fn: ScrapValue): fn is ScrapFunction {
-        return fn instanceof ScrapFunction
+    
+    public static isModuleAccess(node: ASTValueNode): node is ast.ModuleAccessNode {
+        return node.kind === NodeValueType.ModAccess
     }
-
-    public static isNativeFn(fn: ScrapValue): fn is ScrapNativeFn {
-        return fn instanceof ScrapFunction
+    
+    public static isObjectAccess(node: ASTValueNode): node is ast.ObjectAccessNode {
+        return node.kind === NodeValueType.ObjAccess
     }
+    
+    public static isCall(node: ASTValueNode): node is ast.CallNode {
+        return node.kind === NodeValueType.Call
+    }
+    
+    public static isIdentifier(node: ASTValueNode): node is ast.IdentifierNode {
+        return node.kind === NodeValueType.Identifier
+    }
+    
+    public static isLiteralArray<T>(node: ASTValueNode): node is ast.LiteralArrayNode<T> {
+        return node.kind === NodeValueType.LiteralArray
+import * as ast from "@ast/nodes.ts"
 
-    public static isDefinedFn(fn: ScrapValue): fn is DefinedFunction {
-        return fn instanceof ScrapFunction
+export default class guardsNodeV {
+    public static isNumeric(node: ASTValueNode): node is ast.NumericNode {
+        return node.kind === NodeValueType.Numeric
+    }
+    
+    public static isFloat(node: ASTValueNode): node is ast.FloatNode {
+        return node.kind === NodeValueType.Float
+    }
+    
+    public static isString(node: ASTValueNode): node is ast.StringNode {
+        return node.kind === NodeValueType.String
+    }
+    
+    public static isChar(node: ASTValueNode): node is ast.CharNode {
+        return node.kind === NodeValueType.Char
+    }
+    
+    public static isLiteralObject(node: ASTValueNode): node is ast.LiteralObjectNode {
+        return node.kind === NodeValueType.LiteralObj
+    }
+    
+    public static isObjectDestruction(node: ASTValueNode): node is ast.ObjectDestructuringNode {
+        return node.kind === NodeValueType.ObjDestruction
+    }
+    
+    public static isModuleAccess(node: ASTValueNode): node is ast.ModuleAccessNode {
+        return node.kind === NodeValueType.ModAccess
+    }
+    
+    public static isObjectAccess(node: ASTValueNode): node is ast.ObjectAccessNode {
+        return node.kind === NodeValueType.ObjAccess
+    }
+    
+    public static isCall(node: ASTValueNode): node is ast.CallNode {
+        return node.kind === NodeValueType.Call
+    }
+    
+    public static isIdentifier(node: ASTValueNode): node is ast.IdentifierNode {
+        return node.kind === NodeValueType.Identifier
+    }
+    
+    public static isLiteralArray<T>(node: ASTValueNode): node is ast.LiteralArrayNode<T> {
+        return node.kind === NodeValueType.LiteralArray
+    }
+    
+    public static isReference(node: ASTValueNode): node is ast.ReferenceNode {
+        return node.kind === NodeValueType.Reference
+    }
+    
+    public static isReassignment(node: ASTValueNode): node is ast.ReassignmentNode {
+        return node.kind === NodeValueType.Reassignment
+    }
+    
+    public static isUndefined(node: ASTValueNode): node is ast.UndefinedNode {
+        return node.kind === NodeValueType.Undefined
     }
 }
