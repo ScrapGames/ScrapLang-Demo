@@ -60,9 +60,16 @@ export class LiteralObjectNode extends ASTValueNode {
 
     public get getEntries() { return this.entries }
 }
+
+export class ObjectDestructuringNode extends ASTValueNode {
+    private declarations: VariableNode[]
+
+    public constructor(declarations: VariableNode[]) {
+        super(NodeValueType.ObjDestruction)
+        this.declarations = declarations
     }
 
-    public get getPairs() { return this.keyValuePairs }
+    public get getDeclarations() { return this.declarations }
 }
 
 export class ModuleAccessNode extends ASTValueNode {
