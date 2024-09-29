@@ -72,6 +72,9 @@ export class ObjectDestructuringNode extends ASTValueNode {
     public get getDeclarations() { return this.declarations }
 }
 
+/**
+ * Represents a module access in the AST
+ */
 export class ModuleAccessNode extends ASTValueNode {
     private accessedMod: string
     private accessType: CallNode | IdentifierNode
