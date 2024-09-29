@@ -48,15 +48,59 @@ export class ScrapPrimitive extends ScrapValue {
  * }
  */
 export class ScrapObject extends ScrapValue {
-
     prototype: Nullable<ScrapObject>
 
-    public constructor(prototype: Nullable<ScrapObject>, keyValuePairs?: Map<string, ScrapValue>) {
-        super(keyValuePairs)
+    public constructor(prototype: Nullable<ScrapObject>, properties: Map<string, ScrapValue>) {
+        super(properties)
         this.prototype = prototype
     }
 
+    public has(name: string): boolean {
+        return (this.value as Map<string, ScrapValue>).has(name)
+    }
+
+    public get(name: string): ScrapValue | undefined {
+        return (this.value as Map<string, ScrapValue>).get(name)
+    }
+
+    /**
+     * TODO: complete the method, which will be called when 'instanceof' keyword is found
+     * @param obj An instance of an Object
+     */
+    /* public instanceOf(obj: ScrapObject): boolean {
+        if (obj.instanceOf()) {}
+
+        return false
+    } */
+
     public get getValue() { return this.value as Map<string, ScrapValue> }
+
+    private formatObject(deep: number = 0) {
+        let str = "{\n"
+        const vectoredProps = Array.from(this.value as Map<string, ScrapValue>)
+
+        for (let i = 0; i < vectoredProps.length; i++) {
+            const [k, v] = vectoredProps[i]
+            const stringWithDeep = v instanceof ScrapObject ? v instanceof ScrapFunction ? v.format() : v.formatObject(deep + 1) : v.format()
+            const formatedString = `${" ".repeat(deep)} ${k}: ${stringWithDeep}`
+
+            // if is the last key-value pair iterated
+            if ((i + 1) === vectoredProps.length)
+                str += formatedString
+            else {
+                // if the object can be printed in one line
+                if (vectoredProps.length < 2)
+                    str += `${formatedString},`
+                else
+                    str += `${formatedString},\n`
+            }
+        }
+
+        str += `\n${" ".repeat(deep)}}`
+        return str
+    }
+
+    public format() { return this.formatObject() }
 }
 
 /**
