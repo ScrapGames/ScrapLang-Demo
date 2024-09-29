@@ -1,4 +1,3 @@
-import { Interpreter } from "@interpreter"
 import { FunctionNode } from "@ast/nodes.ts"
 import { Scope, createEmptyScope } from "@lang/scope.ts"
 import { DefinedFunction } from "@lang/elements/commons.ts"
@@ -9,7 +8,7 @@ import { DefinedFunction } from "@lang/elements/commons.ts"
  * @param scope Scope where the 
  * @returns A new `DefinedFunction`
  */
-export function computeFn(this: Interpreter, fn: FunctionNode, scope: Scope): DefinedFunction {
+export function computeFn(fn: FunctionNode, scope: Scope): DefinedFunction {
     const fScope = createEmptyScope(scope, fn.name)
-    return new DefinedFunction(fn.name, fScope, fn.getParams, fn.getBody, fn.getReturnValue)
+    return new DefinedFunction(fn.name, fn.isExported, fScope, fn.getParams, fn.getBody, fn.getReturnValue)
 }
