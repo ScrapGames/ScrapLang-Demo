@@ -88,7 +88,19 @@ export class Interpreter {
   }
 
   // TODO: handle number of arguments passed for DefinedFunction objects
-  private execDefinedFunc(_call: CallNode, callee: DefinedFunction, scope: Scope) {
+  private execDefinedFunc(call: CallNode, callee: DefinedFunction, scope: Scope, calleerScope: Scope) {
+    const params = callee.getParams
+    const args = call.getArgs
+    if (args.length !== params.length)
+      scrapRuntimeError(`'${callee.name}' expects ${callee.getParams.length} arguments, but ${call.getArgs.length} has been received`)
+
+    for (const i in callee.getParams) {
+      callee.getScope.addEntry(
+        params[i].pName,
+        new ScrapVariable(false, params[i].pName, this.computeValue(args[i], calleerScope),false)
+      )
+    }
+
     for (const instruction of callee.getBody)
       this.inferFnInstruction(instruction, scope)
 
@@ -114,7 +126,7 @@ export class Interpreter {
       return callee.getAction(...call.getArgs.map(arg => this.computeValue(arg as ASTValueNode, scope)))
     }
 
-    return this.execDefinedFunc(call, callee as DefinedFunction, (callee as DefinedFunction).getScope)
+    return this.execDefinedFunc(call, callee as DefinedFunction, (callee as DefinedFunction).getScope, scope)
   }
 
   public findCallee(call: CallNode, whereIsCallee: Scope) {
