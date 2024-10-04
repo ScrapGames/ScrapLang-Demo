@@ -4,7 +4,7 @@ export class ASTNode {}
 /**
  * Discriminant for Nodes which represents an entity in the AST
  */
-export enum NodeEntityType {
+export enum EntityKind {
     Module,
     Function,
     Variable,
@@ -14,7 +14,7 @@ export enum NodeEntityType {
 /**
  * Discriminant for Nodes which represents a value in the AST
  */
-export enum NodeValueType {
+export enum ValueKind {
     Numeric,
     Float,
     String,
@@ -37,9 +37,9 @@ export enum NodeValueType {
 export class EntityNode extends ASTNode implements Nameable, Exportable {
     name: string
     isExported: boolean = false
-    public kind: NodeEntityType
+    public kind: EntityKind
 
-    public constructor(name: string, kind: NodeEntityType) {
+    public constructor(name: string, kind: EntityKind) {
         super()
         this.name = name
         this.kind = kind
@@ -50,9 +50,9 @@ export class EntityNode extends ASTNode implements Nameable, Exportable {
  * Represents a value in the AST
  */
 export class ValueNode extends ASTNode {
-    public kind: NodeValueType
+    public kind: ValueKind
 
-    public constructor(kind: NodeValueType) {
+    public constructor(kind: ValueKind) {
         super()
         this.kind = kind
     }

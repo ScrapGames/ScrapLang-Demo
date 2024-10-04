@@ -10,7 +10,7 @@ export class NumericNode extends ValueNode {
     private value: number
 
     public constructor(value: number) {
-        super(NodeValueType.Numeric)
+        super(ValueKind.Numeric)
         this.value = value
     }
 
@@ -21,7 +21,7 @@ export class FloatNode extends ValueNode {
     private value: number
 
     public constructor(value: number) {
-        super(NodeValueType.Float)
+        super(ValueKind.Float)
         this.value = value
     }
 
@@ -32,7 +32,7 @@ export class StringNode extends ValueNode {
     private value: string
 
     public constructor(value: string) {
-        super(NodeValueType.String)
+        super(ValueKind.String)
         this.value = value
     }
 
@@ -43,7 +43,7 @@ export class CharNode extends ValueNode  {
     private value: string
 
     public constructor(value: string) {
-        super(NodeValueType.Char)
+        super(ValueKind.Char)
         this.value = value
     }
 
@@ -54,7 +54,7 @@ export class LiteralObjectNode extends ValueNode {
     private entries: Map<string, ValueNode>
 
     public constructor(entries: Map<string, ValueNode>) {
-        super(NodeValueType.LiteralObj)
+        super(ValueKind.LiteralObj)
         this.entries = entries
     }
 
@@ -65,7 +65,7 @@ export class ObjectDestructuringNode extends ValueNode {
     private declarations: VariableNode[]
 
     public constructor(declarations: VariableNode[]) {
-        super(NodeValueType.ObjDestruction)
+        super(ValueKind.ObjDestruction)
         this.declarations = declarations
     }
 
@@ -80,7 +80,7 @@ export class ModuleAccessNode extends ValueNode {
     private target: AccesibleTarget<ModuleAccessNode>
 
     public constructor(modName: string, target: AccesibleTarget<ModuleAccessNode>) {
-        super(NodeValueType.ModAccess)
+        super(ValueKind.ModAccess)
         this.modName = modName
         this.target = target
     }
@@ -114,7 +114,7 @@ export class IdentifierNode extends ValueNode {
     private symbol: string
 
     public constructor(symbol: string) {
-        super(NodeValueType.Identifier)
+        super(ValueKind.Identifier)
         this.symbol = symbol
     }
 
@@ -125,7 +125,7 @@ export class LiteralArrayNode<T> extends ValueNode {
     private array: T[]
 
     public constructor(array: T[]) {
-        super(NodeValueType.LiteralArray)
+        super(ValueKind.LiteralArray)
         this.array = array
     }
 
@@ -136,7 +136,7 @@ export class ReferenceNode extends ValueNode {
     private target: string
 
     public constructor(target: string) {
-        super(NodeValueType.Reference)
+        super(ValueKind.Reference)
         this.target = target
     }
 
@@ -148,7 +148,7 @@ export class CallNode extends ValueNode {
     private args: ValueNode[]
 
     public constructor(callee: string, args: ValueNode[]) {
-        super(NodeValueType.Call)
+        super(ValueKind.Call)
         this.callee = callee
         this.args = args
     }
@@ -162,7 +162,7 @@ export class BinaryExprNode extends ValueNode {
     private rhs: ValueNode
 
     public constructor(lhs: string, rhs: ValueNode) {
-        super(NodeValueType.Reassignment)
+        super(ValueKind.Reassignment)
         this.lhs = lhs
         this.rhs = rhs
     }
@@ -176,7 +176,7 @@ export class BinaryExprNode extends ValueNode {
  */
 export class UndefinedNode extends ValueNode {
     public constructor() {
-        super(NodeValueType.Undefined)
+        super(ValueKind.Undefined)
     }
 export class BooleanNode extends ValueNode {
 }
@@ -190,7 +190,7 @@ export class BooleanNode extends ValueNode {
 export class FunctionNode extends ASTNode implements Nameable, Exportable {
     public name: string
     public isExported: boolean = false
-    public kind: NodeValueType | NodeEntityType
+    public kind: ValueKind | EntityKind
     public name: string
     private params: ScrapParam[]
     private body: Instructions[]
@@ -198,7 +198,7 @@ export class FunctionNode extends ASTNode implements Nameable, Exportable {
     private async: boolean
 
     public constructor(
-        name: string, kind: NodeValueType | NodeEntityType,
+        name: string, kind: ValueKind | EntityKind,
         params: ScrapParam[], body: Instruction[],
         returnValue: ValueNode, async: boolean
     ) {
@@ -225,7 +225,7 @@ export class VariableNode extends EntityNode {
     private assignedValue: ValueNode
 
     public constructor(name: string, constant: boolean, assignedValue: ValueNode) {
-        super(name, NodeEntityType.Variable)
+        super(name, EntityKind.Variable)
         this.const = constant
         this.assignedValue = assignedValue
     }
@@ -239,7 +239,7 @@ export class ModuleNode extends EntityNode {
     private defaultExport?: EntityNode
 
     public constructor(name: string, body: EntityNode[], defaultExport?: EntityNode) {
-        super(name, NodeEntityType.Module)
+        super(name, EntityKind.Module)
         this.body = body
         this.defaultExport = defaultExport
     }
@@ -253,7 +253,7 @@ export class ClassNode extends EntityNode {
     private body: ScrapClassEntityProps[]
 
     public constructor(name: string, options: { inherits?: string, implements?: string }, body: ScrapClassEntityProps[]) {
-        super(name, NodeEntityType.Class)
+        super(name, EntityKind.Class)
         this.options = options
         this.body = body
     }
