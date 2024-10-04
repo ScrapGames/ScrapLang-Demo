@@ -1,12 +1,12 @@
 import {
     NodeEntityType, NodeValueType,
 
-    ASTEntityNode, ASTNode, ASTValueNode
+    ASTNode, EntityNode, ValueNode,
 } from "@ast/ast.ts"
 
 import type { ScrapParam, ScrapClassEntityProps, Instructions } from "@typings"
 
-export class NumericNode extends ASTValueNode {
+export class NumericNode extends ValueNode {
     private value: number
 
     public constructor(value: number) {
@@ -17,7 +17,7 @@ export class NumericNode extends ASTValueNode {
     public get getValue() { return this.value }
 }
 
-export class FloatNode extends ASTValueNode {
+export class FloatNode extends ValueNode {
     private value: number
 
     public constructor(value: number) {
@@ -28,7 +28,7 @@ export class FloatNode extends ASTValueNode {
     public get getValue() { return this.value }
 }
 
-export class StringNode extends ASTValueNode {
+export class StringNode extends ValueNode {
     private value: string
 
     public constructor(value: string) {
@@ -39,7 +39,7 @@ export class StringNode extends ASTValueNode {
     public get getValue() { return this.value }
 }
 
-export class CharNode extends ASTValueNode  {
+export class CharNode extends ValueNode  {
     private value: string
 
     public constructor(value: string) {
@@ -50,10 +50,10 @@ export class CharNode extends ASTValueNode  {
     public get getValue() { return this.value }
 }
 
-export class LiteralObjectNode extends ASTValueNode {
-    private entries: Map<string, ASTValueNode>
+export class LiteralObjectNode extends ValueNode {
+    private entries: Map<string, ValueNode>
 
-    public constructor(entries: Map<string, ASTValueNode>) {
+    public constructor(entries: Map<string, ValueNode>) {
         super(NodeValueType.LiteralObj)
         this.entries = entries
     }
@@ -61,7 +61,7 @@ export class LiteralObjectNode extends ASTValueNode {
     public get getEntries() { return this.entries }
 }
 
-export class ObjectDestructuringNode extends ASTValueNode {
+export class ObjectDestructuringNode extends ValueNode {
     private declarations: VariableNode[]
 
     public constructor(declarations: VariableNode[]) {
@@ -75,7 +75,7 @@ export class ObjectDestructuringNode extends ASTValueNode {
 /**
  * Represents a module access in the AST
  */
-export class ModuleAccessNode extends ASTValueNode {
+export class ModuleAccessNode extends ValueNode {
     private modName: string
     private target: AccesibleTarget<ModuleAccessNode>
 
@@ -103,21 +103,14 @@ export class ModuleAccessNode extends ASTValueNode {
     public get getTarget()  { return this.target }
 }
 
-export class ObjectAccessNode extends ASTValueNode {
-    private accessedObj: string
-    private access: ASTValueNode
-
-    public constructor(accessedObj: string, access: ASTValueNode) {
-        super(NodeValueType.ObjAccess)
-        this.accessedObj = accessedObj
-        this.access = access
+export class ObjectAccessNode extends ValueNode {
     }
 
     public get getAccessedObj()    { return this.accessedObj }
     public get getAccessedEntity() { return this.access }
 }
 
-export class IdentifierNode extends ASTValueNode {
+export class IdentifierNode extends ValueNode {
     private symbol: string
 
     public constructor(symbol: string) {
@@ -128,7 +121,7 @@ export class IdentifierNode extends ASTValueNode {
     public get getSymbol() { return this.symbol }
 }
 
-export class LiteralArrayNode<T> extends ASTValueNode {
+export class LiteralArrayNode<T> extends ValueNode {
     private array: T[]
 
     public constructor(array: T[]) {
@@ -139,7 +132,7 @@ export class LiteralArrayNode<T> extends ASTValueNode {
     public get getArray() { return this.array }
 }
 
-export class ReferenceNode extends ASTValueNode {
+export class ReferenceNode extends ValueNode {
     private target: string
 
     public constructor(target: string) {
@@ -150,11 +143,11 @@ export class ReferenceNode extends ASTValueNode {
     public get getTarget() { return this.target }
 }
 
-export class CallNode extends ASTValueNode {
+export class CallNode extends ValueNode {
     private callee: string
-    private args: ASTNode[]
+    private args: ValueNode[]
 
-    public constructor(callee: string, args: ASTNode[]) {
+    public constructor(callee: string, args: ValueNode[]) {
         super(NodeValueType.Call)
         this.callee = callee
         this.args = args
@@ -164,11 +157,11 @@ export class CallNode extends ASTValueNode {
     public get getArgs()   { return this.args }
 }
 
-export class ReassignmentNode extends ASTValueNode {
+export class BinaryExprNode extends ValueNode {
     private lhs: string
-    private rhs: ASTNode
+    private rhs: ValueNode
 
-    public constructor(lhs: string, rhs: ASTNode) {
+    public constructor(lhs: string, rhs: ValueNode) {
         super(NodeValueType.Reassignment)
         this.lhs = lhs
         this.rhs = rhs
@@ -181,10 +174,11 @@ export class ReassignmentNode extends ASTValueNode {
 /**
  * Reprensets a 
  */
-export class UndefinedNode extends ASTValueNode {
+export class UndefinedNode extends ValueNode {
     public constructor() {
         super(NodeValueType.Undefined)
     }
+export class BooleanNode extends ValueNode {
 }
 
 /**
@@ -200,13 +194,13 @@ export class FunctionNode extends ASTNode implements Nameable, Exportable {
     public name: string
     private params: ScrapParam[]
     private body: Instructions[]
-    private returnValue: ASTValueNode
+    private returnValue: ValueNode
     private async: boolean
 
     public constructor(
         name: string, kind: NodeValueType | NodeEntityType,
         params: ScrapParam[], body: Instruction[],
-        returnValue: ASTValueNode, async: boolean
+        returnValue: ValueNode, async: boolean
     ) {
         super()
         this.name = name
@@ -226,11 +220,11 @@ export class FunctionNode extends ASTNode implements Nameable, Exportable {
 /**
  * Reprensets a variable declaration in the prgram
  */
-export class VariableNode extends ASTEntityNode {
+export class VariableNode extends EntityNode {
     private const: boolean
-    private assignedValue: ASTNode
+    private assignedValue: ValueNode
 
-    public constructor(name: string, constant: boolean, assignedValue: ASTNode) {
+    public constructor(name: string, constant: boolean, assignedValue: ValueNode) {
         super(name, NodeEntityType.Variable)
         this.const = constant
         this.assignedValue = assignedValue
@@ -240,11 +234,11 @@ export class VariableNode extends ASTEntityNode {
     public get getAssginedValue() { return this.assignedValue }
 }
 
-export class ModuleNode extends ASTEntityNode {
-    private body: ASTEntityNode[]
-    private defaultExport?: ASTEntityNode
+export class ModuleNode extends EntityNode {
+    private body: EntityNode[]
+    private defaultExport?: EntityNode
 
-    public constructor(name: string, body: ASTEntityNode[], defaultExport?: ASTEntityNode) {
+    public constructor(name: string, body: EntityNode[], defaultExport?: EntityNode) {
         super(name, NodeEntityType.Module)
         this.body = body
         this.defaultExport = defaultExport
@@ -254,7 +248,7 @@ export class ModuleNode extends ASTEntityNode {
     public get getDefaultExport() { return this.defaultExport }
 }
 
-export class ClassNode extends ASTEntityNode {
+export class ClassNode extends EntityNode {
     private options: { inherits?: string, implements?: string }
     private body: ScrapClassEntityProps[]
 

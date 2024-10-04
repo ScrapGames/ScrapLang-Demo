@@ -1,5 +1,5 @@
 import { Scope } from "@lang/scope.ts"
-import { Nameable, Primitive, ScrapParam, AllowedBlockEntities, Nullable } from "@typings"
+import { ValueNode } from "@ast/ast.ts"
 
 export const BINARY_OPERATORS_PRECEDENCE = {
     '*': 4,
@@ -145,12 +145,12 @@ export class ScrapFunction extends ScrapObject implements Nameable, Exportable {
 export class DefinedFunction extends ScrapFunction {
     private scope: Scope
     private params: ScrapParam[]
-    private returnValue: ASTValueNode
+    private returnValue: ValueNode
     private body: Instructions[]
 
     public constructor(
         name: string, isExported: boolean, scope: Scope, params: ScrapParam[],
-        body: Instruction[], returnValue: ASTValueNode
+        body: Instruction[], returnValue: ValueNode
     ) {
         super(name, isExported)
         this.scope = scope

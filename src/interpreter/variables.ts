@@ -1,4 +1,4 @@
-import { ReassignmentNode } from "@ast/nodes.ts"
+import { ValueNode } from "@ast/ast.ts"
 import { Scope } from "@lang/scope.ts"
 import { ScrapValue } from "@lang/elements/commons.ts"
 import { ScrapVariable } from "@lang/elements/entities/variables.ts"
@@ -13,7 +13,7 @@ import { Interpreter, scrapReferenceError, scrapRuntimeError } from "@interprete
  */
 export function computeReassignment(interpreter: Interpreter, reassingment: ReassignmentNode, scope: Scope): ScrapValue {
     const target = scope.getReference(reassingment.getLHS)
-    const newVal = interpreter.computeValue(reassingment.getRHS as ASTValueNode, scope)
+    const newVal = interpreter.computeValue(reassingment.getRHS as ValueNode, scope)
 
     if (!target)
       scrapReferenceError(interpreter.parser)
@@ -38,7 +38,7 @@ export function computeVar(interpreter: Interpreter, variable: VariableNode, sco
   return new ScrapVariable(
     variable.isConst,
     variable.name,
-    interpreter.computeValue(variable.getAssginedValue as ASTValueNode, scope),
+    interpreter.computeValue(variable.getAssginedValue as ValueNode, scope),
     variable.isExported
   )
 }

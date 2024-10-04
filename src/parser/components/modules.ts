@@ -2,24 +2,10 @@ import type { ASTEntityNode } from "@ast/ast.ts"
 
 import { Keywords, Tokens } from "@lexer/lexer.ts"
 import Parser from "@parser/parser.ts"
-import { CallNode, IdentifierNode, ModuleAccessNode } from "@ast/nodes.ts";
-
-function parseModuleEntity(parser: Parser): { entity: ASTEntityNode, exports?: true } {
-  if (parser.getCursor.currentTok.content === Keywords.EXPORT) {
-    parser.nextToken() // eat 'export' keyword
-
-    return { entity: parser.parseStatement(), exports: true }
-  }
-
-  return { entity: parser.parseStatement() }
-}
-
-/**
- * Parses the module body returning the body
+import { EntityNode } from "@ast/ast.ts"
  */
 export function parseModuleBody(parser: Parser) {
-  const body: ASTEntityNode[] = []
-  const exports: Set<string> = new Set()
+  const body: EntityNode[] = []
 
   while (parser.getCursor.currentTok.content !== Tokens.RBRACE) {
     const moduleEntity = parseModuleEntity(parser)

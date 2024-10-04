@@ -26,7 +26,7 @@ import { parseClassBody } from "@parser/components/classes.ts"
 import { parseModuleAccessor, parseModuleBody } from "@parser/components/modules.ts"
 import { parseAsyncFn, parseFunctionBody, parseParamList } from "@parser/components/functions.ts"
 
-// Elements of ScrapLang
+import { AST, ASTNode, EntityNode, ValueNode, ControlStmtNode, EntityKind, ValueKind } from "@ast/ast.ts"
 import { BINARY_OPERATORS_PRECEDENCE as _ } from "@lang/elements/commons.ts"
 
 
@@ -292,8 +292,8 @@ export default class Parser {
   private parseLiteralObject() {
     this.nextToken() // eat '{'
     let keyName = ""
-    let value: ASTValueNode
-    const keyValuePairs: Map<string, ASTValueNode> = new Map()
+    let value: ValueNode
+    const entries: Map<string, ValueNode> = new Map()
 
     while (this.cursor.currentTok.content !== Tokens.RBRACE) {
       if (
@@ -376,7 +376,7 @@ export default class Parser {
     this.nextToken() // eat fn name
     this.nextToken() // '('
 
-    const args: ASTValueNode[] = []
+    const args: ValueNode[] = []
 
     if (this.cursor.currentTok.content !== Tokens.RPAREN) {
       do {
@@ -402,7 +402,7 @@ export default class Parser {
    * 
    * @returns A value node
    */
-  public parseIdReference(): ASTValueNode {
+  public parseIdReference(): ValueNode {
     const refName = this.cursor.currentTok
     const accessor = this.nextToken() // eat the identifier
 
@@ -419,14 +419,14 @@ export default class Parser {
   /**
    * Parses an identifier. Parsing an single identifier allows to detect calls to functions or simple variable references
    */
-  public parseIdentifier(): ASTValueNode {
+  public parseIdentifier(): ValueNode {
     if (this.cursor.next().content === Tokens.LPAREN)
       return this.parseCall()
 
     return this.parseIdReference()
   }
 
-  private parseToken(): ASTValueNode {
+  private parseBinOperator(operator: string): ValueNode {
     switch (this.cursor.currentTok.content) {
       case Tokens.LBRACE: return this.parseLiteralObject()
       case Tokens.LSQRBR: return this.parseLiteralArray()
@@ -443,13 +443,13 @@ export default class Parser {
    *  - A function (because they are first class citizens)
    * @returns The parsed expression
    */
-  public parseExpr(): ASTValueNode {
+  public parseExpr(): ValueNode {
     // check for 'Statement' type is needed, because this method can be called 
     if (this.cursor.currentTok.type === "Statement" && this.cursor.currentTok.content === Keywords.FN)
-      return this.parseFunction(false, false, false, true) as ASTValueNode
+      return this.parseFunction(false, false, false, true) as ValueNode
 
     if (this.cursor.currentTok.content === Keywords.ASYNC)
-      return parseAsyncFn(this, false, false, true) as ASTValueNode
+      return parseAsyncFn(this, false, false, true) as ValueNode
 
     switch (this.cursor.currentTok.type) {
       case "IdentifierName": return this.parseIdentifier()
@@ -470,12 +470,12 @@ export default class Parser {
    * Parses a statement, indifferently it is placed at the root of the module or inside another entity, like a function or a class
    * @returns 
    */
-  public parseStatement(): ASTEntityNode {
+  public parseStatement(): EntityNode {
     switch (this.cursor.currentTok.content) {
       case Keywords.VAR:    return this.parseVar()
 
-      case Keywords.ASYNC:  return parseAsyncFn(this, false, false, false) as ASTEntityNode
-      case Keywords.FN:     return this.parseFunction(false, false, false, false) as ASTEntityNode
+      case Keywords.ASYNC:  return parseAsyncFn(this, false, false, false) as EntityNode
+      case Keywords.FN:     return this.parseFunction(false, false, false, false) as EntityNode
       case Keywords.CONST:  return this.parseVar()
       case Keywords.CLASS:  return this.parseClass()
       case Keywords.MODULE: return this.parseModule()

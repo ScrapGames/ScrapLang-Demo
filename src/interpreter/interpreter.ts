@@ -1,10 +1,6 @@
 import Parser from "@parser/parser.ts"
 
-import { RuntimeError } from "@lang/lang-errors.ts"
-import { Scope, UndefinedReferenceError } from "@lang/scope.ts"
-
-import { ASTEntityNode, ASTValueNode, NodeEntityType, NodeValueType } from "@ast/ast.ts"
-
+import { ControlStmtNode, EntityNode, ValueNode, EntityKind, ValueKind } from "@ast/ast.ts"
 import {
   NumericNode, FloatNode,
   CallNode, FunctionNode,
@@ -123,7 +119,7 @@ export class Interpreter {
       if (callee.getArgsCount && call.getArgs.length > callee.getArgsCount)
         this.scrapRuntimeError(`'${callee.name}' expects ${callee.getArgsCount} arguments, but ${call.getArgs.length} has been received`)
 
-      return callee.getAction(...call.getArgs.map(arg => this.computeValue(arg as ASTValueNode, scope)))
+      return callee.getAction(...call.getArgs.map(arg => this.computeValue(arg as ValueNode, scope)))
     }
 
     return this.execDefinedFunc(call, callee as DefinedFunction, (callee as DefinedFunction).getScope, scope)
@@ -202,7 +198,7 @@ export class Interpreter {
    * @param scope Scope where the data of some nodes, like 'identifiers' can be founded
    * @returns A new ScrapValue based on the received `node`
    */
-  public computeValue(node: ASTValueNode, scope: Scope): ScrapValue {
+  public computeValue(node: ValueNode, scope: Scope): ScrapValue {
     // switch statement is weird af using type guards, add match to js pls :)
     if (node.kind === NodeValueType.Function)           return fns.computeFn(node as FunctionNode, scope)
     if (guardsNodeV.isReassignment(node))               return vars.computeReassignment(this, node, scope)
@@ -229,7 +225,7 @@ export class Interpreter {
    * @param scope Scope where the declared entites on each entity will be stored
    * @returns A new ScrapEntity containing the data stored at `node`
    */
-  public computeEntity(node: ASTEntityNode, scope: Scope): ScrapEntity {
+  public computeEntity(node: EntityNode, scope: Scope): ScrapEntity {
     if (node.kind === NodeEntityType.Function) return fns.computeFn(node as FunctionNode, scope)
     if (guardsNodeE.isModule(node))   return mods.computeMod(this, node, scope)
     if (guardsNodeE.isVariable(node)) return vars.computeVar(this, node, scope)
@@ -249,11 +245,11 @@ export class Interpreter {
    * @param fnScope Scope of the function to execute
    */
   private inferFnInstruction(node: Instructions, fnScope: Scope) {
-    if (node instanceof ASTValueNode)
+    if (node instanceof ValueNode)
       this.computeValue(node, fnScope)
     else
       // at this point, the value of `node` is an instance of `ASTEntityNode`
-      this.addToScope(this.computeEntity(node as ASTEntityNode, fnScope), fnScope)
+      addToScope(this.computeEntity(node as EntityNode, fnScope), fnScope)
   }
 
   /**

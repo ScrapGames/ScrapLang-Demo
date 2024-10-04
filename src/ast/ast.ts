@@ -34,7 +34,7 @@ export enum NodeValueType {
 /**
  * Represents an entity, like classes or modules in the AST
  */
-export class ASTEntityNode extends ASTNode implements Nameable, Exportable {
+export class EntityNode extends ASTNode implements Nameable, Exportable {
     name: string
     isExported: boolean = false
     public kind: NodeEntityType
@@ -49,7 +49,7 @@ export class ASTEntityNode extends ASTNode implements Nameable, Exportable {
 /**
  * Represents a value in the AST
  */
-export class ASTValueNode extends ASTNode {
+export class ValueNode extends ASTNode {
     public kind: NodeValueType
 
     public constructor(kind: NodeValueType) {

@@ -5,7 +5,7 @@ import { Keywords, Tokens } from "@lexer/lexer.ts"
 
 import Parser from "@parser/parser.ts"
 
-import type { ScrapParam, Instruction } from "@typings"
+import { ValueNode } from "@ast/ast.ts"
 
 /**
  * Parses an asynchronous function
@@ -103,7 +103,7 @@ export function parseFunctionBody(parser: Parser, fName: string) {
  *
  * @returns An `Expression`
  */
-export function parseReturn(parser: Parser): ASTValueNode {
+export function parseReturn(parser: Parser): ValueNode {
   parser.nextToken() // eat 'return' keyword
   return parser.parseExpr()
 }
