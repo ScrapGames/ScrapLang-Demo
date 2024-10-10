@@ -96,8 +96,10 @@ export interface ClassMetadata {
 }
 
 /**
- * Flags which indicate if a class entity is static or overrides another entity
+ * Defines the possible values for an object property visiblity
  */
+export type ClassEntityVisibility = "public" | "private" | "protected"
+
 export interface ClassEntityMetadata {
     isStatic: boolean,
     canOverride: boolean
