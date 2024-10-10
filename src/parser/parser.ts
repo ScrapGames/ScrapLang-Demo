@@ -201,43 +201,43 @@ export default class Parser {
   }
 
   private parseClass(): ast.ClassNode {
-    const classEntities: ScrapClassEntityProps[] = []
-    const options: { inherits?: string, implements?: string } = {}
-
+    const metadata: ClassMetadata = { inherits: "Object", implements: [] }
     const className = this.expectsType("IdentifierName", "Expected a class name").content
-    const relationalKW = this.nextToken() // eat class name (identifier)
 
-    if (relationalKW.content === Keywords.EXTENDS || relationalKW.content === Keywords.IMPLEMENTS) {
-      if (relationalKW.content === Keywords.EXTENDS) {
-        const inheritedClassName = this.expectsType("IdentifierName", "Identifier expected").content
-        options.inherits = inheritedClassName
+    /**
+     * At this point of the parsing, this variable contains 'extends' or 'implements'
+     * Is named 'classInheritance' because using interface is also a way of inheritance
+     * 
+     * @example
+     * class Test extends Object
+     * // or
+     * class Test implements Testeable
+     */
+    this.nextToken() // eat class name (identifier)
 
-        if (this.nextToken().content === Keywords.IMPLEMENTS) {
-          const implemetedInterface = this.expectsType("IdentifierName", "Identifier expected")
-          options.implements = implemetedInterface.content
-          this.nextToken() // eat the interface identifier
+    if (this.isContent(Keywords.EXTENDS) || this.isContent(Keywords.IMPLEMENTS)) {
+      if (this.isContent(Keywords.EXTENDS)) {
+        metadata.inherits = this.expectsType("IdentifierName", "Expected class name").content
+
+        const hasImplements = this.checkNext(Keywords.IMPLEMENTS)
+        if (hasImplements) {
+          this.nextToken() // place cursor at 'implements' keyword
+          metadata.implements = parseClassImplementsList(this)
         }
-
-      } else if (relationalKW.content === Keywords.IMPLEMENTS) {
-        const implementedInterface = this.expectsType("IdentifierName", "Identifier expected")
-        options.implements = implementedInterface.content
-        this.nextToken() // eat the interface identifier
-      }
-    }
-
-    const checkEmptyBody = this.cursor.next().content === Tokens.RBRACE
-    if (this.cursor.currentTok.content === Tokens.LBRACE) {
-      if (checkEmptyBody) {
-        const tokenForWarning = this.nextToken() // eats '}' if the body is empty
-        this.scrapGenerateWarn("Empty class body at line: " + tokenForWarning.line + ", pos: " + tokenForWarning.pos)
       } else
-        parseClassBody(this, classEntities)
+        metadata.implements = parseClassImplementsList(this)
     }
 
-    if (checkEmptyBody)
-      this.nextToken() // eats '}'
+    if (this.isContent(Tokens.SEMICOLON) || !this.isContent(Tokens.LBRACE))
+      return new ast.ClassNode(className, metadata, [])
 
-    return new ast.ClassNode(className, options, classEntities)
+    this.nextToken() // eat class body begins '{'
+    
+      const classBody = parseClassBody(this)
+    
+    this.nextToken() // eat class body ends '}'
+
+    return new ast.ClassNode(className, metadata, classBody)
   }
 
   /**

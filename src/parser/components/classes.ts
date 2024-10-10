@@ -1,109 +1,130 @@
-import type { ClassAccessorModifier, ClassEntityMetadata, ClassEntity } from "@typings"
-
-import { Keywords, Tokens } from "@lexer/lexer.ts"
+import { Keywords, Tokens } from "@tokens"
 
 import Parser from "@parser/parser.ts"
-import { parseAsyncFn } from "@parser/components/functions.ts"
+import { FunctionNode, VariableNode, ClassEntityNode } from "@ast/nodes.ts"
 
-import { FunctionNode, VariableNode } from "@ast/nodes.ts"
+import { ClassEntityMetadata, ClassEntityVisibility } from "@typings"
 
-/**
- * Parses a class entity, either property or method
- * @param parser parser used to _parse_ the class entity
- * @param isStatic Tells the parser if the parsed function is _static_
- * @returns A new ClassEntity
- */
-function parseClassEntity(parser: Parser, isStatic: boolean): FunctionNode | VariableNode {
-  switch (parser.getCursor.currentTok.content) {
+export function parseClassImplementsList(parser: Parser): string[] {
+  const implementsList: string[] = []
 
-    // return for methods
-    case Keywords.ASYNC: return parseAsyncFn(parser, true, isStatic, false)
-    case Keywords.FN:    return parser.parseFunction(false, true, isStatic, false)
+  /**
+   * Since there is no way to resolve when a list of implemented interfaces ends when a class hasn't
+   * body, semicolon is used to determine the end of the class signature unless it contains a body.
+   * 
+   * In this example, semicolo is needed, ebcause class doesnt has a body
+   * @example
+   * class Server extends Socket implements Closeable;
+   * 
+   * --------------------------------------------------
+   * 
+   * Unlikely the past example, in this case, semicolon is not needed, because the class contains a body
+   * even if it's empty
+   * @example
+   * class Server extends Socket implements Closeable {}
+   */
+  while (parser.curtt().content !== Tokens.LBRACE && parser.curtt().content !== Tokens.SEMICOLON) {
+    implementsList.push(parser.nextToken().content)
+    const endOfSign = parser.checkNext(Tokens.LBRACE) || parser.checkNext(Tokens.SEMICOLON)
 
-    // return for properties
-    case Keywords.CONST:
-    case Keywords.VAR:   return parser.parseVar()
+    if (!endOfSign)
+      parser.expectsContent(Tokens.COMMA, "Expected comma after interface name")
+    
+    parser.nextToken()
   }
 
-  parser.scrapParseError("Invalid class entity. Its doesn't appear to be an property nor method")
+  return implementsList
 }
 
-function checkStaticAccessOrOverride(parser: Parser): ClassEntityMetadata {
-  parser.nextToken() // eat 'static'
-  const isStatic = true
+function varOrFnCheck(parser: Parser) {
+  const tok = parser.curtt()
+
+  // simply checks if parsed entity is valid
+  // using `switch` is cleaner than use an `if`
+  switch (tok.content) {
+    case Keywords.VAR:
+    case Keywords.CONST:
+    case Keywords.ASYNC:
+    case Keywords.FN: return true
+
+    default: return false
+  }
+}
+
+function parseClassEntityModifiers(parser: Parser): ClassEntityMetadata {
+  let visibility: ClassEntityVisibility = "private"
   let canOverride = false
+  let isStatic = false
 
-  if (parser.getCursor.currentTok.content === Keywords.OVERRIDE) {
-    parser.nextToken() // eat 'override'
-    canOverride = true
-  }
-
-  return { isStatic, canOverride }
-}
-
-function checkOveride(parser: Parser): boolean {
-  parser.nextToken() // place currentTok to 'override'
-  const canOverride = true
-
-  const classEntityKW = parser.getCursor.next() // eat 'override' keyword
-
-  // Here just check if the next token is a valid keyword to be preceed by 'override' keyword
-  switch (classEntityKW.content) {
-    case Keywords.FN:
-    case Keywords.CONST:
-    case Keywords.VAR: break
-    default: parser.scrapParseError("'override' keyword must be preceeded only by a function or variable declaration")   
-  }
-
-  return canOverride
-}
-
-/**
- * Same as `parseBody`, but since there are specific keywords inside a class body
- * like: public, private, protected or static. Parsing the content is different
- */
-export function parseClassBody(
-  parser: Parser, classEntities: ClassEntity[]
-): ClassEntity[] {
-  parser.nextToken() // eat '{'
-  let accessor: ClassAccessorModifier = "private"
-  const entityFlags: ClassEntityMetadata = { isStatic: false, canOverride: false }
-
-  while (parser.getCursor.currentTok.content !== Tokens.RBRACE) {
-    switch (parser.getCursor.currentTok.content) {
+  while (!varOrFnCheck(parser)) {
+    switch (parser.curtt().content) {
       case Keywords.PUBLIC:
       case Keywords.PRIVATE:
       case Keywords.PROTECTED: {
-        accessor = parser.getCursor.currentTok.content
-        
-        parser.nextToken() // eat accessor modifier
-      } break
-
-      case Keywords.STATIC: {
-        const entityProps = checkStaticAccessOrOverride(parser)
-        entityFlags.isStatic = entityProps.isStatic
-        entityFlags.canOverride = entityProps.canOverride
-
+        visibility = parser.curtt().content as ClassEntityVisibility
         parser.nextToken()
       } break
 
       case Keywords.OVERRIDE: {
-        entityFlags.canOverride = checkOveride(parser)
-
         parser.nextToken()
+        if (!varOrFnCheck(parser))
+          parser.scrapParseError("'override' keyword must be preceeded by a class entity itself ('fn', 'const' or 'var')")
+
+        canOverride = true
+      } break
+
+      /**
+       * Eating 'override' and 'static' keywords is completly neccesary
+       * unlikely visibility modifiers ('public', 'private', 'override'), which are 'ated' at the end of its case block
+       * 
+       * This is why both 'override' and 'static' needs to check if its preceeded token
+       * is an entity itself ('fn', 'const' or 'var') in case of 'overrider'
+       * or an 'override' or entity itself in case of 'static'
+       * 
+       * @example
+       * class Server extends Socket {
+       *  public fn override listen(opts: {...}) {...}
+       * }
+       * 
+       * class Server extends Socket {
+       *  public static override fn isListening(server: Server) {...}
+       * }
+       */
+
+      case Keywords.STATIC: {
+        parser.nextToken()
+        if (!varOrFnCheck(parser) && !parser.isContent(Keywords.OVERRIDE))
+          parser.scrapParseError("'static' keyword must be preceeded by a class entity itself or an override keyword")
+
+        isStatic = true
       } break
     }
-
-    const entity = parseClassEntity(parser, entityFlags.isStatic)
-    classEntities.push({ accessor, entityFlags, entity })
-
-    // Reset value to his initial values
-    entityFlags.isStatic = false
-    entityFlags.canOverride = false
   }
 
+  return { visibility, isStatic, canOverride }
+}
 
-  parser.nextToken() // eat '}'
+/**
+ * Parses a class entity, either property or method
+ */
+function parseClassEntity(parser: Parser): ClassEntityNode {
+  const { visibility, isStatic, canOverride } = parseClassEntityModifiers(parser)
 
-  return classEntities
+  return new ClassEntityNode(visibility, isStatic, canOverride, parser.parseStatement() as FunctionNode | VariableNode)
+}
+
+/**
+ * TODO: complete this JSDoc comment accordsing to this method
+ * @param parser 
+ * @param classEntities 
+ * @returns 
+ */
+export function parseClassBody(parser: Parser): ClassEntityNode[] {
+  const classBody: ClassEntityNode[] = []
+
+  while (parser.curtt().content !== Tokens.RBRACE) {
+    classBody.push(parseClassEntity(parser))
+  }
+
+  return classBody
 }
