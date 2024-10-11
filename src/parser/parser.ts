@@ -91,14 +91,14 @@ export default class Parser {
    * @param message Error message
    */
   public scrapParseError(message: string): never {
-    throw new ParsingError(message, this.cursor.currentTok)
+    throw new ParsingError(message, this.curtt())
   }
 
   /**
-   * Adds a warning message to `warnings`
+   * Prints a warning in console
    * @param message Warning message
    */
-  private scrapGenerateWarn(message: string): void {
+  public scrapGenerateWarn(message: string): void {
     console.warn(message)
   }
 
@@ -111,18 +111,45 @@ export default class Parser {
     return this.ast
   }
 
+  /* ===== Helper functions ===== */
+
   /**
-   * Advance the cursor one position on `Cursor.source`
-   * @returns The new value where `Cursor.pos` is placed
+   * Shorthand function for `Cursor.currentTok` access
+   * @returns The current tok where the `cursor` is placed
    */
-  protected pConsume() { return this.cursor.consume() }
+  public curtt(): Token { return this.cursor.currentTok }
+
+  /**
+   * Checks if `Cursor.currentTok.type` is `type`
+   * @param type TokenType member to be comparated against `Cursor.currentTok.type`
+   * @returns boolean if `type` is equals to `Cursor.currentTok.type`, false in other case
+   */
+  public isType(type: TokenType): boolean {
+    return this.cursor.currentTok.type === type
+  }
+
+  /**
+   * Checks if `Cursor.currentTok.content` is `c`
+   * @param c String to be comparated against `Cursor.currentTok.content`
+   * @returns boolean if `c` is equals to `Cursor.currentTok.content`, false in other case
+   */
+  public isContent(c: string): boolean {
+    return this.cursor.currentTok.content === c
+  }
 
   /**
    * Assign to `Cursor.currentTok` the value of the next position by using `Cursor.consume`
    * @returns The new value for `Cursor.currentTok`
    */
-  public nextToken() { return this.cursor.currentTok = this.pConsume() }
+  public nextToken() { return this.cursor.currentTok = this.cursor.consume() }
 
+  /**
+   * Consumes the current token advancing in the `lexer source` and checks if the actual token after the advancement is equals to `shouldBeLike`
+   * @param shouldBeLike Token to compare with `currentTok`
+   * @param message Error message if `currenTok.content` is not equal to `shouldBeLike`
+   * @throws `ParsingError` if `currenTok.content` is not equal to `shouldBeLike`
+   * @returns The next token in the source
+   */
   public expectsContent(shouldBeLike: string, message: string) {
     const nextToken = this.nextToken()
 
@@ -132,6 +159,13 @@ export default class Parser {
     return nextToken
   }
 
+  /**
+   * Checks the current token advacing in the `lexer source`and checks if the actual token after the advancement is equals to `shouldBeOf`
+   * @param shouldBeOf Tpe of token to compare with `currentTok`
+   * @param message Error menssage if `currentTok.type` is not equal to `ShouldBeOf`
+   * @throws `ParsingError` if `currentTok.type` is not equal to `ShouldBeOf`
+   * @returns The next token in the source
+   */
   public expectsType(shouldBeOf: TokenType, message: string) {
     const tok = this.nextToken()
 
@@ -139,6 +173,21 @@ export default class Parser {
       this.scrapParseError(message)
 
     return tok
+  }
+
+  /**
+   * Checks if passed parameter is the same than the next token in the source
+   * 
+   * NOTE: this method checks the source in a forward position buts doesn't advance
+   * @param canBe Possible next token
+   * @returns true, if `canBe` is equals to the next token in the source, false in other case
+   */
+  public checkNext(canBe: string): boolean {
+    return this.cursor.next().content === canBe
+  }
+
+  public getNext(): Token {
+    return this.cursor.next()
   }
 
   /**
