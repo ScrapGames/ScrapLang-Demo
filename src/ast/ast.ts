@@ -28,6 +28,10 @@ export enum ValueKind {
     Call,
     Reassignment,
     Undefined,
+    Function,
+    Boolean,
+    BinaryExpr
+}
 
 export enum ControlStmtKind {
     If,
