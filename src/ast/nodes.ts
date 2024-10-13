@@ -77,9 +77,9 @@ export class ObjectDestructuringNode extends ValueNode {
  */
 export class ModuleAccessNode extends ValueNode {
     private modName: string
-    private target: AccesibleTarget<ModuleAccessNode>
+    private target: Accessible<ModuleAccessNode>
 
-    public constructor(modName: string, target: AccesibleTarget<ModuleAccessNode>) {
+    public constructor(modName: string, target: Accessible<ModuleAccessNode>) {
         super(ValueKind.ModAccess)
         this.modName = modName
         this.target = target

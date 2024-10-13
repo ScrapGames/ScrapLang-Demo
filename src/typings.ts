@@ -70,7 +70,7 @@ export type Primitive = number | string | boolean | null | undefined
  */
 export type Instruction = FunctionNode | CallNode | ReassignmentNode | VariableNode | ASTControlNode
 
-export type AccesibleTarget<T extends ModuleAccessNode | ObjectAccessNode> = CallNode | IdentifierNode | T
+export type Accessible<T> = CallNode | IdentifierNode | T
 
 /**
  * Represents a function parameter
