@@ -165,6 +165,23 @@ export class CallNode extends ValueNode {
 }
 
 export class BinaryExprNode extends ValueNode {
+    private operator: string
+    private lhs: ValueNode
+    private rhs: ValueNode
+
+    public constructor(operator: string, lhs: ValueNode, rhs: ValueNode) {
+        super(ValueKind.BinaryExpr)
+        this.operator = operator
+        this.lhs = lhs
+        this.rhs = rhs
+    }
+
+    
+    public get getOperator() { return this.operator }
+    public get getLHS() { return this.lhs }
+    public get getRHS() { return this.rhs }
+    
+}
     private lhs: string
     private rhs: ValueNode
 

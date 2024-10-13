@@ -58,5 +58,7 @@ export default class guardsNodeV {
         return node.kind === ValueKind.Undefined
     }
 
+    public static isBinaryExpr(node: ValueNode): node is ast.BinaryExprNode {
+        return node.kind === ValueKind.BinaryExpr
     }
 }
