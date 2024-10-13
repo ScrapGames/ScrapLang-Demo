@@ -46,6 +46,21 @@ export class EntityNode extends ASTNode implements Nameable, Exportable {
     }
 }
 
+export class ControlStmtNode extends ASTNode {
+    public condition: BooleanNode
+    public kind: ControlStmtKind
+    private body: Instruction[]
+
+    public constructor(condition: BooleanNode, body: Instruction[], kind: ControlStmtKind) {
+        super()
+        this.condition = condition
+        this.body = body
+        this.kind = kind
+    }
+
+    public get getBody() { return this.body }
+}
+
 /**
  * Represents a value in the AST
  */

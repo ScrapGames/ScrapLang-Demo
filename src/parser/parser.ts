@@ -455,12 +455,13 @@ export default class Parser {
     return this.parseIdReference()
   }
 
-  private parseBinOperator(operator: string): ValueNode {
-    switch (this.cursor.currentTok.content) {
-      case Tokens.LBRACE: return this.parseLiteralObject()
-      case Tokens.LSQRBR: return this.parseLiteralArray()
-      case Tokens.AMPER: return this.parseReference()
-      default: this.scrapParseError(`The token '${this.cursor.currentTok.content}' is not implemented yet`)
+  public parseControlBlock(): ControlStmtNode {
+    const toBeParsed = this.curtt()
+
+    switch (toBeParsed.content) {
+      case Keywords.IF: return this.parseIf()
+
+      default: this.scrapParseError(`Token '${toBeParsed.content}' unimplemented yet`)
     }
   }
 

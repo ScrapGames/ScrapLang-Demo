@@ -233,7 +233,7 @@ export class Interpreter {
     scrapRuntimeError(`ScrapLang ${VERSION} still doesn't support '${node.constructor.name}' interpreting`)
   }
 
-  public computeControl(node: ASTControlNode, scope: Scope) {
+  public computeControl(node: ControlStmtNode, scope: Scope) {
     if (guardsNodeC.isIf(node)) ctrls.computeIf(this, node, scope)
   }
 
@@ -247,7 +247,9 @@ export class Interpreter {
   private inferFnInstruction(node: Instructions, fnScope: Scope) {
     if (node instanceof ValueNode)
       this.computeValue(node, fnScope)
-    else
+    else if (node instanceof ControlStmtNode) {
+      if (guardsNodeC.isIf(node)) ctrls.computeIf(this, node, fnScope)
+    } else
       // at this point, the value of `node` is an instance of `ASTEntityNode`
       addToScope(this.computeEntity(node as EntityNode, fnScope), fnScope)
   }

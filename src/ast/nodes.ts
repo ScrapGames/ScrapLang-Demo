@@ -2,6 +2,7 @@ import {
     NodeEntityType, NodeValueType,
 
     ASTNode, EntityNode, ValueNode,
+    ControlStmtNode, ControlStmtKind
 } from "@ast/ast.ts"
 
 import type { ScrapParam, ScrapClassEntityProps, Instructions } from "@typings"
@@ -258,6 +259,9 @@ export class ClassNode extends EntityNode {
         this.body = body
     }
 
-    public get getOptions() { return this.options }
-    public get getBody()    { return this.body }
+export class IfStmtNode extends ControlStmtNode {
+    public constructor(condition: BooleanNode, body: Instruction[]) {
+        super(condition, body, ControlStmtKind.If)
+        this.condition = condition
+    }
 }
