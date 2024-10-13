@@ -83,10 +83,6 @@ export default class Lexer {
     this.line = 1
   }
 
-  private createToken(type: TokenType, content: string): Token {
-    return { type, content, line: this.line, pos: this.cursor.pos }
-  }
-
   /**
    * Sets the a lexer object ready to read a new file and tokenize his content
    * @param otherFileName Name of the new file to be scanned
@@ -101,6 +97,10 @@ export default class Lexer {
     this.cursor.source = otherSource
     this.cursor.currentTok = otherSource.at(0)!
     this.cursor.pos = 1
+  }
+
+  private createToken(content: string, type: TokenType) {
+    return createToken(content, type, this.line, this.cursor.pos)
   }
 
   /**
