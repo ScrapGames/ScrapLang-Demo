@@ -19,7 +19,7 @@ const VALID_HEXADECIMAL_END = [
   'D', 'E', 'F'
 ]
 
-function resolveIdentifier(identifier: string, line: number, pos: number): Token {
+function createTokFromKeyword(identifier: string, line: number, pos: number): Token {
   switch (identifier) {
     case Keywords.FN:
     case Keywords.VAR:
@@ -269,7 +269,7 @@ export default class Lexer {
           identifier += this.cursor.currentTok
         } while (!this.cursor.isEOF() && isAlphaNum(this.nextToken()))
   
-        tokens.push(resolveIdentifier(identifier, this.line, this.cursor.pos))
+        tokens.push(createTokFromKeyword(identifier, this.line, this.cursor.pos))
       }
   
       if (isNumeric(this.cursor.currentTok)) {
