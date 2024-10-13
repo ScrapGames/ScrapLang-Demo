@@ -261,20 +261,24 @@ export class Interpreter {
 
   /**
    * Inits the Interpreter and execute the contents in the AST
-   * @param inserts Entities and other nameables which will be inserted before the execution of the program
+   * @param parser Parser to _parse_ the source
+   * @param globalMod Global module where all the priamry statements will be parsed
    */
-  public run() {
-    while (!this.parser.hasFinish) {
-      const interpretedEntity = this.computeEntity(this.parser.parseRoot(), this.globalMod.getScope)
-      this.globalMod.insert(interpretedEntity.name, interpretedEntity)
+  public static run(parser: Parser, globalMod: ScrapModule) {
+    const interpreter = new Interpreter(parser)
+
+    while (!parser.hasFinish) {
+      const parsedEntity = parser.parseRoot()
+      const computedEntity = interpreter.computeEntity(parsedEntity, globalMod.getScope)
+      globalMod.insert(computedEntity.name, computedEntity)
     }
 
-    const mainFn = this.globalMod.getEntity("main") as DefinedFunction | undefined
+    const mainFn = globalMod.getEntity("main") as DefinedFunction | undefined
     if (!mainFn)
-      this.scrapRuntimeError("Missing program entry point (main function)")
+      scrapRuntimeError("Missing program entry point (main function)")
 
     for (const instruction of mainFn.getBody) {
-      this.inferFnInstruction(instruction, mainFn.getScope)
+      interpreter.computeFnInstruction(instruction, mainFn.getScope)
     }
   }
 }
