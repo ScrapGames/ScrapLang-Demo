@@ -15,7 +15,8 @@ import LexerCursor from "@lexer/lexer-cursor.ts"
 import { isAlpha, isNumeric, isAlphaNum, isSpace, isHexadecimal, inArray } from "@utils"
 
 const VALID_HEXADECIMAL_END = [
-  'A', 'B', 'C', 'D', 'E', 'F'
+  'A', 'B', 'C',
+  'D', 'E', 'F'
 ]
 
 function resolveIdentifier(identifier: string, line: number, pos: number): Token {
