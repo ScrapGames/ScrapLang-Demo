@@ -7,52 +7,32 @@
  * this results on an error, since the const keyword represents a declaration instruction and cant be assigned.
  */
 
-import type { ScrapClassEntityProps, ScrapParam } from "@typings"
-
-import { inArray } from "@utils"
-import { AST, ASTEntityNode, ASTNode, ASTValueNode, NodeEntityType, NodeValueType } from "@ast/ast.ts"
-
+// lexer
 import Lexer from "@lexer/lexer.ts"
-import { TokenType } from "@lexer/lexer.ts"
-import { Keywords, Tokens } from "@lexer/lexer.ts"
+import { type TokenType, Keywords, Token, Tokens } from "@tokens"
 
+// parser utils
 import * as pUtils from "@parser/parser-utils.ts"
 import ParsingError from "@parser/parser-error.ts"
 import ParserCursor from "@parser/parser-cursor.ts"
 
-import * as ast from "@ast/nodes.ts"
-
-import { parseClassBody } from "@parser/components/classes.ts"
+// parser utility functions
+import { parseClassBody, parseClassImplementsList } from "@parser/components/classes.ts"
 import { parseModuleAccessor, parseModuleBody } from "@parser/components/modules.ts"
 import { parseAsyncFn, parseFunctionBody, parseParamList } from "@parser/components/functions.ts"
 
+// ast
+import * as ast from "@ast/nodes.ts"
 import { AST, ASTNode, EntityNode, ValueNode, ControlStmtNode, EntityKind, ValueKind } from "@ast/ast.ts"
-import { BINARY_OPERATORS_PRECEDENCE as _ } from "@lang/elements/commons.ts"
 
+// lang
+import { BINARY_OPERATORS_PRECEDENCE as _ } from "@scrap"
 
-export enum PrimitiveTypes {
-  u8      = "u8",
-  i8      = "i8",
-  u16     = "u16",
-  i16     = "i16",
-  u32     = "u32",
-  i32     = "i32",
-  u64     = "u64",
-  i64     = "i64",
-  u128    = "u128",
-  i128    = "i128",
+// utils
+import { inArray } from "@utils"
 
-  // floats
-  f8      = "f8",
-  f16     = "f16",
-  f32     = "f32",
-  f64     = "f64",
-  f128    = "f128",
-
-  // utils
-  char    = "char",
-  boolean = "boolean"
-}
+// type definitions
+import type { Accessible, ClassMetadata, Instruction, IScrapParam } from "@typings"
 
 const RESERVERD_VAR_NAMES = [
   "this",
