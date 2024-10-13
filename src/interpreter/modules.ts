@@ -1,19 +1,13 @@
-import { Interpreter } from "@interpreter"
+import { Interpreter, scrapReferenceError, scrapRuntimeError } from "@interpreter"
 
 import { Scope, createEmptyScope } from "@lang/scope.ts"
-
-import { ScrapValue } from "@lang/elements/commons.ts"
 import { ScrapModule } from "@lang/elements/entities/modules.ts"
+import { ScrapVariable } from "@lang/elements/entities/variables.ts"
+import { ScrapFunction, ScrapValue } from "@lang/elements/commons.ts"
 
-import { NodeValueType } from "@ast/ast.ts"
-import { CallNode, IdentifierNode, ModuleAccessNode, ModuleNode } from "@ast/nodes.ts"
+import { CallNode, ModuleAccessNode, ModuleNode } from "@ast/nodes.ts"
+import guardsNodeV from "@ast/type-guards/values.ts"
 
-/**
- * 
- * @param mod
- * @param scope
- * @returns
- */
 export function computeMod(this: Interpreter, mod: ModuleNode, scope: Scope): ScrapModule {
   const newMod = new ScrapModule(mod.name, createEmptyScope(scope, mod.name), mod.getExports)
 
