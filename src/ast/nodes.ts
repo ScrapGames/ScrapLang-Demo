@@ -179,7 +179,17 @@ export class UndefinedNode extends ValueNode {
     public constructor() {
         super(ValueKind.Undefined)
     }
+}
+
 export class BooleanNode extends ValueNode {
+    private value: boolean
+
+    public constructor(value: boolean) {
+        super(ValueKind.Boolean)
+        this.value = value
+    }
+
+    public get getValue() { return this.value }
 }
 
 /**

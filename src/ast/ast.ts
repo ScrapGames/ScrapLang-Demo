@@ -1,4 +1,6 @@
 import type { Nameable, Exportable, Instruction } from "@typings"
+import { BooleanNode } from "@ast/nodes.ts"
+
 export class ASTNode {}
 
 /**
