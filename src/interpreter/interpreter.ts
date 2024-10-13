@@ -131,7 +131,7 @@ export class Interpreter {
   }
 
   public findCallee(call: CallNode, whereIsCallee: Scope) {
-    const callee = whereIsCallee.getReference(call.getCallee) as ScrapFunction | undefined
+    const callee = whereIsCallee.get(call.getCallee) as ScrapFunction | undefined
     if (!callee)
       this.scrapReferenceError()
 
