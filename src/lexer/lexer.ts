@@ -66,17 +66,10 @@ function resolveIdentifier(identifier: string, line: number, pos: number): Token
     case Keywords.ASYNC:
     case Keywords.AWAIT: return createToken(identifier, "Keyword", line, pos)
 
-    case Keywords.AWAIT: {
-      return { type: "Statement", content: identifier, line, pos }
-    }
-
-    case "instanceof": {
-      return { type: "Operator", content: identifier, line, pos }
-    }
-
-    default: {
-      return { type: "IdentifierName", content: identifier, line, pos }
-    }
+    case Keywords.AND:
+    case Keywords.OR:
+    case Keywords.NOT:
+    case Keywords.INSTANCEOF: return createToken(identifier, "Operator", line, pos)
   }
 }
 
