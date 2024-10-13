@@ -1,5 +1,5 @@
 import {
-    NodeEntityType, NodeValueType,
+    EntityKind, ValueKind,
 
     ASTNode, EntityNode, ValueNode,
     ControlStmtNode, ControlStmtKind
