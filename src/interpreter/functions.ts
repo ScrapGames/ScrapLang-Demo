@@ -1,4 +1,5 @@
 import { FunctionNode } from "@ast/nodes.ts"
+
 import { Scope, createEmptyScope } from "@lang/scope.ts"
 import { DefinedFunction } from "@lang/elements/commons.ts"
 
