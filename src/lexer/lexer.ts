@@ -64,6 +64,8 @@ function resolveIdentifier(identifier: string, line: number, pos: number): Token
     case Keywords.SETTER:
     case Keywords.GETTER:
     case Keywords.ASYNC:
+    case Keywords.AWAIT: return createToken(identifier, "Keyword", line, pos)
+
     case Keywords.AWAIT: {
       return { type: "Statement", content: identifier, line, pos }
     }
