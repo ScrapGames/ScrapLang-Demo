@@ -105,11 +105,17 @@ export class Interpreter {
     for (const instruction of callee.getBody)
       this.computeInstruction(instruction, scope)
 
-    if (guardsV.isIdentifier(callee.getReturnValue) && callee.getScope.getScopedEntities.has(callee.getReturnValue.getSymbol))
-      scrapRuntimeError(`You returned a locally scoped entity in '${callee.name}', which will be destroyed after the execution ends`)
+    // handles that returns value doesn't be a locally scoped variable
+    if (guardsNodeV.isIdentifier(callee.getReturnValue) && callee.getScope.getEntries.has(callee.getReturnValue.getSymbol))
+      scrapRuntimeError(`You returned a locally scoped value in '${callee.name}', which will be destroyed after the execution ends`)
 
     callee.getScope.clean() // cleanup the scope, freeing memory
-    return this.computeValue(callee.getReturnValue, scope) // The return value is deleted by the JavaScript garbage collector itself, since it's not part of the function scope, ins't necessary to explictly delete it
+    return (
+      guardsNodeV.isUndefined(callee.getReturnValue) ?
+        new ScrapUndefined() :
+        this.computeValue(callee.getReturnValue, scope)
+      )
+    // The return value is deleted by the JavaScript garbage collector itself, since it's not part of the function scope, i't cant be explicitly deleted
   }
 
   /**
