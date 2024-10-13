@@ -103,7 +103,7 @@ export class Interpreter {
     }
 
     for (const instruction of callee.getBody)
-      this.inferFnInstruction(instruction, scope)
+      this.computeInstruction(instruction, scope)
 
     if (guardsV.isIdentifier(callee.getReturnValue) && callee.getScope.getScopedEntities.has(callee.getReturnValue.getSymbol))
       scrapRuntimeError(`You returned a locally scoped entity in '${callee.name}', which will be destroyed after the execution ends`)
@@ -249,7 +249,7 @@ export class Interpreter {
    * @param node Node of instruction type, they can be: FunctionNode | CallNode | ReassignmentNode | VariableNode
    * @param fnScope Scope of the function to execute
    */
-  private inferFnInstruction(node: Instructions, fnScope: Scope) {
+  public computeInstruction(node: Instruction, fnScope: Scope) {
     if (node instanceof ValueNode)
       this.computeValue(node, fnScope)
     else if (node instanceof ControlStmtNode) {
@@ -278,7 +278,7 @@ export class Interpreter {
       scrapRuntimeError("Missing program entry point (main function)")
 
     for (const instruction of mainFn.getBody) {
-      interpreter.computeFnInstruction(instruction, mainFn.getScope)
+      interpreter.computeInstruction(instruction, mainFn.getScope)
     }
   }
 }
