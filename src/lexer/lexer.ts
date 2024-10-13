@@ -142,9 +142,9 @@ export default class Lexer {
 
   private scanOperationalAssign() {
     if (this.checkNext(Tokens.EQUAL))
-      return this.createToken("Operator", this.cursor.currentTok + this.nextToken())
+      return this.createToken(this.cursor.currentTok + this.nextToken(), "Operator",)
 
-    return this.createToken("Operator", this.cursor.currentTok)
+    return this.createToken(this.cursor.currentTok, "Operator")
   }
 
   /**
@@ -156,7 +156,7 @@ export default class Lexer {
       case Tokens.PLUS:
       case Tokens.MINUS: {
         if (this.checkNext(this.cursor.currentTok))
-          return this.createToken("Operator", this.cursor.currentTok + this.nextToken())
+          return this.createToken(this.cursor.currentTok + this.nextToken(), "Operator")
       }
     }
 
@@ -179,7 +179,7 @@ export default class Lexer {
    */
   private initOperatorScan() {
     if (this.cursor.currentTok === Tokens.MINUS && this.checkNext(Tokens.GREATER))
-      return this.createToken("Token", this.cursor.currentTok + this.nextToken())
+      return this.createToken(this.cursor.currentTok + this.nextToken(), "Token")
 
     return this.scanAdjustOperator()
   }
