@@ -318,9 +318,7 @@ export default class Lexer {
             // If the number is a literal integer with base not 10 (binary, octal or hexadecimal)
             case "0b": case "0B": numericIdentifier = this.scanBinary(); break
             case "0o": case "0O": numericIdentifier = this.scanOctal(); break
-            case "0x": case "0X": {
-              numericIdentifier = this.scanHexadecimal()
-            } break
+            case "0x": case "0X": numericIdentifier = this.scanHexadecimal(); break
 
             // else, then the parsed number its a number with base 10 or a float (floast is base 10 too)
             default: numericIdentifier += this.cursor.currentTok
