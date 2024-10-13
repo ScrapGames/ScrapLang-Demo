@@ -28,7 +28,14 @@ export enum ValueKind {
     Call,
     Reassignment,
     Undefined,
-    Function
+
+export enum ControlStmtKind {
+    If,
+    For,
+    ForOf,
+    ForIn,
+    While,
+    DoWhile
 }
 
 /**
