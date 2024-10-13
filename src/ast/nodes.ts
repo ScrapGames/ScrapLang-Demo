@@ -5,7 +5,13 @@ import {
     ControlStmtNode, ControlStmtKind
 } from "@ast/ast.ts"
 
-import type { ScrapParam, ScrapClassEntityProps, Instructions } from "@typings"
+import guardsNodeV from "@ast/type-guards/values.ts"
+
+// traits
+import type { Nameable, Exportable, Accessible } from "@typings"
+
+// variety
+import type { Instruction, IScrapParam, ClassMetadata, ClassEntityVisibility } from "@typings"
 
 export class NumericNode extends ValueNode {
     private value: number
