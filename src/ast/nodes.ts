@@ -196,7 +196,7 @@ export class BinaryExprNode extends ValueNode {
 }
 
 /**
- * Reprensets a 
+ * Represents an undefined value
  */
 export class UndefinedNode extends ValueNode {
     public constructor() {
