@@ -70,6 +70,8 @@ function resolveIdentifier(identifier: string, line: number, pos: number): Token
     case Keywords.OR:
     case Keywords.NOT:
     case Keywords.INSTANCEOF: return createToken(identifier, "Operator", line, pos)
+
+    default: return createToken(identifier, "IdentifierName", line, pos)
   }
 }
 
