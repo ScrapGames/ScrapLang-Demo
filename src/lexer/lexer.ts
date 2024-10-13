@@ -48,9 +48,6 @@ function createTokFromKeyword(identifier: string, line: number, pos: number): To
     case Keywords.DEFAULT:
     case Keywords.IN:
     case Keywords.OF:
-    case Keywords.AND:
-    case Keywords.OR:
-    case Keywords.NOT:
     case Keywords.TRY:
     case Keywords.CATCH:
     case Keywords.AS:
