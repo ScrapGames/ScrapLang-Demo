@@ -1,21 +1,34 @@
+import * as mods from "./modules.ts"
+import * as fns from "./functions.ts"
+import * as vars from "./variables.ts"
+import * as objs from "./objects.ts"
+import * as ctrls from "./controls.ts"
+
 import Parser from "@parser/parser.ts"
 
 import { ControlStmtNode, EntityNode, ValueNode, EntityKind, ValueKind } from "@ast/ast.ts"
 import {
-  NumericNode, FloatNode,
   CallNode, FunctionNode,
-  ModuleNode, ClassNode as _,
-  ReassignmentNode, VariableNode,
-  StringNode, CharNode,
   LiteralObjectNode, LiteralArrayNode,
-  ModuleAccessNode, ObjectAccessNode as __,
-  IdentifierNode, ReferenceNode
+  IdentifierNode,
+  BinaryExprNode
 } from "@ast/nodes.ts"
 
-import { Instructions, Nameable } from "@typings"
+import guardsNodeV from "@ast/type-guards/values.ts"
+import guardsNodeE from "@ast/type-guards/entities.ts"
+import guardsNodeC from "@ast/type-guards/controls.ts"
 
-import { ScrapVariable } from "@lang/elements/entities/variables.ts"
+import guards from "@lang/elements/guards.ts"
+
+import { RuntimeError } from "@lang/lang-errors.ts"
+import { Scope, UndefinedReferenceError } from "@lang/scope.ts"
+
 import { ScrapModule } from "@lang/elements/entities/modules.ts"
+import { ScrapVariable } from "@lang/elements/entities/variables.ts"
+
+import { ScrapArray } from "@lang/elements/values/array.ts"
+import { ScrapChar, ScrapString } from "@lang/elements/values/textuals.ts"
+import { ScrapFloat, ScrapInteger } from "@lang/elements/values/numerics.ts"
 
 import {
   ScrapValue,
@@ -24,19 +37,11 @@ import {
   ScrapEntity,
   ScrapObject,
   ScrapFunction,
-  ScrapPrimitive
+  ScrapUndefined
 } from "@lang/elements/commons.ts"
 
-import { ScrapArray } from "@lang/elements/values/array.ts"
-import { ScrapUndefined } from "@lang/elements/values/absence.ts"
-import { ScrapReference } from "@lang/elements/values/reference.ts"
-import { ScrapChar, ScrapString } from "@lang/elements/values/textuals.ts"
-import { ScrapFloat, ScrapInteger } from "@lang/elements/values/numerics.ts"
-
-import * as mods from "./modules.ts"
-import * as fns from "./functions.ts"
-import * as vars from "./variables.ts"
 import { VERSION } from "@scrap"
+import type { Nameable, Exportable, Instruction, ScrapObjectProperty } from "@typings"
 
 /**
  * Causes the program stop by a undefined referenced
