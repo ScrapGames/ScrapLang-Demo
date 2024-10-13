@@ -162,7 +162,7 @@ export class Interpreter {
    * @param scope Scope where the element can be founded
    * @returns A new ScrapValue of the founded element
    */
-  public computeIdentifier(node: IdentifierNode, scope: Scope): ScrapValue {
+  public computeIdentifier(node: IdentifierNode, scope: Scope, searcher?: (name: string) => (ScrapVariable | ScrapFunction) | undefined): ScrapValue {
     const referred = scope.getReference(node.getSymbol) as ScrapVariable | ScrapFunction
     if (!referred)
       this.scrapReferenceError()
