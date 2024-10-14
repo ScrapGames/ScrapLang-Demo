@@ -22,6 +22,7 @@ export enum ValueKind {
     String,
     Char,
     LiteralObj,
+    ObjDestructuring,
     ModAccess,
     ObjAccess,
     Identifier,
