@@ -166,6 +166,31 @@ const ast: AST = new AST()
     return this.cursor.next()
   }
 
+  /* ===== Parser functions ===== */
+
+  /**
+   * Parses a function entity, which is any element which is allowed to be placed inside a function body (between '{' and '}')
+   * @returns An allowed element inside a function body: they can be: other `DefinedFunctions`, `ScrapVariables` or `ScrapCalls` to any function
+   */
+  public parseInstruction(): Instruction {
+    const toBeParsedTok = this.curtt()
+
+    if (toBeParsedTok.type === "IdentifierName")
+      return this.parseIdentifier() as Instruction
+    else {
+      switch (toBeParsedTok.content) {
+        case Keywords.FN:
+        case Keywords.VAR:
+        case Keywords.CONST: return this.parseStatement() as Instruction
+        case Keywords.IF: return this.parseControlBlock()
+
+        default: {
+          this.scrapParseError("Only instructions are allowed inside a block body")
+        }
+      }
+    }
+  }
+
   /**
    * A function is a block of code that can be accessed by type the name given to the function.
    * In this way, we avoid to repeat the same code simultaneously over the program.

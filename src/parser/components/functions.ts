@@ -50,33 +50,6 @@ export function parseParamList(parser: Parser): ScrapParam[] {
 }
 
 /**
- * Parses a function entity, which is any element which is allowed to be placed inside a function body (between '{' and '}')
- *
- * @param parser Parser used to _parse_ the function body
- * @param scope scope where variabled are saved and references are searched
- * @returns An allowed element inside a function body: they can be: other `DefinedFunctions`, `ScrapVariables` or `ScrapCalls` to any function
- */
-function parseFunctionEntity(parser: Parser): Instruction {
-  const toBeParsedTok = parser.getCursor.currentTok
-
-  if (toBeParsedTok.type === "IdentifierName") {
-    const parsedId = parser.parseIdentifier()
-
-    return parsedId as Instruction
-  } else {
-    switch (toBeParsedTok.content) {
-      case Keywords.FN:
-      case Keywords.VAR:
-      case Keywords.CONST: return parser.parseStatement() as Instruction
-
-      default: {
-        parser.scrapParseError("Only 'fn', 'var', 'const', function calls and reassignments are allowed inside a function body")
-      }
-    }
-  }
-}
-
-/**
  * Parse the block of code that correspond with a function. Which is represented by contain code between '{' and a '}'
  * @param isMethod
  * @param scope `Scope` where the function can registry variables that has been declared inside his body
@@ -90,9 +63,8 @@ export function parseFunctionBody(parser: Parser, fName: string) {
         parser.scrapParseError("A constructor can not have a return statement")
       
       return { body, return: parseReturn(parser) }
-    } else {
-      body.push(parseFunctionEntity(parser))
-    }
+    } else
+      body.push(parser.parseInstruction())
   }
 
   return { body, return: new UndefinedNode() }
