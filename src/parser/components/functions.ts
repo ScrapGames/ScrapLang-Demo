@@ -21,7 +21,18 @@ import type { IScrapParam, Instruction } from "@typings"
  */
 export function parseAsyncFn(parser: Parser, isMethod: boolean, isStatic: boolean, isExpression: boolean): FunctionNode {
   parser.expectsContent(Keywords.FN, "'async' keywords is only applicable to functions")
-  return parser.parseFunction(true, isMethod, isStatic, isExpression)
+  return parser.parseFunction(true, isMethod, isStatic)
+}
+
+export function resolveFunctionName(parser: Parser, isExpression: boolean): string {
+  parser.nextToken()
+  
+  if (!isExpression) {
+    if (!parser.isType("IdentifierName"))
+      parser.scrapParseError("Missing function name. This isn't a function expression")
+  }
+
+  return parser.isContent(Tokens.LPAREN) ? "anonymous" : parser.curtt().content
 }
 
 function parseParameter(parser: Parser): ScrapParam {

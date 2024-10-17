@@ -202,15 +202,7 @@ const ast: AST = new AST()
    * 
    * @returns A new function statement
    */
-  public parseFunction(isAsync: boolean, isMethod: boolean, _isStatic: boolean, isExpression: boolean): ast.FunctionNode {
-    const fName = this.expectsType("IdentifierName", "Missing function name").content
-
-    this.expectsContent(Tokens.LPAREN, "Missing parameter list")
-
-    const existsParams = this.cursor.next().content !== Tokens.RPAREN
-    const params: ScrapParam[] = existsParams ? parseParamList(this) : []
-
-    if (isMethod)
+    const fName = resolveFunctionName(this, isExpression)
       params.unshift({ pName: "this", pType: "this" }) // TODO: pType as `"this"` is a temporal value, in the future, the type will be the object of the instanced class
 
     if (!existsParams) {
