@@ -309,22 +309,22 @@ const ast: AST = new AST()
    * @returns A `ScrapVariable` where the stored value will be `undefined` or an assigned value
    */
   public parseVar(): ast.VariableNode {
-    const isConst = this.cursor.currentTok.content === Keywords.CONST
+    const isConst = this.curtt().content === Keywords.CONST
 
     this.nextToken() // eat 'var' or 'const' keyword
 
-    const name = this.cursor.currentTok.content
+    const name = this.curtt().content
     if (inArray(name, RESERVERD_VAR_NAMES))
       this.scrapParseError(`'${name}' is not allowed as a variable declaration name.`)
 
-    if (this.cursor.next().content === Tokens.COLON) {
+    if (this.checkNext(Tokens.COLON)) {
       this.nextToken()
       this.expectsType("IdentifierName", "Expected data type")
     }
 
     if (isConst)
       this.expectsContent(Tokens.EQUAL, "A constant must have a assigned value")
-    else if (this.cursor.next().content === Tokens.EQUAL)
+    else if (this.checkNext(Tokens.EQUAL))
       this.nextToken() // eats data type or name in case variable is not constant
     
     this.nextToken() // eat '='
@@ -345,28 +345,27 @@ const ast: AST = new AST()
     let value: ValueNode
     const entries: Map<string, ValueNode> = new Map()
 
-    while (this.cursor.currentTok.content !== Tokens.RBRACE) {
+    while (this.curtt().content !== Tokens.RBRACE) {
       if (
         this.cursor.currentTok.type !== "IdentifierName" &&
         this.cursor.currentTok.type !== "StringLiteral"
       ) {
         this.scrapParseError("object key from a key-value pair must be an identifier or a string")
       }
-      keyName = this.cursor.currentTok.content
+      keyName = this.curtt().content
 
       if (keyValuePairs.has(keyName))
         this.scrapParseError(`${keyName} already exists in the literal object`)
 
-      if (this.nextToken().content !== Tokens.COLON)
-        this.scrapParseError("Missing colon ':'")
+      this.expectsContent(Tokens.COLON, "Missing colon ':' after key")
 
       this.nextToken() // eat the colon ':'
       value = this.parseExpr()
       
-      if (this.cursor.currentTok.content !== Tokens.RBRACE) {
-        if (this.cursor.currentTok.content !== Tokens.COMMA) {
+      if (!this.isContent(Tokens.RBRACE)) {
+        if (!this.isContent(Tokens.COMMA))
           this.scrapParseError("Missing comma after key-value")
-        } else this.nextToken() // eat the comma
+        else this.nextToken() // eat the comma
       }
 
       keyValuePairs.set(keyName, value)
@@ -387,11 +386,14 @@ const ast: AST = new AST()
 
     this.nextToken() // eat '['
 
-    while (this.cursor.currentTok.content !== Tokens.RSQRBR) {
+    while (this.curtt().content !== Tokens.RSQRBR) {
       elements.push(this.parseExpr())
-      if (this.cursor.currentTok.content !== Tokens.RSQRBR) {
-        this.expectsContent(Tokens.COMMA, "Expected comma after item")
-        this.nextToken() // consume the comma
+      if (this.curtt().content !== Tokens.RSQRBR) {
+        const isComma = this.curtt().content === Tokens.COMMA
+        if (!isComma)
+          this.scrapParseError("Expected comma after array item")
+
+        this.nextToken() // if `currenTok` is comma, then eat it
       }
     }
 
@@ -421,19 +423,19 @@ const ast: AST = new AST()
    * @returns A `CallNode`
    */
   private parseCall(): ast.CallNode {
-    const functionName = this.cursor.currentTok.content
+    const functionName = this.curtt().content
 
-    this.nextToken() // eat fn name
-    this.nextToken() // '('
+    this.expectsContent(Tokens.LPAREN, "Expected open parenthesis for args list '('")
+    this.nextToken() // eat '('
 
     const args: ValueNode[] = []
 
-    if (this.cursor.currentTok.content !== Tokens.RPAREN) {
+    if (!this.isContent(Tokens.RPAREN)) {
       do {
         args.push(this.parseExpr())
-        if (this.cursor.currentTok.content === Tokens.COMMA)
+        if (this.isContent(Tokens.COMMA))
           this.nextToken()
-      } while (this.cursor.currentTok.content !== Tokens.RPAREN)
+      } while (!this.isContent(Tokens.RPAREN))
     }
 
     this.nextToken() // eat ')'
@@ -453,7 +455,7 @@ const ast: AST = new AST()
    * @returns A value node
    */
   public parseIdReference(): ValueNode {
-    const refName = this.cursor.currentTok
+    const refName = this.curtt()
     const accessor = this.nextToken() // eat the identifier
 
     switch (accessor.content) {
@@ -470,7 +472,7 @@ const ast: AST = new AST()
    * Parses an identifier. Parsing an single identifier allows to detect calls to functions or simple variable references
    */
   public parseIdentifier(): ValueNode {
-    if (this.cursor.next().content === Tokens.LPAREN)
+    if (this.checkNext(Tokens.LPAREN))
       return this.parseCall()
 
     return this.parseIdReference()
@@ -495,14 +497,16 @@ const ast: AST = new AST()
    * @returns The parsed expression
    */
   public parseExpr(): ValueNode {
-    // check for 'Statement' type is needed, because this method can be called 
-    if (this.cursor.currentTok.type === "Statement" && this.cursor.currentTok.content === Keywords.FN)
+    // check for 'Statement' type is needed
+    // because this method could be called when in the source appears
+    // an string which content is: "fn"
+    if (this.isType("Statement") && this.isContent(Keywords.FN))
       return this.parseFunction(false, false, false, true) as ValueNode
 
-    if (this.cursor.currentTok.content === Keywords.ASYNC)
+    if (this.isContent(Keywords.ASYNC))
       return parseAsyncFn(this, false, false, true) as ValueNode
 
-    switch (this.cursor.currentTok.type) {
+    switch (this.curtt().type) {
       case "IdentifierName": return this.parseIdentifier()
       case "NumericLiteral": return pUtils.parseNumber.call(this)
       case "BinaryLiteral":  return pUtils.parseBinary.call(this)
@@ -522,7 +526,8 @@ const ast: AST = new AST()
    * @returns 
    */
   public parseStatement(): EntityNode {
-    switch (this.cursor.currentTok.content) {
+    switch (this.curtt().content) {
+      /* Parses non-primary entities */
       case Keywords.VAR:    return this.parseVar()
 
       case Keywords.ASYNC:  return parseAsyncFn(this, false, false, false) as EntityNode
@@ -531,12 +536,12 @@ const ast: AST = new AST()
       case Keywords.CLASS:  return this.parseClass()
       case Keywords.MODULE: return this.parseModule()
 
-      default: this.scrapParseError(`The ${this.cursor.currentTok.type} '${this.cursor.currentTok.content}' is not allowed here'`)
+      default: this.scrapParseError(`The ${this.curtt().type} '${this.curtt().content}' is not allowed here`)
     }
   }
 
   private parseRootEntity() {
-    switch (this.cursor.currentTok.content) {
+    switch (this.curtt().content) {
       case Keywords.ASYNC:
       case Keywords.FN:
       case Keywords.CONST:
@@ -544,7 +549,7 @@ const ast: AST = new AST()
       case Keywords.MODULE: return this.parseStatement()
 
       default: {
-        const invalidTokenMessage = `The token '${this.cursor.currentTok.content}' is not allowed here`
+        const invalidTokenMessage = `The token '${this.curtt().content}' is not allowed here`
 
         this.scrapParseError(
           `${invalidTokenMessage}. Only: 'fn', 'const', 'class', 'module', 'interface', 'enum', 'import' and 'export' keywords are allowed as primary statements.
@@ -565,7 +570,7 @@ const ast: AST = new AST()
    * Parses a primary entity
    */
   public parseRoot() {
-    if (this.cursor.currentTok.content === Keywords.EXPORT) {
+    if (this.curtt().content === Keywords.EXPORT) {
       const exported = this.parseExportedRoot()
       return exported
     }
