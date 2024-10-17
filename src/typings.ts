@@ -91,8 +91,8 @@ export type ClassAccessorModifier = "public" | "private" | "protected"
  * Represents flags for a class implementation of from where 
  */
 export interface ClassMetadata {
-    inherits?: string,
-    implements?: string
+    inherits: string,
+    implements: string[]
 }
 
 /**
