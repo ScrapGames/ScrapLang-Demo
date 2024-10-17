@@ -6,6 +6,10 @@ import { Keywords, Tokens } from "@lexer/lexer.ts"
 import Parser from "@parser/parser.ts"
 
 import { ValueNode } from "@ast/ast.ts"
+import { FunctionNode, UndefinedNode } from "@ast/nodes.ts"
+
+import { Keywords, Tokens } from "@tokens"
+import type { IScrapParam, Instruction } from "@typings"
 
 /**
  * Parses an asynchronous function
