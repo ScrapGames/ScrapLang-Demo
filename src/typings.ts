@@ -1,5 +1,5 @@
-import { ASTControlNode } from "@ast/ast.ts"
-import { CallNode, FunctionNode, IdentifierNode, ModuleAccessNode, ObjectAccessNode, ReassignmentNode, VariableNode } from "@ast/nodes.ts"
+import { ControlStmtNode } from "@ast/ast.ts"
+import { CallNode, FunctionNode, IdentifierNode, ReassignmentNode, VariableNode } from "@ast/nodes.ts"
 
 import { ScrapValue } from "@lang/elements/commons.ts"
 
@@ -96,25 +96,33 @@ export interface ClassMetadata {
 }
 
 /**
- * Defines the possible values for an object property visiblity
+ * Defines the possible values that a object property will have
+ * 
+ * This is used in classes for: determine what visivility will have an object property
+ * In objects (created directly in a literal way): the entities will always be "public"
  */
-export type ClassEntityVisibility = "public" | "private" | "protected"
+export type ScrapVisibility = "public" | "private" | "protected"
 
 export interface ClassEntityMetadata {
     isStatic: boolean,
     canOverride: boolean
 }
 
+// ===== Object types =====
+
 /**
- * Represents metadata for a class entity
+ * Represents metadata
  */
-export interface ClassEntity {
-    accessor: ClassAccessorModifier,
-    entityFlags: ClassEntityMetadata,
-    entity: FunctionNode | VariableNode
+export interface ScrapObjectPropertyMetadata {
+    visibility: ScrapVisibility,
+    isStatic: boolean,
+    writeable: boolean
 }
 
-interface ExecutionContext {
-    callee: string,
-    instructions: Instruction[]
+/**
+ * Represents valid valuse to ScrapObject keys (identifiers, strings literals and integers)
+ */
+export interface ScrapObjectProperty {
+    metaproperties: ScrapObjectPropertyMetadata,
+    value: ScrapValue
 }
