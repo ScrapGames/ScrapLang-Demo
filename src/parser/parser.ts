@@ -48,7 +48,6 @@ const RESERVERD_VAR_NAMES = [
 export default class Parser {
   private lexer: Lexer
   private cursor: ParserCursor
-  private ast: AST
 
   public constructor(lexer: Lexer) {
     this.lexer = lexer
@@ -73,13 +72,19 @@ export default class Parser {
     console.warn(message)
   }
 
+/**
+   * Creates a new AST filling it with nodes which correspond with the parsed source code
+   * @returns The created and filled AST
+   */
   public build(): AST {
+const ast: AST = new AST()
+
     while (!this.cursor.isEOF()) {
       const parsedRootEntity = this.parseRoot()
-      this.ast.pushNode(parsedRootEntity)
+      ast.pushNode(parsedRootEntity)
     }
 
-    return this.ast
+    return ast
   }
 
   /* ===== Helper functions ===== */
@@ -548,5 +553,4 @@ export default class Parser {
   public get hasFinish()   { return this.cursor.isEOF() }
   public get getLexer()    { return this.lexer }
   public get getCursor()   { return this.cursor }
-  public get getAST()      { return this.ast }
 }
