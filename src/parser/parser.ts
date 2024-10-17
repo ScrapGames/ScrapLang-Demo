@@ -53,15 +53,6 @@ export default class Parser {
   public constructor(lexer: Lexer) {
     this.lexer = lexer
     this.cursor = new ParserCursor(lexer)
-    this.ast = new AST()
-
-    this.cursor.currentTok = this.cursor.consume() // gives an initial value to the parser
-  }
-
-  public restart() {
-    this.cursor.source = this.lexer.tokens()
-    this.cursor.currentTok = this.cursor.source.at(0)!
-    this.cursor.pos = 0
 
     this.cursor.currentTok = this.cursor.consume() // gives an initial value to the parser
   }
