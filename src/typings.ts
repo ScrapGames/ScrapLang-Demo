@@ -103,7 +103,15 @@ export interface ClassMetadata {
  */
 export type ScrapVisibility = "public" | "private" | "protected"
 
+// ===== Class types =====
+
+/**
+ * Represents metadata for class properties
+ * which is useful when an object will be created
+ * to determine if an the property can be accessed or not
+ */
 export interface ClassEntityMetadata {
+    visibility: ScrapVisibility,
     isStatic: boolean,
     canOverride: boolean
 }
