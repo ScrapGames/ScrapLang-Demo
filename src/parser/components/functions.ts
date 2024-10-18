@@ -19,9 +19,9 @@ import type { IScrapParam, Instruction } from "@typings"
  * @param isExpression Same as `isExpression` from `Parser.parseFunction`
  * @returns A function node where `isAsync` is setted to true
  */
-export function parseAsyncFn(parser: Parser, isMethod: boolean, isStatic: boolean, isExpression: boolean): FunctionNode {
+export function parseAsyncFn(parser: Parser, isExpression: boolean, isMethod: boolean, isStatic: boolean): FunctionNode {
   parser.expectsContent(Keywords.FN, "'async' keywords is only applicable to functions")
-  return parser.parseFunction(true, isMethod, isStatic)
+  return parser.parseFunction(isExpression, true, isMethod, isStatic)
 }
 
 export function resolveFunctionName(parser: Parser, isExpression: boolean): string {
