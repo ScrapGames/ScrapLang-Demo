@@ -12,12 +12,12 @@ import { Keywords, Tokens } from "@tokens"
 import type { IScrapParam, Instruction } from "@typings"
 
 /**
- * Parses an asynchronous function
+ * Calls to `parseFunction` passing `isAsync` as true
  * @param parser Parses used to _parse_ the function
- * @param isMethod Determines if `this` argument need to be added to the function
- * @param isStatic Determines if the function can be accessed througth a class object
- * @param isExpression Determines if an function is defined as a expression
- * @returns 
+ * @param isMethod Same as `isMethod` from `Parser.parseFunction`
+ * @param isStatic Same as `isStatic` from `Parser.parseFunction`
+ * @param isExpression Same as `isExpression` from `Parser.parseFunction`
+ * @returns A function node where `isAsync` is setted to true
  */
 export function parseAsyncFn(parser: Parser, isMethod: boolean, isStatic: boolean, isExpression: boolean): FunctionNode {
   parser.expectsContent(Keywords.FN, "'async' keywords is only applicable to functions")
