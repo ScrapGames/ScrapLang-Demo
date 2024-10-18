@@ -106,12 +106,12 @@ export class Interpreter {
       this.computeInstruction(instruction, scope)
 
     // handles that returns value doesn't be a locally scoped variable
-    if (guardsNodeV.isIdentifier(callee.getReturnValue) && callee.getScope.getEntries.has(callee.getReturnValue.getSymbol))
+    if (callee.getReturnValue.isIdentifier() && callee.getScope.getEntries.has(callee.getReturnValue.getSymbol))
       scrapRuntimeError(`You returned a locally scoped value in '${callee.name}', which will be destroyed after the execution ends`)
 
     callee.getScope.clean() // cleanup the scope, freeing memory
     return (
-      guardsNodeV.isUndefined(callee.getReturnValue) ?
+        callee.getReturnValue.isUndefined() ?
         new ScrapUndefined() :
         this.computeValue(callee.getReturnValue, scope)
       )
@@ -141,8 +141,8 @@ export class Interpreter {
     if (!callee)
       this.scrapReferenceError()
 
-    if (callee instanceof ScrapVariable) {
-      if (!(callee.getAssignedValue instanceof ScrapFunction))
+    if (guards.isVariable(callee)) {
+      if (!guards.isDefinedFn(callee.getVal))
         this.scrapRuntimeError(`The expression is not callable. '${call.getCallee}' doesn't contains values with call signatures`)
 
       return callee.getAssignedValue
