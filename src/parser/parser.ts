@@ -204,21 +204,44 @@ const ast: AST = new AST()
    */
   public parseFunction(isExpression: boolean, isAsync: boolean, isMethod: boolean, isStatic: boolean): ast.FunctionNode {
     const fName = resolveFunctionName(this, isExpression)
-      params.unshift({ pName: "this", pType: "this" }) // TODO: pType as `"this"` is a temporal value, in the future, the type will be the object of the instanced class
 
-    if (!existsParams) {
-      this.nextToken() // eat '(' if there are not parameters
-    }
+    /**
+     * This check is needed because if `isExpression` is true,
+     * this means that a token which is not the function name was consumed in `resolveFunctionName` execution
+     * so the `currentTok.content` is already '(' giving false in this next `expectsContent` checking
+     * and finally throwing an error
+     */
+    if (fName !== "anonymous")
+      this.expectsContent(Tokens.LPAREN, "Missing parameter list") // eats the fn name and advance to next tok '('
 
-    this.expectsContent(Tokens.LBRACE, "Missing function body open")
+    /** If `currentTok` isn't RPAREN ')', then means that the function will receive arguments, in other way, the param list is empty */
+    const existsParams = !this.checkNext(Tokens.RPAREN)
+    let params: IScrapParam[] = []
 
-    this.nextToken() // eat '{' (function body beings)
+    /**
+     * Check is neccesary because if `parseParamList`
+     * isn't executed, the source doesn't advance until ')' token
+     */
+    if (existsParams)
+      params = parseParamList(this)
+    else
+      this.nextToken()
 
-    const { body, return: returnExpression } = parseFunctionBody(this, fName)
+    if (fName === "destructor" && params.length > 0)
+      this.scrapParseError("A class destructor must not receive parameters")
+
+    // If the method is defined inside a class and isn't declared as a static method, the function will implicitly receive the instance itself as `this`
+    if (isMethod && !isStatic)
+      params.unshift({ pName: "this", pType: "this" })
+
+    this.expectsContent(Tokens.LBRACE, "Missing function body open") // eats parameter list closing ')' and advance
+    this.nextToken() // eat '{' (function body opens)
+
+    const { body, return: returnNode } = parseFunctionBody(this, fName)
 
     this.nextToken() // eat '}' (function body ends)
 
-    return new ast.FunctionNode(isExpression ? NodeValueType.Function : NodeEntityType.Function, fName, params, body, returnExpression, isAsync)
+    return new ast.FunctionNode(fName, isExpression ? ValueKind.Function : EntityKind.Function, params, body, returnNode, isAsync)
   }
 
   /**
