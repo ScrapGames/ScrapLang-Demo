@@ -192,16 +192,17 @@ const ast: AST = new AST()
   }
 
   /**
-   * A function is a block of code that can be accessed by type the name given to the function.
-   * In this way, we avoid to repeat the same code simultaneously over the program.
+   * Parses a function, either statement or expression
+   * If a function is parsed as an expression isn't needed to provide a name. Moreover, a function expression is only accessibe by the variable name which contains it.
    * 
-   * A function is compounded by a name, a list of parameters, comprises by a parenthesis pair and a body ( '(' , ')' ), comprises by a curly braces pair ( '{' , '}' )
-   * 
-   * @param isMethod Is true when the method is invoked while a class is beign parsed. It is used to add the "this" implcit param
-   * @param isStatic Is true when the method will be accessed in a _static way_. This means that is not necessary create a object of any class to use that method or variable
-   * 
-   * @returns A new function statement
+   * @param isExpression Determines if the function is an expression
+   * this means that the function is beign parsed as a value of a variable or as return value
+   * @param isAsync Determines if the function
+   * @param isMethod Determines if the function will be parsed as a class method, this allows to add the `this` parameter implicitly
+   * @param isStatic In combination with `isMethod`
+   * @returns A new function node
    */
+  public parseFunction(isExpression: boolean, isAsync: boolean, isMethod: boolean, isStatic: boolean): ast.FunctionNode {
     const fName = resolveFunctionName(this, isExpression)
       params.unshift({ pName: "this", pType: "this" }) // TODO: pType as `"this"` is a temporal value, in the future, the type will be the object of the instanced class
 
