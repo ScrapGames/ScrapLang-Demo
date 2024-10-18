@@ -5,8 +5,6 @@ import {
     ControlStmtNode, ControlStmtKind
 } from "@ast/ast.ts"
 
-import guardsNodeV from "@ast/type-guards/values.ts"
-
 // traits
 import type { Nameable, Exportable, Accessible } from "@typings"
 
@@ -97,13 +95,12 @@ export class ModuleAccessNode extends ValueNode {
      * @returns The name of the wrapped acccessed entity
      */
     public getTargetName(): string {
-        if (TypeGuardsNodeValues.isCall(this.target))
+        if (this.target.isCall())
             return this.target.getCallee
-        else if (TypeGuardsNodeValues.isIdentifier(this.target))
+        else if (this.target.isIdentifier())
             return this.target.getSymbol
-        else {
+        else
             return this.target.getTargetName()
-        }
     }
 
     public get getModName() { return this.modName }
