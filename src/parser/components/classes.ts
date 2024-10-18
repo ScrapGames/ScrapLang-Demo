@@ -12,7 +12,7 @@ export function parseClassImplementsList(parser: Parser): string[] {
    * Since there is no way to resolve when a list of implemented interfaces ends when a class hasn't
    * body, semicolon is used to determine the end of the class signature unless it contains a body.
    * 
-   * In this example, semicolo is needed, ebcause class doesnt has a body
+   * In this example, semicolon is needed, because class doesn't has a body
    * @example
    * class Server extends Socket implements Closeable;
    * 
@@ -77,7 +77,7 @@ function parseClassEntityModifiers(parser: Parser): ClassEntityMetadata {
        * Eating 'override' and 'static' keywords is completly neccesary
        * unlikely visibility modifiers ('public', 'private', 'override'), which are 'ated' at the end of its case block
        * 
-       * This is why both 'override' and 'static' needs to check if its preceeded token
+       * This is because both 'override' and 'static' needs to check if its preceeded token
        * is an entity itself ('fn', 'const' or 'var') in case of 'overrider'
        * or an 'override' or entity itself in case of 'static'
        * 
