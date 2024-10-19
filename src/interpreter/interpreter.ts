@@ -308,6 +308,11 @@ export class Interpreter {
     if (!mainFn)
       scrapRuntimeError("Missing program entry point (main function)")
 
+    const scrapArgs = new ScrapArray(Deno.args.map(arg => ({
+      metaproperties: { isStatic: true, visibility: "public", writeable: true },
+      value: new ScrapString(arg)
+    })));
+    (globalMod.getEntity("std") as ScrapModule).insert("args", new ScrapVariable(true, "args", scrapArgs, true))
     for (const instruction of mainFn.getBody) {
       interpreter.computeInstruction(instruction, mainFn.getScope)
     }
