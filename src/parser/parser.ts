@@ -513,14 +513,17 @@ const ast: AST = new AST()
    * @returns The parsed expression
    */
   public parseExpr(): ValueNode {
-    // check for 'Statement' type is needed
-    // because this method could be called when in the source appears
-    // an string which content is: "fn"
-    if (this.isType("Statement") && this.isContent(Keywords.FN))
-      return this.parseFunction(false, false, false, true) as ValueNode
 
-    if (this.isContent(Keywords.ASYNC))
-      return parseAsyncFn(this, false, false, true) as ValueNode
+    /**
+     * Functions are the unique entity which can be used as value, for this reason:
+     * We need to parse them outside the switch statement, because functions
+     * aren't designed to be lexed as a single token which is associated with a type of token as numbers can (for example, a string or any other **value**).
+     */
+    if (this.isContent(Keywords.FN)) // casting first to unkown is needed due to `kind` field of FunctionNode doesn't fit in ValueNode `kind` field
+      return this.parseFunction(true, false, false, false) as unknown as ValueNode
+
+    if (this.isContent(Keywords.ASYNC)) // casting  first to unkown is needed due to `kind` field of FunctionNode doesn't fit in ValueNode `kind` field
+      return parseAsyncFn(this, false, false, true) as unknown as ValueNode
 
     switch (this.curtt().type) {
       case "IdentifierName": return this.parseIdentifier()
@@ -546,8 +549,13 @@ const ast: AST = new AST()
       /* Parses non-primary entities */
       case Keywords.VAR:    return this.parseVar()
 
-      case Keywords.ASYNC:  return parseAsyncFn(this, false, false, false) as EntityNode
-      case Keywords.FN:     return this.parseFunction(false, false, false, false) as EntityNode
+      /**
+       * Parses primary entities
+       * Same as when we casted the returned node to
+       * unkown first. The `kind` field of FunctionNode doesn't fit in EnitytNode `kind` field
+       */
+      case Keywords.ASYNC:  return parseAsyncFn(this, false, false, false) as unknown as EntityNode
+      case Keywords.FN:     return this.parseFunction(false, false, false, false) as unknown as EntityNode
       case Keywords.CONST:  return this.parseVar()
       case Keywords.CLASS:  return this.parseClass()
       case Keywords.MODULE: return this.parseModule()
