@@ -295,7 +295,7 @@ export class Interpreter {
    * @param parser Parser to _parse_ the source
    * @param globalMod Global module where all the priamry statements will be parsed
    */
-  public static run(parser: Parser, globalMod: ScrapModule) {
+  public static run(parser: Parser, globalMod: ScrapModule, std: ScrapModule) {
     const interpreter = new Interpreter(parser)
 
     while (!parser.hasFinish) {
@@ -312,7 +312,8 @@ export class Interpreter {
       metaproperties: { isStatic: true, visibility: "public", writeable: true },
       value: new ScrapString(arg)
     })));
-    (globalMod.getEntity("std") as ScrapModule).insert("args", new ScrapVariable(true, "args", scrapArgs, true))
+
+    std.insert("args", new ScrapVariable(true, "args", scrapArgs, true))
     for (const instruction of mainFn.getBody) {
       interpreter.computeInstruction(instruction, mainFn.getScope)
     }
