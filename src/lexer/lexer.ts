@@ -12,6 +12,12 @@ import { isAlpha, isNumeric, isAlphaNum, isSpace, isHexadecimal, inArray } from 
 import LexingError from "@lexer/lexer-error.ts"
 import LexerCursor from "@lexer/lexer-cursor.ts"
 
+// types
+import type { Token, TokenType } from "@tokens"
+
+// utils
+import { createToken, Keywords, Tokens } from "@tokens"
+
 import { isAlpha, isNumeric, isAlphaNum, isSpace, isHexadecimal, inArray } from "@utils"
 
 const VALID_HEXADECIMAL_END = [
