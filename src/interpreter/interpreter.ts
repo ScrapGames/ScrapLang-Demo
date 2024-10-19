@@ -76,30 +76,55 @@ export class Interpreter {
     this.parser = parser
   }
 
-  private computeReference(ref: ReferenceNode, scope: Scope) {
-    const target = scope.getReference(ref.getTarget)
+  private computeRestParameters(callee: DefinedFunction, calleerScope: Scope, params: IScrapParam[], args: ValueNode[]) {
+    const restIdx = params.length - 1
+    const slicedParams = params.slice(0, restIdx)
+    const slicedArgs = args.slice(0, restIdx)
 
-    if (!target)
-      this.scrapReferenceError()
+    if (slicedArgs.length !== slicedParams.length)
+      scrapRuntimeError(`'${callee.name}' expects from ${slicedParams.length} to multiple arguments, but received ${slicedArgs.length}`)
 
-    if (target instanceof ScrapModule)
-      this.scrapRuntimeError("Modules cannot be referenced")
+    for (const i in slicedParams) {
+      callee.getScope.addEntry(
+        params[i].pName,
+        new ScrapVariable(false, params[i].pName, this.computeValue(slicedArgs[i], calleerScope), false)
+      )
+    }
 
-    return new ScrapReference(target)
+    callee.getScope.addEntry(
+      params[params.length - 1].pName,
+      new ScrapVariable(
+        true, params[params.length - 1].pName,
+        new ScrapArray(args.slice(restIdx, args.length).map(node => {
+          return ({
+            metaproperties: {
+              isStatic: true,
+              visibility: "public",
+              writeable: true
+            },
+            value: this.computeValue(node, calleerScope)
+          })
+        })), false
+      )
+    )
   }
 
-  // TODO: handle number of arguments passed for DefinedFunction objects
   private execDefinedFunc(call: CallNode, callee: DefinedFunction, scope: Scope, calleerScope: Scope) {
     const params = callee.getParams
     const args = call.getArgs
-    if (args.length !== params.length)
-      scrapRuntimeError(`'${callee.name}' expects ${callee.getParams.length} arguments, but ${call.getArgs.length} has been received`)
 
-    for (const i in callee.getParams) {
-      callee.getScope.addEntry(
-        params[i].pName,
-        new ScrapVariable(false, params[i].pName, this.computeValue(args[i], calleerScope),false)
-      )
+    if (params.length > 0 && params[params.length - 1].isRest) {
+      this.computeRestParameters(callee, calleerScope, params, args)
+    } else {
+      if (args.length !== params.length)
+        scrapRuntimeError(`'${callee.name}' expects ${callee.getParams.length} arguments, but received ${call.getArgs.length}`)
+
+      for (const i in callee.getParams) {
+        callee.getScope.addEntry(
+          params[i].pName,
+          new ScrapVariable(false, params[i].pName, this.computeValue(args[i], calleerScope), false)
+        )
+      }
     }
 
     for (const instruction of callee.getBody)

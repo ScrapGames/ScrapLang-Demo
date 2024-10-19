@@ -35,25 +35,37 @@ export function resolveFunctionName(parser: Parser, isExpression: boolean): stri
   return parser.isContent(Tokens.LPAREN) ? "anonymous" : parser.curtt().content
 }
 
-function parseParameter(parser: Parser): ScrapParam {
+function parseParameter(parser: Parser): IScrapParam {
+  const isRest = parser.checkNext("...")
+  if (isRest)
+    parser.nextToken() // eats '...'
+
   const pName = parser.expectsType("IdentifierName", "Missing parameter name").content
-  parser.nextToken() // eats ':' token
+  parser.expectsContent(Tokens.COLON, "Expected parameter data type indicator ':'")
   const pType = parser.expectsType("IdentifierName", "Missing parameter data type").content
 
-  return { pName, pType }
+  return { pName, pType, isRest }
 }
 
 /**
  * Fills the array passed as parameter `param` with the parameters of the parsed function
  * @param param Array of params that the function receive
  */
-export function parseParamList(parser: Parser): ScrapParam[] {
-  const params: ScrapParam[] = []
-  while (parser.getCursor.currentTok.content !== Tokens.RPAREN) {
-    params.push(parseParameter(parser))
+export function parseParamList(parser: Parser): IScrapParam[] {
+  const params: IScrapParam[] = []
 
-    if (parser.nextToken().content === Tokens.COMMA) {
-      parser.nextToken()
+  while (parser.curtt().content !== Tokens.RPAREN) {
+    const param = parseParameter(parser)
+    params.push(param)
+
+
+    parser.nextToken() // eats the data type
+    if (!parser.isContent(Tokens.RPAREN)) {
+      if (!parser.isContent(Tokens.COMMA))
+        parser.scrapParseError("Missing comma ',' separating parameters")
+
+      if (param.isRest)
+        parser.scrapParseError("Rest parameter must be the last parameter of the function")
     }
   }
 
