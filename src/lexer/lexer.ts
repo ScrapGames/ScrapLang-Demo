@@ -377,19 +377,24 @@ export default class Lexer {
         case Tokens.MINUS:
         case Tokens.STAR:
         case Tokens.SLASH: {
-          if (this.checkNext(Tokens.SLASH)) {
-            do {
-              this.cursor.currentTok = this.consume() // manual assingment instead use `nextToken` to avoid overlaped comparations
-            } while (this.cursor.currentTok !== '\n' && !this.cursor.isEOF())
-          } else if (this.checkNext(Tokens.STAR)) {
-            let stillIgnoring = true
-            while (stillIgnoring) {
-              this.nextToken()
+          const commentType = this.cursor.next()
+          switch (commentType) {
+            case Tokens.SLASH: {
+              do {
+                this.cursor.currentTok = this.consume() // manual assingment instead use `nextToken` to avoid overlaped comparations
+              } while (this.cursor.currentTok !== '\n' && !this.cursor.isEOF())
+            } break
 
-              if (this.cursor.currentTok === Tokens.STAR) {
-                if (this.checkNext(Tokens.SLASH)) {
-                  this.cursor.currentTok = this.cursor.doubleConsume()
-                  stillIgnoring = false
+            case Tokens.STAR: {
+              let stillIgnoring = true
+              while (stillIgnoring) {
+                this.nextToken()
+
+                if (this.cursor.currentTok === Tokens.STAR) {
+                  if (this.checkNext(Tokens.SLASH)) {
+                    this.cursor.currentTok = this.cursor.doubleConsume()
+                    stillIgnoring = false
+                  }
                 }
               }
             }
