@@ -391,8 +391,10 @@ export default class Lexer {
                 this.nextToken()
 
                 if (this.cursor.currentTok === Tokens.STAR) {
-                  if (this.checkNext(Tokens.SLASH)) {
-                    this.cursor.currentTok = this.cursor.doubleConsume()
+                  this.nextToken()
+                  // @ts-ignore This comparison is intentional becase the 'currentTok' as has changed by use `nextToken`
+                  if (this.cursor.currentTok === Tokens.SLASH) {
+                    this.nextToken()
                     stillIgnoring = false
                   }
                 }
