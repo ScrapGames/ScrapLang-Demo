@@ -7,10 +7,10 @@ import { ScrapInteger } from "@lang/elements/values/numerics.ts"
  * @example
  * const myArray = [1, 2, 3, 4, 5]
  */
-export class ScrapArray<T extends ScrapObjectProperty = ScrapObjectProperty> extends ScrapObject implements Sliceable<ScrapArray<T>> {
+export class ScrapArray extends ScrapObject implements Sliceable<ScrapArray> {
     public length: number = 0
 
-    public constructor(elements: T[]) {
+    public constructor(elements: ScrapObjectProperty[]) {
         super(null, new Map())
         this.length = elements.length
 
@@ -32,10 +32,11 @@ export class ScrapArray<T extends ScrapObjectProperty = ScrapObjectProperty> ext
      * Push one ScrapValue to the array
      * @param element ScrapValue to be pushed
      */
-    public push(element: T) {
-        this.set(
-            (this.length === 0 ? this.length : this.length - 1).toString(),
-            element
+    public push(element: ScrapValue) {
+        this.set((this.length === 0 ? this.length : this.length - 1).toString(), {
+              metaproperties: { isStatic: true, visibility: "public", writeable: true },
+              value: element
+            }
         )
 
         this.length++
@@ -53,7 +54,7 @@ export class ScrapArray<T extends ScrapObjectProperty = ScrapObjectProperty> ext
      * @param until Ends of the new array, if not specified, the array will be spliced until his last element
      * @returns The new spliced `ScrapArray`
      */
-    public slice(from: number, until?: number): ScrapArray<T> {
+    public slice(from: number, until?: number): ScrapArray {
       return new ScrapArray(Array.from(this.getValue, (item) => item[1]).slice(from, until))
     }
 
