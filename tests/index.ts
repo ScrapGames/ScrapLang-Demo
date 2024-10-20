@@ -30,7 +30,7 @@ async function main() {
             mainMod.insert("std", std)
             std.insert("fs", makeFSModule())
 
-            new Interpreter(new Parser(lex), globalMod).run()
+            Interpreter.run(new Parser(lex), mainMod, std)
         }
     }
 }
