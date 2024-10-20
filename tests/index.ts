@@ -2,12 +2,15 @@ import Lexer from "@lexer/lexer.ts"
 import Parser from "@parser/parser.ts"
 import { Interpreter } from "@interpreter"
 
+import { createEmptyScope } from "@lang/scope.ts"
+import { ScrapModule } from "@lang/elements/entities/modules.ts"
+
+import { makeStdModule } from "@lang/api/native/std.ts"
+import { makeFSModule } from "@lang/api/native/fs.ts"
+
 import { repl } from "@repl"
 import { inArray } from "@utils"
-
-import { createEmptyScope } from "@lang/scope.ts"
-import { makeStdModule } from "@lang/api/native/std.ts"
-import { ScrapModule } from "@lang/elements/entities/modules.ts"
+import { exists } from "@std/fs/exists";
 
 async function main() {
     if (inArray("--repl", Deno.args)) {
