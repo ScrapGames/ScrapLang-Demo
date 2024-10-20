@@ -63,10 +63,6 @@ export class EntityNode extends ASTNode implements Nameable, Exportable {
         return this.kind === EntityKind.Variable
     }
 
-    public isFunctionStmt(): this is ast.FunctionNode {
-        return this.kind === EntityKind.Function
-    }
-    
     public isModule(): this is ast.ModuleNode {
         return this.kind === EntityKind.Module
     }
@@ -165,10 +161,36 @@ export class ValueNode extends ASTNode {
     public isBinaryExpr(): this is ast.BinaryExprNode {
         return this.kind === ValueKind.BinaryExpr
     }
+}
 
-    public isFunctionExpr(): this is ast.FunctionNode {
-        return this.kind === ValueKind.Function
-    }
+
+/**
+ * Why these type guards aren't instance variables
+ * like others
+ * 
+ * Since `FunctionNode` extends from `ASTNode` instead `ValueNode` or `EntityNode` like other nodes does
+ * because of them can be used as entities or values. Its `kind` field is an _intersection type_ of `ValueKind` and `EntityKind` cannot be compared
+ * because the rhs of a `===` token is of type `ValueKind` or `EntityKind` but not an _intersection type_ between these 2 types
+ * 
+ * !PROBABLY THIS WILL CHANGE IN THE FUTURE, AND SHOULDN'T AFFECT THE RUNNING PROGRAMS ON THESE MOMENT
+ */
+
+/**
+ * Checks if `node` is a function entity
+ * @param node node who could be an EntityNode
+ * @returns true if `node.kind` is equals to `EntityKind.Function`
+ */
+export function isFunctionStmt(node: { kind: ValueKind | EntityKind }): node is ast.FunctionNode {
+    return node.kind === EntityKind.Function
+}
+
+/**
+ * Checks if `node` is a function expression
+ * @param node node who could be an ValueNode
+ * @returns true if `node.kind` is equals to `ValueKind.Function`
+ */
+export function isFunctionExpr(node: { kind: ValueKind | EntityKind }): node is ast.FunctionNode {
+    return node.kind === ValueKind.Function
 }
 
 /**
