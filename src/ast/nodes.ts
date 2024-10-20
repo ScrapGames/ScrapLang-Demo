@@ -79,6 +79,13 @@ export class ObjectDestructuringNode extends ValueNode {
 
 /**
  * Represents a module access in the AST
+ *
+ * Is compounded by 2 elements:
+ *  - The mod name
+ *  - The target (searched entity)
+ * 
+ * @example
+ * modName::target
  */
 export class ModuleAccessNode extends ValueNode {
     private modName: string
