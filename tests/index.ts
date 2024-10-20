@@ -13,7 +13,10 @@ async function main() {
     if (inArray("--repl", Deno.args)) {
         repl()
     } else {
-        const fileName = "./tests/tiny.scrap"
+        const fileName = Deno.args[0]
+        if (!(await exists(fileName, { isFile: true })))
+            throw new Error(`'${fileName}' doesn't exists`)
+
         const file = await Deno.readTextFile(fileName)
     
         const lex = new Lexer(file, fileName)
