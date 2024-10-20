@@ -19,7 +19,7 @@ async function main() {
         const lex = new Lexer(file, fileName)
 
         if (lex.cursor.isEOF()) {
-            console.warn(`Empty file, nothing to parse in '${lex.fileName}'`)
+            console.warn(`Empty file, nothing to parse in '${fileName}'`)
         } else {
             const globalMod = new ScrapModule("MainModule", createEmptyScope(null, "MainModule"))
             globalMod.insert("std", makeStdModule())
