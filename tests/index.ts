@@ -21,7 +21,6 @@ async function main() {
             throw new Error(`'${fileName}' doesn't exists`)
 
         const file = await Deno.readTextFile(fileName)
-    
         const lex = new Lexer(file, fileName)
 
         if (lex.cursor.isEOF()) {
