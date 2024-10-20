@@ -10,6 +10,7 @@ import { ControlStmtNode, EntityNode, ValueNode, EntityKind, ValueKind } from "@
 import {
   CallNode, FunctionNode,
   LiteralObjectNode, LiteralArrayNode,
+  ArrayNode,
   IdentifierNode,
   BinaryExprNode
 } from "@ast/nodes.ts"
@@ -224,8 +225,7 @@ export class Interpreter {
    * @param scope Scope where the items exists
    * @returns A new ScrapArray
    */
-  private computeLitArr(node: LiteralArrayNode<ASTValueNode>, scope: Scope): ScrapArray<ScrapValue> {
-    return new ScrapArray(node.getArray.map(item => this.computeValue(item, scope)))
+  private computeLitArr(node: ArrayNode<ASTValueNode>, scope: Scope): ScrapArray<ScrapValue> {
   }
 
   /**

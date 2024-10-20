@@ -132,7 +132,7 @@ export class IdentifierNode extends ValueNode {
     public get getSymbol() { return this.symbol }
 }
 
-export class LiteralArrayNode<T> extends ValueNode {
+export class ArrayNode<T> extends ValueNode {
     private array: T[]
 
     public constructor(array: T[]) {

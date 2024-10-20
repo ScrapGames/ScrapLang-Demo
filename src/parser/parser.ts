@@ -397,7 +397,7 @@ const ast: AST = new AST()
    * @param scope Scope where the elements of the array may be found
    * @returns A new `ScrapArray`
    */
-  private parseLiteralArray(): ast.LiteralArrayNode<ASTNode> {
+  private parseLiteralArray(): ast.ArrayNode<ASTNode> {
     const elements: ASTNode[] = []
 
     this.nextToken() // eat '['
@@ -415,7 +415,7 @@ const ast: AST = new AST()
 
     this.nextToken() // eat ']'
 
-    return new ast.LiteralArrayNode(elements)
+    return new ast.ArrayNode(elements)
   }
 
   private parseReassignment(target: string): ast.ReassignmentNode {
