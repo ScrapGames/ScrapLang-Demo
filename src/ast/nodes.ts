@@ -287,14 +287,38 @@ export class ModuleNode extends EntityNode {
 }
 
 export class ClassNode extends EntityNode {
-    private options: { inherits?: string, implements?: string }
-    private body: ScrapClassEntityProps[]
+    private metadata: ClassMetadata
+    private body: ClassEntityNode[]
 
-    public constructor(name: string, options: { inherits?: string, implements?: string }, body: ScrapClassEntityProps[]) {
+    public constructor(name: string, metadata: ClassMetadata, body: ClassEntityNode[]) {
         super(name, EntityKind.Class)
-        this.options = options
+        this.metadata = metadata
         this.body = body
     }
+
+    public get getMetadata() { return this.metadata }
+    public get getBody()     { return this.body }
+}
+
+export class ClassEntityNode extends ASTNode {
+    isStatic: boolean
+    canOverride: boolean
+    visibility: ScrapVisibility
+    member: FunctionNode | VariableNode
+
+    public constructor(
+        isStatic: boolean,
+        visibility: ScrapVisibility,
+        canOverride: boolean,
+        member: FunctionNode | VariableNode
+    ) {
+        super()
+        this.visibility = visibility
+        this.isStatic = isStatic
+        this.canOverride = canOverride
+        this.member = member
+    }
+}
 
 export class IfStmtNode extends ControlStmtNode {
     public constructor(condition: BooleanNode, body: Instruction[]) {
