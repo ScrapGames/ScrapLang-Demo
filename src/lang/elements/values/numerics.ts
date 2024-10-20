@@ -22,9 +22,7 @@ export class ScrapInteger extends ScrapPrimitive implements Ajustable {
         return this
     }
 
-
-
-    public get getValue() { return this.value as number }
+    public override get getValue() { return this.value as number }
 }
 
 /**
@@ -38,5 +36,5 @@ export class ScrapFloat extends ScrapPrimitive {
         super(val)
     }
 
-    public get getValue() { return this.value as number }
+    public override get getValue() { return this.value as number }
 }

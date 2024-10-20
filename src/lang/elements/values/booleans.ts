@@ -8,7 +8,7 @@ export class ScrapTrue extends ScrapPrimitive {
         super(true)
     }
 
-    public get getValue() { return this.value as true }
+    public override get getValue() { return this.value as true }
 }
 
 /**
@@ -19,7 +19,7 @@ export class ScrapFalse extends ScrapPrimitive {
         super(false)
     }
 
-    public get getValue() { return this.value as false }
+    public override get getValue() { return this.value as false }
 }
 
 export class TernaryExpression extends ScrapValue {}

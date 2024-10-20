@@ -34,7 +34,7 @@ export class ScrapPrimitive extends ScrapValue {
         super(value)
     }
 
-    public get getValue() { return this.value as Primitive }
+    public override get getValue() { return this.value as undefined }
 }
 
 /**
@@ -100,7 +100,7 @@ export class ScrapObject extends ScrapValue {
         return str
     }
 
-    public format() { return this.formatObject() }
+    public override format() { return this.formatObject() }
 }
 
 /**
@@ -164,7 +164,7 @@ export class DefinedFunction extends ScrapFunction {
     public get getReturnValue() { return this.returnValue }
     public get getBody() { return this.body }
 
-    public format() { return `fn ${this.name}(${this.params.length} params) []` }
+    public override format() { return `fn ${this.name}(${this.params.length} params) []` }
 }
 
 /**
@@ -185,5 +185,5 @@ export class ScrapNative extends ScrapFunction {
 
     public get getArgsCount() { return this.argsCount }
     public get getAction() { return this.action }
-    public format() { return `fn ${this.name}(${this.argsCount ? this.argsCount : "..."}) [ native code ]` }
+    public override format() { return `fn ${this.name}(${this.argsCount ? this.argsCount : "..."}) [ native code ]` }
 }

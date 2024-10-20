@@ -19,5 +19,5 @@ export class ReassignmentExpression extends ScrapValue {
     }
 
     public get getTarget() { return this.target }
-    public get getValue() { return this.value as ScrapValue }
+    public override get getValue() { return this.value as ScrapValue }
 }
