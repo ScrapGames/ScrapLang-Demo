@@ -24,8 +24,11 @@ async function main() {
         if (lex.cursor.isEOF()) {
             console.warn(`Empty file, nothing to parse in '${fileName}'`)
         } else {
-            const globalMod = new ScrapModule("MainModule", createEmptyScope(null, "MainModule"))
-            globalMod.insert("std", makeStdModule())
+            const std = makeStdModule()
+            const mainMod = new ScrapModule(fileName, false, createEmptyScope(null, fileName))
+
+            mainMod.insert("std", std)
+            std.insert("fs", makeFSModule())
 
             new Interpreter(new Parser(lex), globalMod).run()
         }
