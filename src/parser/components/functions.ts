@@ -36,7 +36,7 @@ export function resolveFunctionName(parser: Parser, isExpression: boolean): stri
 }
 
 function parseParameter(parser: Parser): IScrapParam {
-  const isRest = parser.checkNext("...")
+  const isRest = parser.checkNext(Tokens.SPREAD)
   if (isRest)
     parser.nextToken() // eats '...'
 
