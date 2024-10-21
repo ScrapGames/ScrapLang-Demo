@@ -48,56 +48,63 @@ export class ScrapPrimitive extends ScrapValue {
  * }
  */
 export class ScrapObject extends ScrapValue {
-    prototype: Nullable<ScrapObject>
+    /** Following the ecma-262 specification, `prototype` points to prototype  */
+    public prototype: Nullable<ScrapObject>
 
-    public constructor(prototype: Nullable<ScrapObject>, properties: Map<string, ScrapValue>) {
-        super(properties)
+    public constructor(prototype: Nullable<ScrapObject>, entries: Map<string, ScrapObjectProperty>) {
+        super(entries)
         this.prototype = prototype
     }
 
-    public has(name: string): boolean {
-        return (this.value as Map<string, ScrapValue>).has(name)
-    }
-
-    public get(name: string): ScrapValue | undefined {
-        return (this.value as Map<string, ScrapValue>).get(name)
+    /**
+     * Gets the value which is prop of `this` ScrapObject
+     * @param name 
+     * @returns 
+     */
+    public get(name: string): ScrapValue {
+        const prop = (this.value as Map<string, ScrapObjectProperty>).get(name)
+        return prop ? prop.value : new ScrapUndefined()
     }
 
     /**
-     * TODO: complete the method, which will be called when 'instanceof' keyword is found
-     * @param obj An instance of an Object
+     * 
+     * @param key 
+     * @param value 
      */
-    /* public instanceOf(obj: ScrapObject): boolean {
-        if (obj.instanceOf()) {}
+    public set(key: string, value: ScrapObjectProperty) {
+        (this.value as Map<string, ScrapObjectProperty>).set(key, value)
+    }
 
-        return false
-    } */
+    /**
+     * Checks if an object has `name` property
+     * @param name Name of the searched property
+     * @returns 
+     */
+    public has(name: string): boolean {
+        return (this.value as Map<string, ScrapObjectProperty>).has(name)
+    }
 
-    public get getValue() { return this.value as Map<string, ScrapValue> }
+    public override get getValue() { return this.value as Map<string, ScrapObjectProperty> }
 
     private formatObject(deep: number = 0) {
-        let str = "{\n"
-        const vectoredProps = Array.from(this.value as Map<string, ScrapValue>)
+        const arr = Array.from(this.value as Map<string, ScrapObjectProperty>)
+        const isMultiline = arr.length > 2
+        let str = isMultiline ? "{\n" : "{"
 
-        for (let i = 0; i < vectoredProps.length; i++) {
-            const [k, v] = vectoredProps[i]
-            const stringWithDeep = v instanceof ScrapObject ? v instanceof ScrapFunction ? v.format() : v.formatObject(deep + 1) : v.format()
+        for (const [idx, [k, v]] of arr.entries()) {
+            const stringWithDeep = v instanceof ScrapObject ? v instanceof ScrapFunction ? v.format() : v.formatObject(deep + 1) : v.value.format()
             const formatedString = `${" ".repeat(deep)} ${k}: ${stringWithDeep}`
 
-            // if is the last key-value pair iterated
-            if ((i + 1) === vectoredProps.length)
-                str += formatedString
+            if ((idx + 1) === arr.length)
+                str += `${formatedString} `
             else {
-                // if the object can be printed in one line
-                if (vectoredProps.length < 2)
+                isMultiline ?
+                    str += `${formatedString},\n` :
                     str += `${formatedString},`
-                else
-                    str += `${formatedString},\n`
             }
         }
 
-        str += `\n${" ".repeat(deep)}}`
-        return str
+        return str += `${isMultiline ? "\n" : " ".repeat(deep)}}`
     }
 
     public override format() { return this.formatObject() }
