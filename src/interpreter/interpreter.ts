@@ -315,8 +315,6 @@ export class Interpreter {
     })));
 
     std.insert("args", new ScrapVariable(true, "args", scrapArgs, true))
-    for (const instruction of mainFn.getBody) {
-      interpreter.computeInstruction(instruction, mainFn.getScope)
-    }
+    interpreter.execDefinedFunc(new CallNode("main", []), mainFn, mainFn.getScope, mainMod.getScope)
   }
 }
