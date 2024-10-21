@@ -294,18 +294,18 @@ export class Interpreter {
   /**
    * Inits the Interpreter and execute the contents in the AST
    * @param parser Parser to _parse_ the source
-   * @param globalMod Global module where all the priamry statements will be parsed
+   * @param mainMod Global module where all the priamry statements will be parsed
    */
-  public static run(parser: Parser, globalMod: ScrapModule, std: ScrapModule) {
+  public static run(parser: Parser, mainMod: ScrapModule, std: ScrapModule) {
     const interpreter = new Interpreter(parser)
 
     while (!parser.hasFinish) {
       const parsedEntity = parser.parseRoot()
-      const computedEntity = interpreter.computeEntity(parsedEntity, globalMod.getScope)
-      globalMod.insert(computedEntity.name, computedEntity)
+      const computedEntity = interpreter.computeEntity(parsedEntity, mainMod.getScope)
+      mainMod.insert(computedEntity.name, computedEntity)
     }
 
-    const mainFn = globalMod.getEntity("main") as DefinedFunction | undefined
+    const mainFn = mainMod.getEntity("main") as DefinedFunction | undefined
     if (!mainFn)
       scrapRuntimeError("Missing program entry point (main function)")
 
