@@ -132,7 +132,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     } while (this.next() !== quoteType)
 
     this.next() // eats closing quote
-    return this.createToken(Tokens.STRING, content)
+    return this.createToken(Tokens.STRING, content, false)
   }
 
   private scanIdentifier() {
