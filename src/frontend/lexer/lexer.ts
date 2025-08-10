@@ -211,14 +211,6 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     return this.createToken(isPlus ? Tokens.PLUS : Tokens.MINUS)
   }
 
-  private scanBang() {
-    if (this.check("=") && this.nextN(2)) {
-      return this.createToken(Tokens.NOT_EQUALS)
-    }
-
-    return this.createToken(Tokens.EQUAL)
-  }
-
   private scanSingleChar() {
     switch (this.currentTok) {
       case '{':  return this.createToken(Tokens.LBRACE)
@@ -234,7 +226,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
       case '>':  return this.createToken(Tokens.GREATER)
       case '<':  return this.createToken(Tokens.LESS)
       case '*':  return this.createToken(Tokens.STAR)
-      case '!':  return this.scanBang()
+      case '!':  return this.createToken(Tokens.BANG)
       case '+':
       case '-':  return this.scanIncrement()
       case '=':  return this.scanEqual()
