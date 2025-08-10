@@ -10,14 +10,18 @@ import { ScrapValue } from "@lang/elements/commons.ts"
  * const myStringConcatenation = "Hello, " + "World!"
  */
 export class BinaryExpression extends ScrapValue {
+    private operator: string
     private lhs: ScrapValue
     private rhs: ScrapValue
-    private operator: string
 
-    public constructor(lhs: ScrapValue, rhs: ScrapValue, operator: string) {
+    public constructor(operator: string, lhs: ScrapValue, rhs: ScrapValue) {
         super(undefined)
+        this.operator = operator
         this.lhs = lhs
         this.rhs = rhs
-        this.operator = operator
     }
+
+    public get getLHS()      { return this.lhs }
+    public get getRHS()      { return this.rhs }
+    public get getOperator() { return this.operator }
 }

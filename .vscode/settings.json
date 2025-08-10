@@ -1,8 +1,10 @@
 {
   "deno.enable": true,
-  "deno.unstable": true,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "workbench.editor.mouseBackForwardToNavigate": true,
 
   "material-icon-theme.files.associations": {
-    "*.scrap": "scraplang-squared-logo"
+    "*.scrap": "scraplang"
   }
 }

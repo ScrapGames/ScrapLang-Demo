@@ -1,66 +1,47 @@
-import { ScrapValue } from "@lang/elements/commons.ts"
-import { ScrapCall } from "@lang/elements/values/call.ts"
-import { DefinedFunction } from "@lang/elements/commons.ts"
-import { ScrapVariable } from "@lang/elements/entities/variable.ts"
-import { ReassignmentExpression } from "@lang/elements/values/reassignment.ts"
-
 /**
- * Converts the type parameter to a possible null type
- * 
- * The next example shows how it works with the number type
- * @example
- * function showNumberString(num: Nullable<number>) {
- *   if (num)
- *     console.log(num.toString())
- * }
- */
-export type Nullable<T> = T | null
-
-/**
- * Represents values which has `name` as a common property
- * 
- * The `name` property is util and fundamental to search and save items in scopes or other data structured
- * 
- * These values can include:
- *  * Any type that extends from `ScrapEntity`, like: variables, classes, modules, etc
- *  * Any type that extends from `ScrapFunction`
+ * Represents an entity that can be identified by a unique name.
  */
 export interface Nameable {
-    name: string
+  /** The unique identifier of the entity */
+  name: string
 }
-
-export interface Accessible<T> {
-    get(from: T): ScrapValue
-}
-
-export interface Operable {
-    operator(operator: string): ScrapValue
-}
-
-export interface Ajustable {
-    increment(): ScrapValue
-    decrement(): ScrapValue
-}
-
-export type Primitive = number | string | boolean | null | undefined
-
-export type AllowedBlockEntities = DefinedFunction | ScrapVariable | ScrapCall | ReassignmentExpression
 
 /**
- * Represents a function parameter
- * 
- * A function parameter is util to pass values to a function, allowing a function returns a variable value
+ * Represents a chainable environment for symbol resolution.
+ * Typically used for nested scopes like modules, classes, or functions.
+ *
+ * @template T The type of the parent context.
+ * @template S The type of the values stored in the context.
  */
-export interface ScrapParam {
-    pName: string,
-    pType: string
-}
+export interface Chain<T, S> {
+  /** Optional reference to the parent context in the chain. */
+  parent?: T
 
-export type AccessorModifiers = "public" | "private" | "protected"
+  /** Internal storage for symbol bindings in this context. */
+  storage: Map<string, S>
 
-export interface ScrapClassEntityProps {
-    accessor: AccessorModifiers,
-    isStatic: boolean,
-    canOverride: boolean,
-    entitiyType: ScrapVariable | DefinedFunction
+  /**
+   * Stores a new symbol in the current context.
+   *
+   * @param symbol The name of the symbol to store.
+   * @param value The metadata or value associated with the symbol.
+   * @returns `true` if the symbol was successfully stored; `false` if it already exists.
+   */
+  set(symbol: string, value: S): boolean
+
+  /**
+   * Retrieves the value of a symbol from the current or parent contexts.
+   *
+   * @param symbol The name of the symbol to retrieve.
+   * @returns The associated value if found; otherwise, `undefined`.
+   */
+  get(symbol: string): S | undefined
+
+  /**
+   * Checks if a symbol exists in the current or parent contexts.
+   *
+   * @param symbol The name of the symbol to check.
+   * @returns `true` if the symbol exists; otherwise, `false`.
+   */
+  has(symbol: string): boolean
 }

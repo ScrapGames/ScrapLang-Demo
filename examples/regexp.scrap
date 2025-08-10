@@ -1,6 +1,12 @@
+/**
+ * ScrapLang Regular Expressions
+ *
+ * Regular expressions are a common and popular feature in the most programming languages, which helps to find patterns in strings
+ */
+
 fn main() {
   const text = "En un lugar de La Mancha, de cuyo nombre no quiero acordarme..."
 
   console.log(new RegExp("*lugar*").test(text)) // true
-  console.log(new RegExp("lugar").test(text)) // false
+  console.log(new RegExp("lugar").test(text)) // true
 }

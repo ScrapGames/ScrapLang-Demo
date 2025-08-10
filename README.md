@@ -17,37 +17,50 @@ ut rather to provide a very simple API where there aren't hundreds of functions 
 - Built-in package manager ✅
 - Safe execution by default (requires explicit permissions, e.g: read from fs, net connections, etc) ✅
 
-## Module system
+## Simple tutorial
 
-Thought the module system we can import code from other packages (files and directories)
+### Data types
 
-Examples:
+- Number
+- Float
+- String
+- Boolean
+- Undefined
 
-- Import a module as a object
+### Functions
+
 ```scrap
-import os
-
-fn main() {
-    os.shutdown()
+fn greet() {
+    std::print("¡Hola, Mundo!")
 }
 ```
 
-Each directory is a package and each file is a module
+### Variables
 
-- Import some entities from a module
 ```scrap
-import { shutdown } from os
+var num = 10
+```
 
-fn main() {
-    shutdown()
+### Constants
+
+```scrap
+const num = 10
+```
+
+### Modules
+
+```scrap
+module Functions {
+    fn greet() {
+        std::print("¡Hola, Mundo!")
+    }
+
+    fn fareWell() {
+        std::print("Its time to go home, bye!")
+    }
 }
 ```
 
-- Import the module as a object renaming the module
-```scrap
-import * as system from os
+The modules are a language entities which stores multiple entities, among which are: another modules, functions, variables, interfaces, type declarations, classes, etc
 
-fn main() {
-    system.shutdown()
-}
-```
+Them can be exported, which means that these **exported** entities can be **imported** in another modules

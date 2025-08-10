@@ -16,29 +16,39 @@
 	// 	"description": "Log output to console"
 	// }
 	"curtt": {
-      "body": "console.log(this.cursor.currentTok)",
+    "body": "console.log(this.curtt())",
 	  "description": "Prints the currentTok content",
 	  "prefix": ["curtt"]
-    },
+  },
 
-	"slog": {
-		"body": "std::log($0)",
+	"pcurtt": {
+		"body": "console.log(parser.curtt())",
+		"description": "Prints the currentTok content in an outside function",
+		"prefix": "pcurtt"
+	},
+
+	"pr": {
+		"body": "std::print($0)",
 		"description": "Log output to console",
-		"prefix": "slog",
+		"prefix": "pr",
 		"scope": "scraplang"
 	},
-	
-	"log": {
-		"body": "std::log($0)",
-		"description": "Log output to console",
-		"prefix": "log",
+
+	"fn": {
+		"body": [
+			"fn $2name() {",
+			"",
+			"}"
+		],
+		"description": "Creates a new function",
+		"prefix": "fn",
 		"scope": "scraplang"
 	},
 
 	"main": {
 		"body": [
 			"fn main() {",
-			"    $0",
+			"$2",
 			"}"
 		],
 		"description": "Make a program entry point",

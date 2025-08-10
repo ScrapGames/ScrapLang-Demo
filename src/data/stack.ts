@@ -1,43 +1,19 @@
-import { LinkedList, Node } from "./linked-list.ts"
-import { Nullable } from "../typings.ts"
+export default class Stack<T> {
+  private storage: T[] = [];
 
-interface IStack<T> {
-  push(info: T): void
-  pop(info: T): void
-
-  get peek(): Nullable<Node<T>>
-  get size(): number
-}
-
-class Stack<T> extends LinkedList<T> implements IStack<T> {
-  public push(info: T) {
-    super.setFirst = info
+  push(item: T): void {
+    this.storage.push(item);
   }
 
-  public pop() {
-    super.removeFirst()
+  pop(): T | undefined {
+    return this.storage.pop();
   }
 
-  public get peek(): Nullable<Node<T>> {
-    return super.first
+  peek(): T | undefined {
+    return this.storage[this.size() - 1];
   }
 
-  public get size(): number {
-    return super.count()
-  }
-
-  public beautyPrint() {
-    let stackContent = ""
-    const nodes = super.traverse()
-
-    for (const node of nodes) {
-      stackContent += `|\t${node?.info}\t|\n`
-    }
-
-    stackContent += "-----------------"
-
-    return stackContent
+  size(): number {
+    return this.storage.length;
   }
 }
-
-export { Stack, type IStack }

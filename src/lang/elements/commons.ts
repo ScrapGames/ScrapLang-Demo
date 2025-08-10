@@ -1,41 +1,40 @@
-import { Scope } from "@lang/scope.ts"
-import { Nameable, Primitive, ScrapParam, AllowedBlockEntities, Nullable } from "@typings"
+import { Scope } from "../../engine/scope.ts"
+import { ExpressionNode } from "@ast/ast.ts"
 
-export const BINARY_OPERATORS_PRECEDENCE = {
-    '*': 4,
-    '/': 4,
-    '%': 4,
+import type {
+  Nameable,
+  Primitive, IScrapParam,
+  Instruction, Formattable,
+  Nullable
+} from "@typings"
+import { ScrapObjectProperty } from "@lang/elements/typings.ts";
 
-    '+': 3,
-    '-': 3,
+export class ScrapValue implements Formattable {
+  protected value: unknown
 
+  public constructor(value: unknown) {
+      this.value = value
+  }
 
-    '<': 2,
-    '>': 2,
-    "<=": 2,
-    ">=": 2,
-    "instanceof": 2,
-    "in": 2
-}
-
-export class ScrapValue {
-    protected value: unknown
-
-    public constructor(value: unknown) {
-        this.value = value
-    }
-
-    public get getValue() { return this.value }
-    public toString() { this.value + "" }
+  public get Value() { return this.value }
+  public format() { return String(this.value) }
 }
 
 export class ScrapPrimitive extends ScrapValue {    
-    public constructor(value: Primitive) {
-        super(value)
-    }
+  public constructor(value: Primitive) {
+    super(value)
+  }
 
-    public get getValue() { return this.value as Primitive }
+  public override get Value() { return this.value as Primitive }
 }
+
+/**
+ * Represents a code entity that can handle / contain blocks of code, it can be:
+ *  - Class
+ *  - Module
+ *  - Variable (or constant) declaration
+ */
+export class ScrapStatement {}
 
 /**
  * Represent a literal object expression. Which is a way to write objects in a literal way assigning value to keys
@@ -48,29 +47,69 @@ export class ScrapPrimitive extends ScrapValue {
  * }
  */
 export class ScrapObject extends ScrapValue {
+  public prototype: Nullable<ScrapObject>
 
-    prototype: Nullable<ScrapObject>
+  public constructor(prototype: Nullable<ScrapObject>, entries: Map<string, ScrapObjectProperty>) {
+    super(entries)
+    this.prototype = prototype
+  }
 
-    public constructor(prototype: Nullable<ScrapObject>, keyValuePairs?: Map<string, ScrapValue>) {
-        super(keyValuePairs)
-        this.prototype = prototype
+  /**
+   * Gets the value which is prop of `this` ScrapObject
+   * @param name 
+   * @returns 
+   */
+  public get(name: string): ScrapValue {
+    const prop = this.Value.get(name)
+    return prop ? prop.value : new ScrapValue(undefined)
+  }
+
+  /**
+   * 
+   * @param key 
+   * @param value 
+   */
+  public set(key: string, value: ScrapObjectProperty) {
+    this.Value.set(key, value)
+  }
+
+  /**
+   * Checks if an object has `name` property
+   * @param name Name of the searched property
+   * @returns 
+   */
+  public has(name: string): boolean {
+    return this.Value.has(name)
+  }
+
+  public index(item: string): ScrapValue {
+    return this.get(item)
+  }
+
+  public override get Value() { return this.value as Map<string, ScrapObjectProperty> }
+
+  private formatObject(deep: number = 0) {
+    const arr = Array.from(this.value as Map<string, ScrapObjectProperty>)
+    const isMultiline = arr.length > 2
+    let str = isMultiline ? "{\n" : "{"
+
+    for (const [idx, [k, v]] of arr.entries()) {
+      const stringWithDeep = v instanceof ScrapObject ? v instanceof ScrapFunction ? v.format() : v.formatObject(deep + 1) : v.value.format()
+      const formatedString = `${" ".repeat(deep)} ${k}: ${stringWithDeep}`
+
+      if ((idx + 1) === arr.length)
+        str += `${formatedString} `
+      else {
+        isMultiline
+          ? str += `${formatedString},\n`
+          : str += `${formatedString},`
+      }
     }
 
-    public get getValue() { return this.value as Map<string, ScrapValue> }
-}
+    return str += `${isMultiline ? "\n" : " ".repeat(deep)}}`
+  }
 
-/**
- * Represents a code entity that can handle / contain blocks of code, it can be:
- *  - Class
- *  - Module
- *  - Variable (or constant) declaration
- */
-export class ScrapEntity implements Nameable {
-    name: string
-
-    public constructor(name: string) {
-        this.name = name
-    }
+  public override format() { return this.formatObject() }
 }
 
 /**
@@ -85,58 +124,60 @@ export class ScrapEntity implements Nameable {
  * const myFunctionInVariable = myFunction
  */
 export class ScrapFunction extends ScrapObject implements Nameable {
-    name: string
+  name: string
 
-    // TODO: gives the constructor a suitable initial value
-    public constructor(name: string) {
-        super(null)
-        this.name = name
-    }
+  public constructor(name: string) {
+    super(null, new Map())
+    this.name = name
+  }
 }
 
-export class DefinedFunction extends ScrapFunction {
-    private params: ScrapParam[]
-    private scope: Scope
-    private returnExpression: ScrapValue
+export class ScrapDefinedFn extends ScrapFunction {
+  private scope: Scope
+  private params: IScrapParam[]
+  private ret: ExpressionNode
+  private body: Instruction[]
 
-    body: AllowedBlockEntities[]
+  public constructor(
+      name: string, scope: Scope, params: IScrapParam[],
+      body: Instruction[], ret: ExpressionNode
+  ) {
+      super(name)
+      this.scope = scope
+      this.params = params
+      this.body = body
+      this.ret = ret
+  }
 
-    public constructor(
-        name: string, params: ScrapParam[], body: AllowedBlockEntities[],
-        scope: Scope, returnExpression: ScrapValue
-    ) {
-        super(name)
-        this.params = params
-        this.scope = scope
-        this.body = body
-        this.returnExpression = returnExpression
-    }
+  public get Scope()  { return this.scope }
+  public get Params() { return this.params }
+  public get Body()   { return this.body }
+  public get Ret()    { return this.ret }
 
-
-    public get getParams() { return this.params }
-    public get getScope() { return this.scope }
-    public get getReturnType() { return this.returnExpression }
-
-    public set setReturnType(returnValue: ScrapValue) { this.returnExpression = returnValue }
-    public toString() { return this.name }
+  public override format() { return `fn ${this.name}(${this.params.length} params) []` }
 }
 
 /**
- * Represents a predefined functions. Which is a function that has been embbeded using TypeScript directly into the language engine
+ * Represents a predefined functions which has been embbeded
+ * using `TypeScript` directly into the language engine
  */
-export class ScrapNative extends ScrapFunction {
+export class ScrapNativeFn extends ScrapFunction {
     private action: (...args: ScrapValue[]) => ScrapValue
-    private argsCount: number | true
+    private argsCount: number | undefined
 
+    // if `argsCount` is setted to `undefined`, then the number of args is _variable_
+    // which means and undefined number of arguments
     public constructor(
-        name: string, argsCount: number | true,
-        action: (...args: ScrapValue[]) => ScrapValue
+      name: string,
+      argsCount: number | undefined,
+      action: (...args: ScrapValue[]) => ScrapValue
     ) {
-        super(name)
-        this.argsCount = argsCount
-        this.action = action
+      super(name)
+      this.argsCount = argsCount
+      this.action = action
     }
 
     public get getArgsCount() { return this.argsCount }
-    public get getAction() { return this.action }
+    public get Action() { return this.action }
+    public override format() { return `fn ${this.name}(${this.argsCount ? this.argsCount : "..."}) [ native code ]` }
 }

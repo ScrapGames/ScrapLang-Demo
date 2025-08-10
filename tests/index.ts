@@ -1,41 +1,41 @@
-import Lexer from "../src/lexer/lexer.ts"
-import Parser from "../src/parser/parser.ts"
+import { exists } from "jsr:@std/fs"
 
-import { inArray } from "../src/utils.ts"
-import { repl } from "../src/repl.ts"
-import { addSTD } from "../src/lang/std.ts"
-import { RuntimeError } from "../src/lang/lang-errors.ts"
-import { ScrapCall, ScrapString } from "../src/lang/expressions.ts"
-import { Interpreter } from "../src/interpreter.ts"
+import Lexer from "@frontend/lexer/lexer.ts"
+import Parser from "../src/frontend/parser/base.ts"
+import type { MixedParser } from "@frontend/typings.ts"
 
-const args = Deno.args
+import { ScrapModule } from "@lang/elements/entities/modules.ts"
+import { makeStdModule } from "@lang/api/native/std.ts"
+
+import { repl } from "@repl"
+import { inArray } from "@utils"
 
 async function main() {
-    if (inArray("--repl", args)) {
+    if (inArray("--repl", Deno.args)) {
         repl()
     } else {
+        const file = Deno.args[0]
+        if (!file)
+            throw new Error("Missing script location. Specify a entrypoint file as first argument")
+        if (!(await exists(file, { isFile: true })))
+            throw new Error(`'${file}' doesn't exists`)
 
-        const fileName = "./tests/tiny.scrap"
-        const file = await Deno.readTextFile(fileName)
-    
-        const lex = new Lexer(file, fileName)
-        if (lex.cursor.isEOF()) {
-            console.warn(`Empty file, nothing to parse in ${lex.cursor.source}`)
+        const source = await Deno.readTextFile(file)
+        const lex = new Lexer(file)
+
+        if (lex.HasEnd) {
+            console.warn(`Empty file, nothing to parse in '${file}'`)
         } else {
-            const parser = new Parser(lex)
-            addSTD(parser.mainModule.getScope)
+            const fileName = checkExtension(file)
+            const std = makeStdModule()
+            const mainMod = new ScrapModule(fileName)
 
-            const interpreter = new Interpreter(parser.build())
-            interpreter.run() // runs the program
+            mainMod.insert(std)
 
-            const mainFunction = parser.functions.find(func => func.getName === "main")
-            
-            if (!mainFunction)
-                throw new RuntimeError("Missing program entrypoint (main function)")
-
-            interpreter.execScrapFunction(mainFunction, new ScrapCall(parser.mainModule.getName, mainFunction, Deno.args.map(arg => new ScrapString(arg))))
-            
-            parser.warnings.forEach(warning => console.warn("Warning: %s", warning))
+            const parser = new Parser(lex) as MixedParser
+            const ast = parser.build()
+            console.log(ast.Program[0])
+            //Interpreter.run(new Parser(lex), mainMod, std)
         }
     }
 }

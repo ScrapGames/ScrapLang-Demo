@@ -1,5 +1,6 @@
-import { Ajustable, Operable as _ } from "@typings"
 import { ScrapPrimitive } from "@lang/elements/commons.ts"
+
+import type { Ajustable } from "@typings"
 
 /**
  * Represent an integer value
@@ -13,14 +14,16 @@ export class ScrapInteger extends ScrapPrimitive implements Ajustable {
     }
 
     public increment() {
-        return new ScrapInteger((this.value as number)++)
+        (this.Value as number)++
+        return this
     }
 
     public decrement() {
-      return new ScrapInteger((this.value as number)--)
+        (this.Value as number)--
+        return this
     }
 
-    public get getValue() { return this.value as number }
+    public override get Value() { return this.value as number }
 }
 
 /**
@@ -29,10 +32,20 @@ export class ScrapInteger extends ScrapPrimitive implements Ajustable {
  * @example
  * 1.1, 2.20, 0xb000.f
  */
-export class ScrapFloat extends ScrapPrimitive {
+export class ScrapFloat extends ScrapPrimitive implements Ajustable {
     public constructor(val: number) {
         super(val)
     }
 
-    public get getValue() { return this.value as number }
+    public increment() {
+        (this.Value as number)++
+        return this
+    }
+
+    public decrement() {
+        (this.Value as number)--
+        return this
+    }
+
+    public override get Value() { return this.value as number }
 }

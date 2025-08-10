@@ -1,4 +1,4 @@
-import type { Nullable } from "../typings.ts"
+import type { Nullable } from "@typings"
 import { Stack } from "./stack.ts"
 
 interface IChild<T> {
