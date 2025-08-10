@@ -1,14 +1,24 @@
 {
   "version": "beta-1.0.0",
   "tasks": {
-    "dev": "deno run --allow-read --allow-net --watch tests/index.ts"
+    "dev": "deno run --allow-read --allow-net --watch src/scrap.ts --debug tests/tiny.scrap"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "strictPropertyInitialization": false
   },
   "imports": {
-    "@lang/": "./src/lang/",
-    "@typings": "./src/typings.ts",
-    "@lexer/": "./src/lexer/",
-    "@parser/": "./src/parser/",
-    "@utils": "./src/utils.ts",
-    "@ast": "./src/ast.ts"
+    "@std/path":  "jsr:@std/path@1.1.1",
+    "@std/cli":   "jsr:@std/cli@1.0.21",
+
+    "@/":          "./src/",
+    "@frontend/": "./src/frontend/",
+    "@engine/":   "./src/engine/",
+    "@lang/":     "./src/lang/",
+    "@repl":      "./src/repl.ts",
+    "@scrap":     "./src/scrap.ts",
+    "@typings":   "./src/typings.ts",
+    "@utils":     "./src/utils.ts",
+    "@errors":    "./src/errors.ts"
   }
 }

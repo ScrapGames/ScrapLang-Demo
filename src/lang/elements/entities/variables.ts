@@ -1,4 +1,5 @@
-import { ScrapEntity, ScrapValue } from "@lang/elements/commons.ts"
+import { ScrapStatement, ScrapValue } from "@lang/elements/commons.ts"
+import { Nameable } from "@typings"
 
 /**
  * Represents a declaration. Either a constant or a variable
@@ -16,20 +17,18 @@ import { ScrapEntity, ScrapValue } from "@lang/elements/commons.ts"
  * 
  * myVariable = 10 // this will not cause an error because is a variable value
  */
-export class ScrapVariable extends ScrapEntity {
+export class ScrapVariable extends ScrapStatement implements Nameable {
+    name: string
     public isConst: boolean
-    private val: ScrapValue
+    private value: ScrapValue
 
-    public constructor(
-        isConst: boolean, name: string,
-        assignedValue: ScrapValue, isExported: boolean
-    ) {
-        super(name, isExported)
+    public constructor(name: string, isConst: boolean, value: ScrapValue) {
+        super()
+        this.name = name
         this.isConst = isConst
-        this.val = assignedValue
+        this.value = value
     }
 
-    public get getVal() { return this.val }
-
-    public set setVal(newVal: ScrapValue) { this.val = newVal }
+    public get Value() { return this.value }
+    public set Value(value: ScrapValue) { this.value = value }
 }

@@ -11,7 +11,7 @@ export class ScrapChar extends ScrapPrimitive {
         super(literal)
     }
 
-    public override get getValue() { return this.value as string }
+    public override get Value() { return this.value as string }
 }
 
 /**
@@ -32,5 +32,5 @@ export class ScrapString extends ScrapPrimitive {
 
     public get getLength() { return this.length }
     public get getSize()   { return this.size }
-    public override get getValue()  { return this.value as string }
+    public override get Value()  { return this.value as string }
 }

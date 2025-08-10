@@ -1,0 +1,56 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [{
+    "request": "launch",
+    "name": "Launch Program",
+    "type": "node",
+    "cwd": "${workspaceFolder}",
+    "env": {},
+    "runtimeExecutable": "/home/raxabi/.deno/bin/deno",
+    "runtimeArgs": [
+      "run",
+      "--inspect-brk",
+      "--allow-all",
+      "${workspaceFolder}/src/scrap.ts",
+      "--debug",
+      "${workspaceFolder}/tests/tiny.scrap"
+    ],
+    "attachSimplePort": 9229
+  }, {
+      "request": "launch",
+      "name": "Launch Program (Windows casa)",
+      "type": "node",
+      "cwd": "${workspaceFolder}",
+      "env": {},
+      "runtimeExecutable": "C:/Users/raxapaxo/.deno/bin/deno.exe",
+      "runtimeArgs": [
+        "run",
+        "--inspect-brk",
+        "--allow-read",
+        "--allow-net",
+        "${workspaceFolder}/src/scrap.ts",
+        "--debug",
+        "${workspaceFolder}/tests/tiny.scrap"
+      ],
+      "attachSimplePort": 9229
+  }, {
+    "request": "launch",
+    "name": "Launch Program (Windows Pedro Espinosa)",
+    "type": "node",
+    "cwd": "${workspaceFolder}",
+    "env": {},
+    "runtimeExecutable": "C:/Users/2DAW/.deno/bin/deno.exe",
+    "runtimeArgs": [
+      "run",
+      "--inspect-brk",
+      "--allow-all",
+      "${workspaceFolder}/tests/index.ts",
+      "${workspaceFolder}/tests/tiny.scrap",
+      "--debug"
+    ],
+    "attachSimplePort": 9229
+  }]
+}

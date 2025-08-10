@@ -1,5 +1,6 @@
+import type { Exportable, Nameable } from "@typings"
 import { ScrapValue } from "@lang/elements/commons.ts"
-import { ScrapVariable } from "@lang/elements/entities/variable.ts"
+import { ScrapVariable } from "@lang/elements/entities/variables.ts";
 
 /**
  * Represent a reference to a variable
@@ -18,5 +19,5 @@ export class ScrapReference extends ScrapValue {
         super(referenceTo)
     }
 
-    public get getReferencedVar(): ScrapVariable { return this.value as ScrapVariable }
+    public get getReferencedVar() { return this.value as ScrapVariable }
 }

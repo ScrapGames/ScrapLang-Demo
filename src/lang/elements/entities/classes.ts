@@ -1,6 +1,7 @@
-import { Scope } from "@lang/scope.ts"
-import { ScrapEntity } from "@lang/elements/commons.ts"
-import type { ClassEntity, ClassMetadata } from "@typings"
+import { Scope } from "../../../engine/scope.ts"
+import { ScrapStatement } from "@lang/elements/commons.ts"
+import { ClassEntityNode } from "@ast/nodes.ts"
+import type { ClassMetadata } from "@typings"
 
 /**
  * Represent a class
@@ -33,15 +34,15 @@ import type { ClassEntity, ClassMetadata } from "@typings"
  * juan.name // correct, `name` has been declared using `public`
  * juan.id // error, `id` does not have a accessor modifier, this means is `private` and can only be accessible inside the class
  */
-export class ScrapClass extends ScrapEntity {
+export class ScrapClass extends ScrapStatement {
     private scope: Scope
-    private entities: ClassEntity[]
+    private entities: ClassEntityNode[]
     private metadata: ClassMetadata
     private hasConstructor: boolean
 
     public constructor(
         className: string, isExported: boolean, scope: Scope,
-        entities: ClassEntity[], metadata: ClassMetadata,
+        entities: ClassEntityNode[], metadata: ClassMetadata,
         hasConstructor: boolean
     ) {
         super(className, isExported)

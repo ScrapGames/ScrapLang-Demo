@@ -1,4 +1,5 @@
 import { ScrapPrimitive, ScrapValue } from "@lang/elements/commons.ts"
+import { ExpressionKind } from "@ast/ast.ts";
 
 /**
  * Represent a true value
@@ -8,7 +9,7 @@ export class ScrapTrue extends ScrapPrimitive {
         super(true)
     }
 
-    public override get getValue() { return this.value as true }
+    public override get Value() { return this.value as true }
 }
 
 /**
@@ -19,7 +20,18 @@ export class ScrapFalse extends ScrapPrimitive {
         super(false)
     }
 
-    public override get getValue() { return this.value as false }
+    public override get Value() { return this.value as false }
 }
 
-export class TernaryExpression extends ScrapValue {}
+export class TernaryExpression extends ScrapValue {
+    public cmp: ScrapValue
+    public lhs: ScrapValue
+    public rhs: ScrapValue
+
+    public constructor(cmp: ScrapValue, lhs: ScrapValue, rhs: ScrapValue) {
+        super(ExpressionKind.Ternary)
+        this.cmp = cmp
+        this.lhs = lhs
+        this.rhs = rhs
+    }
+}

@@ -1,38 +1,41 @@
-import Lexer from "@lexer/lexer.ts"
-import Parser from "@parser/parser.ts"
-import { Interpreter } from "@interpreter"
+import { exists } from "jsr:@std/fs"
 
-import { createEmptyScope } from "@lang/scope.ts"
+import Lexer from "@frontend/lexer/lexer.ts"
+import Parser from "../src/frontend/parser/base.ts"
+import type { MixedParser } from "@frontend/typings.ts"
+
 import { ScrapModule } from "@lang/elements/entities/modules.ts"
-
 import { makeStdModule } from "@lang/api/native/std.ts"
-import { makeFSModule } from "@lang/api/native/fs.ts"
 
 import { repl } from "@repl"
 import { inArray } from "@utils"
-import { exists } from "@std/fs/exists";
 
 async function main() {
     if (inArray("--repl", Deno.args)) {
         repl()
     } else {
-        const fileName = Deno.args[0]
-        if (!(await exists(fileName, { isFile: true })))
-            throw new Error(`'${fileName}' doesn't exists`)
+        const file = Deno.args[0]
+        if (!file)
+            throw new Error("Missing script location. Specify a entrypoint file as first argument")
+        if (!(await exists(file, { isFile: true })))
+            throw new Error(`'${file}' doesn't exists`)
 
-        const file = await Deno.readTextFile(fileName)
-        const lex = new Lexer(file, fileName)
+        const source = await Deno.readTextFile(file)
+        const lex = new Lexer(file)
 
-        if (lex.cursor.isEOF()) {
-            console.warn(`Empty file, nothing to parse in '${fileName}'`)
+        if (lex.HasEnd) {
+            console.warn(`Empty file, nothing to parse in '${file}'`)
         } else {
+            const fileName = checkExtension(file)
             const std = makeStdModule()
-            const mainMod = new ScrapModule(fileName, false, createEmptyScope(null, fileName))
+            const mainMod = new ScrapModule(fileName)
 
-            mainMod.insert("std", std)
-            std.insert("fs", makeFSModule())
+            mainMod.insert(std)
 
-            Interpreter.run(new Parser(lex), mainMod, std)
+            const parser = new Parser(lex) as MixedParser
+            const ast = parser.build()
+            console.log(ast.Program[0])
+            //Interpreter.run(new Parser(lex), mainMod, std)
         }
     }
 }

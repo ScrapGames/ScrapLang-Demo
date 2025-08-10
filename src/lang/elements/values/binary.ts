@@ -20,4 +20,8 @@ export class BinaryExpression extends ScrapValue {
         this.lhs = lhs
         this.rhs = rhs
     }
+
+    public get getLHS()      { return this.lhs }
+    public get getRHS()      { return this.rhs }
+    public get getOperator() { return this.operator }
 }

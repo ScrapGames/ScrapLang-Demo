@@ -1,11 +1,11 @@
-import { ScrapValue } from "@lang/elements/commons.ts"
 import { ScrapInteger } from "@lang/elements/values/numerics.ts"
+import { ScrapObject, ScrapValue } from "@lang/elements/commons.ts"
+
+import type { Sliceable } from "@typings"
+import { getDefaultMetaproperties } from "@utils"
 
 /**
- * Represent an array. Which is an allocated space where can store values
- * 
- * @example
- * const myArray = [1, 2, 3, 4, 5]
+ * Represents an array data structure in ScrapLang
  */
 export class ScrapArray extends ScrapObject implements Sliceable<ScrapArray> {
     public length: number = 0
@@ -15,7 +15,7 @@ export class ScrapArray extends ScrapObject implements Sliceable<ScrapArray> {
         this.length = elements.length
 
         for (const [idx, item] of elements.entries())
-            this.getValue.set(idx.toString(), item)
+            this.Value.set(idx.toString(), item)
 
     }
 
@@ -25,7 +25,7 @@ export class ScrapArray extends ScrapObject implements Sliceable<ScrapArray> {
      * @returns The wrapped `ScrapValue` if exists, `ScrapUndefined` in other case
      */
     public at(idx: number): ScrapValue {
-        return this.get(idx.toString())
+        return this.index(idx.toString())
     }
 
     /**
@@ -34,7 +34,7 @@ export class ScrapArray extends ScrapObject implements Sliceable<ScrapArray> {
      */
     public push(element: ScrapValue) {
         this.set((this.length === 0 ? this.length : this.length - 1).toString(), {
-              metaproperties: { isStatic: true, visibility: "public", writeable: true },
+              metaproperties: getDefaultMetaproperties(),
               value: element
             }
         )
@@ -44,7 +44,7 @@ export class ScrapArray extends ScrapObject implements Sliceable<ScrapArray> {
 
     /** Deletes the last element in the array */
     public pop() {
-        this.getValue.delete((this.length - 1).toString())
+        this.Value.delete((this.length - 1).toString())
         this.length--
     }
 
@@ -55,14 +55,14 @@ export class ScrapArray extends ScrapObject implements Sliceable<ScrapArray> {
      * @returns The new spliced `ScrapArray`
      */
     public slice(from: number, until?: number): ScrapArray {
-      return new ScrapArray(Array.from(this.getValue, (item) => item[1]).slice(from, until))
+      return new ScrapArray(Array.from(this.Value, (item) => item[1]).slice(from, until))
     }
 
-    public override get getValue() { return this.value as Map<string, ScrapObjectProperty> }
+    public override get Value() { return this.value as Map<string, ScrapObjectProperty> }
 
     private formatArray() {
         let str = "["
-        Array.from(this.getValue)
+        Array.from(this.Value)
             .forEach((item, idx, arr) => {
                 (idx + 1) === arr.length ?
                     str += item[1].value.format() :
@@ -76,18 +76,7 @@ export class ScrapArray extends ScrapObject implements Sliceable<ScrapArray> {
 }
 
 export class ScrapArrayAccess extends ScrapValue {
-
-    private accessedPosition: ScrapInteger
-    private accessedArray: ScrapArray<ScrapValue>
-
-
-    public constructor(accessedArray: ScrapArray<ScrapValue>, accessedPosition: ScrapInteger) {
-        super(undefined)
-        this.accessedArray = accessedArray
-        this.accessedPosition = accessedPosition
+    public constructor(arr: ScrapArray, target: ScrapInteger) {
+        super(arr.at(target.Value))
     }
-
-    public get getAccessedPosition() { return this.accessedPosition }
-
-    public get getAccessedArray() { return this.accessedArray }
 }

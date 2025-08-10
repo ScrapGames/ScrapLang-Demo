@@ -1,6 +1,4 @@
-import { Nullable } from "@typings"
-import { createEmptyScope, Scope } from "@lang/scope.ts"
-import { ScrapModule } from "@lang/elements/entities/modules.ts"
+export type Nullable<T> = T | null
 
 /// Detects alphabetic characters (ignoring Cases)
 export function isAlpha(token: string) {
@@ -17,7 +15,7 @@ export function isHexadecimal(token: string) {
 
 /// Detects alphanumeric characters
 export function isAlphaNum(token: string) {
-    const alphaNum = /[0-9a-zA-Z_]/
+    const alphaNum = /[0-9a-zA-Z_$]/
 
     return alphaNum.test(token)
 }
@@ -25,13 +23,12 @@ export function isAlphaNum(token: string) {
 /// Detects numeric characters, including decimals
 export function isNumeric(token: string) {
     const numericRegex = /[0-9_]/
-
     return numericRegex.test(token)
 }
 
 /// Detects whitespaces characters
-export function isSpace(token: string) {
-    return token === ' '
+export function isSpace(char: string): char is ' ' {
+    return char === ' '
 }
 
 /**
@@ -44,23 +41,9 @@ export function inArray<T>(item: T, array: T[]): boolean {
     return array.some(e => e === item)
 }
 
-export function createNativeModule(name: string, parent: Nullable<Scope>, isExported: boolean): ScrapModule {
-    return new ScrapModule(name, isExported, createEmptyScope(parent, name))
+export function isAndInArray<T>(item: T, maybeArray: T) {
+    return Array.isArray(maybeArray) && inArray(item, maybeArray)
 }
 
-/**
- * `Cursor` is the base class that a Data Structure can inherit to iterate in a defined way the elements of the class that inherit.
- * 
- * The iterated data type will be specified via a generic data type
- */
-export abstract class Cursor<T> {
-    abstract source: T | T[]
-    abstract pos: number
-    abstract currentTok: T
-
-    abstract consume(): T
-    abstract next(): T
-    abstract previous(): T
-    abstract isEOF(): boolean
-    abstract get eofChar(): T
-}
+// Crea un fondo para una tarjeta de presentación de una empresa dedicada a los videojuegos. Debe de ser minimalista
+// y con colores no agresivos

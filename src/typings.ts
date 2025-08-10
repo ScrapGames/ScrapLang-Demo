@@ -1,136 +1,47 @@
-import { ControlStmtNode } from "@ast/ast.ts"
-import { CallNode, FunctionNode, IdentifierNode, ReassignmentNode, VariableNode } from "@ast/nodes.ts"
-
-import { ScrapValue } from "@lang/elements/commons.ts"
-
 /**
- * Converts the type parameter to a possible null value
- * 
- * The next example shows how it works with the number type
- * @example
- * function showNumberString(num: Nullable<number>) {
- *   if (num)
- *     console.log(num.toString())
- * }
- */
-export type Nullable<T> = T | null
-
-/**
- * Represents values which has `name` as a common property
- * 
- * The `name` property is util and fundamental to search and save items in scopes or other data structured
- * 
- * These values can include:
- *  * Any type that extends from `ScrapEntity`, like: variables, classes, modules, etc
- *  * Any type that extends from `ScrapFunction`
+ * Represents an entity that can be identified by a unique name.
  */
 export interface Nameable {
-    name: string
+  /** The unique identifier of the entity */
+  name: string
 }
 
 /**
- * Makes the class who implements to define a method which
- * 
+ * Represents a chainable environment for symbol resolution.
+ * Typically used for nested scopes like modules, classes, or functions.
+ *
+ * @template T The type of the parent context.
+ * @template S The type of the values stored in the context.
  */
-export interface Exportable {
-    isExported: boolean
-}
+export interface Chain<T, S> {
+  /** Optional reference to the parent context in the chain. */
+  parent?: T
 
-/**
- * Makes the class who implements to define a method which
- * represents the info about the value
- */
-export interface Formattable {
-    format(): string
-}
+  /** Internal storage for symbol bindings in this context. */
+  storage: Map<string, S>
 
-export type AccessOperators = "[]" | "::" | "."
+  /**
+   * Stores a new symbol in the current context.
+   *
+   * @param symbol The name of the symbol to store.
+   * @param value The metadata or value associated with the symbol.
+   * @returns `true` if the symbol was successfully stored; `false` if it already exists.
+   */
+  set(symbol: string, value: S): boolean
 
-/**
- * Defines 
- */
-export interface Accessible<T> {
-    //accessOperators: Record<AccessOperators, () => ScrapValue>
-    get(from: T): ScrapValue
-}
+  /**
+   * Retrieves the value of a symbol from the current or parent contexts.
+   *
+   * @param symbol The name of the symbol to retrieve.
+   * @returns The associated value if found; otherwise, `undefined`.
+   */
+  get(symbol: string): S | undefined
 
-export interface Operable {
-    operator(operator: string): ScrapValue
-}
-
-export interface Ajustable {
-    increment(): ScrapValue
-    decrement(): ScrapValue
-}
-
-export type Primitive = number | string | boolean | null | undefined
-
-/**
- * Represents allowable nodes to appear inside a function body
- */
-export type Instruction = FunctionNode | CallNode | ReassignmentNode | VariableNode | ASTControlNode
-
-export type Accessible<T> = CallNode | IdentifierNode | T
-
-/**
- * Represents a function parameter
- * 
- * A function parameter is util to pass values to a function, allowing a function returns a variable value
- */
-export interface ScrapParam {
-    pName: string,
-    pType: string
-}
-
-/**
- * Represents possible values for accessor modifiers of a class entity
- */
-export type ClassAccessorModifier = "public" | "private" | "protected"
-
-/**
- * Represents flags for a class implementation of from where 
- */
-export interface ClassMetadata {
-    inherits: string,
-    implements: string[]
-}
-
-/**
- * Defines the possible values that a object property will have
- * 
- * This is used in classes for: determine what visivility will have an object property
- * In objects (created directly in a literal way): the entities will always be "public"
- */
-export type ScrapVisibility = "public" | "private" | "protected"
-
-// ===== Class types =====
-
-/**
- * Represents metadata for class properties
- * which is useful when an object will be created
- * to determine if an the property can be accessed or not
- */
-export interface ClassEntityMetadata {
-    visibility: ScrapVisibility,
-    isStatic: boolean,
-    canOverride: boolean
-}
-
-// ===== Object types =====
-
-/**
- * Represents metadata
- */
-export interface ScrapObjectPropertyMetadata {
-    visibility: ScrapVisibility,
-    isStatic: boolean,
-    writeable: boolean
-}
-
-/**
- * Represents valid valuse to ScrapObject keys (identifiers, strings literals and integers)
- */
-export interface ScrapObjectProperty {
-    metaproperties: ScrapObjectPropertyMetadata,
-    value: ScrapValue
+  /**
+   * Checks if a symbol exists in the current or parent contexts.
+   *
+   * @param symbol The name of the symbol to check.
+   * @returns `true` if the symbol exists; otherwise, `false`.
+   */
+  has(symbol: string): boolean
 }
