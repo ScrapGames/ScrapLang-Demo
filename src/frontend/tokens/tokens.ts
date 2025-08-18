@@ -9,7 +9,7 @@ import { Position } from "@frontend/position.ts"
  */
 export enum Tokens {
   // KEYWORDS
-  keywords_open, // determines where keywords starts
+  keywords_open,
     FN,
     VAR,
     CONST,
@@ -48,96 +48,87 @@ export enum Tokens {
     GETTER,
     ASYNC,
     AWAIT,
-  keywords_close, // determines where keywords ends
+  keywords_close,
 
-  // OPERATORS OPEN
+  // OPERATORS
   operators_open,
+    // ARITHMETIC
+      PLUS,   // +
+      MINUS,  // -
+      STAR,   // *
+      SLASH,  // /
+      PERCEN, // %
 
-  /**
-   * Not all tokens included here (within the operator delimiter) are always treated as operators.
-   * However, in an expression context, these tokens are treated as operators.
-   */
-
-  // ARITHMETICS OPERATORS
-    // UNARY
-      PLUS,      // +
-      MINUS,     // -
-      INCREMENT, // ++
-      DECREMENT, // --
-
-    // BINARY
-      STAR,         // *
-      SLASH,        // /
-      PERCEN,       // %
-      ADD_ASSIGN,   // +=
-      MINUS_ASSIGN, // -=
-      MULT_ASSIGN,  // *=
-      DIV_ASSIGN,   // /=
-      MOD_ASSIGN,   // %=
-    
-
-  // BOOLEAN OPERATORS
-    // UNARY
+    // BOOLEAN
       BANG, // !
       NOT,
       AS,
       NEW,
       DROP,
-
-    // BINARY
       IN,
       AND,
       OR,
       INSTANCEOF,
-      LESS,        // <
-      GREATER,     // >
-      LESS_EQUAL,  // <=
-      GREAT_EQUAL, // >=
-      EQUALS,      // ==
-      NOT_EQUALS,  // !=
+      LESS,
+      GREATER,
 
-  // ACCESS OPERATORS
-    // UNARY
-      LSQRBR,  // [
-      LPAREN,  // (
-      RSQRBR,  // ]
-      RPAREN,  // )
-      AMPER,   // &
-    
-    // BINARY
-      MOD_ACCESSOR, // ::
-      DOT,     // .
-  
-  // WITHOUT CLASSIFICATION
-  EQUAL, // =
-  SLICE, // ..
-  COMMA, // ,
+    // ACCESS
+      // UNARY
+        LSQRBR,
+        LPAREN,
+        RSQRBR,
+        RPAREN,
+        AMPER,
+      // BINARY
+        DOT,
+
+    // WITHOUT CLASSIFICATION
+      EQUAL,
+      COMMA,
   operators_close,
-  // OPERATORS END
+
+  // COMPOUND TOKENS
+  compounds_open,
+    INCREMENT,    // ++
+    DECREMENT,    // --
+    ADD_ASSIGN,   // +=
+    MINUS_ASSIGN, // -=
+    MULT_ASSIGN,  // *=
+    DIV_ASSIGN,   // /=
+    MOD_ASSIGN,   // %=
+    LESS_EQUAL,   // <=
+    GREAT_EQUAL,  // >=
+    EQUALS,       // ==
+    NOT_EQUALS,   // !=
+    MOD_ACCESSOR, // ::
+    SLICE,        // ..
+    SPREAD,       // ...
+  compounds_close,
 
   // LITERAL TOKENS
   literals_open,
-    STRING,     // "hola"
-    CHAR,       // 'b'
-    NUMBER,     // 777
-    FLOAT,      // 3.14
+    STRING,
+    CHAR,
+    NUMBER,
+    FLOAT,
   literals_close,
-    
-  IDENTIFIER, // bruh
-  COLON,      // :
-  SEMICOLON,  // ;
-  UNDERSCORE, // _
-  QUESTION,   // ?
-  LBRACE,     // {
-  RBRACE,     // }
-  
-  SPREAD,     // ...
+
+  IDENTIFIER,
+  COLON,
+  SEMICOLON,
+  UNDERSCORE,
+  QUESTION,
+  LBRACE,
+  RBRACE,
 
   EOF,
   UNKNOWN
 }
 
 export const TOKEN_MAP = new Map([
+  // ========================
+  // KEYWORDS
+  // ========================
   [Tokens.FN,         "fn"],
   [Tokens.VAR,        "var"],
   [Tokens.CONST,      "const"],
@@ -177,74 +168,89 @@ export const TOKEN_MAP = new Map([
   [Tokens.ASYNC,      "async"],
   [Tokens.AWAIT,      "await"],
 
-  // OPERATORS OPEN
-  // 1º OPERATORS WHICH ARE WORDS
-  [Tokens.IN,         "in"],
-  [Tokens.AND,        "and"],
-  [Tokens.OR,         "or"],
+  // ========================
+  // OPERATORS
+  // ========================
+
+  // ARITHMETIC
+  [Tokens.PLUS,   "+"],
+  [Tokens.MINUS,  "-"],
+  [Tokens.STAR,   "*"],
+  [Tokens.SLASH,  "/"],
+  [Tokens.PERCEN, "%"],
+
+  // BOOLEAN
+  [Tokens.BANG,       "!"],
   [Tokens.NOT,        "not"],
-  [Tokens.INSTANCEOF, "instanceof"],
   [Tokens.AS,         "as"],
   [Tokens.NEW,        "new"],
   [Tokens.DROP,       "drop"],
+  [Tokens.IN,         "in"],
+  [Tokens.AND,        "and"],
+  [Tokens.OR,         "or"],
+  [Tokens.INSTANCEOF, "instanceof"],
+  [Tokens.LESS,       "<"],
+  [Tokens.GREATER,    ">"],
 
-  // 2º OPERATORS WHICH ARE TOKENS
-  [Tokens.PLUS,    "+"],
-  [Tokens.MINUS,   "-"],
-  [Tokens.STAR,    "*"],
-  [Tokens.SLASH,   "/"],
-  [Tokens.PERCEN,  "%"],
-  [Tokens.LESS,    "<"],
-  [Tokens.GREATER, ">"],
-  [Tokens.DOT,     "."],
-  [Tokens.LSQRBR,  "["],
-  [Tokens.RSQRBR,  "]"],
-  [Tokens.BANG,    "!"],
-  [Tokens.LPAREN,  "("],
-  [Tokens.RPAREN,  ")"],
-  [Tokens.AMPER,   "&"],
-  [Tokens.EQUAL,   "="],
+  // ACCESS
+  // UNARY
+  [Tokens.LSQRBR, "["],
+  [Tokens.LPAREN, "("],
+  [Tokens.RSQRBR, "]"],
+  [Tokens.RPAREN, ")"],
+  [Tokens.AMPER,  "&"],
+  // BINARY
+  [Tokens.DOT,    "."],
 
-  // 3º OPERATORS WHICH ARE COMPOUNDED TOKENS
-  [Tokens.MOD_ACCESSOR, "::"],
+  // WITHOUT CLASSIFICATION
+  [Tokens.EQUAL, "="],
+  [Tokens.COMMA, ","],
+
+  // ========================
+  // COMPOUND TOKENS
+  // ========================
   [Tokens.INCREMENT,    "++"],
   [Tokens.DECREMENT,    "--"],
-
-  [Tokens.LESS_EQUAL,  "<="],
-  [Tokens.GREAT_EQUAL, ">="],
-
-  [Tokens.SLICE,      ".."],
-  [Tokens.SPREAD,     "..."],
-  [Tokens.EQUALS,     "=="],
-  [Tokens.NOT_EQUALS, "!="],
-
   [Tokens.ADD_ASSIGN,   "+="],
   [Tokens.MINUS_ASSIGN, "-="],
   [Tokens.MULT_ASSIGN,  "*="],
   [Tokens.DIV_ASSIGN,   "/="],
   [Tokens.MOD_ASSIGN,   "%="],
-  // OPERATORS END
+  [Tokens.LESS_EQUAL,   "<="],
+  [Tokens.GREAT_EQUAL,  ">="],
+  [Tokens.EQUALS,       "=="],
+  [Tokens.NOT_EQUALS,   "!="],
+  [Tokens.MOD_ACCESSOR, "::"],
+  [Tokens.SLICE,        ".."],
+  [Tokens.SPREAD,       "..."],
 
-  // LITERAL OPENS
-  [Tokens.STRING,     "STRING"],     // "hola"
-  [Tokens.CHAR,       "CHAR"],       // 'b'
-  [Tokens.NUMBER,     "NUMBER"],     // 777
-  [Tokens.FLOAT,      "FLOAT"],      // 3.14
-  [Tokens.IDENTIFIER, "IDENTIFIER"], // bruh
-  // LITERAL ENDS
+  // ========================
+  // LITERALS
+  // ========================
+  [Tokens.STRING,     "STRING"],
+  [Tokens.CHAR,       "CHAR"],
+  [Tokens.NUMBER,     "NUMBER"],
+  [Tokens.FLOAT,      "FLOAT"],
 
-  // SIMPLE TOKENS
-  [Tokens.COLON,     ":"],
-  [Tokens.SEMICOLON, ";"],
- 
+  // ========================
+  // IDENTIFIERS & SYMBOLS
+  // ========================
+  [Tokens.IDENTIFIER, "IDENTIFIER"],
+  [Tokens.COLON,      ":"],
+  [Tokens.SEMICOLON,  ";"],
   [Tokens.UNDERSCORE, "_"],
   [Tokens.QUESTION,   "?"],
   [Tokens.LBRACE,     "{"],
   [Tokens.RBRACE,     "}"],
-  [Tokens.COMMA,      ","],
 
-  [Tokens.EOF, "EOF"]
-])
+  // ========================
+  // SPECIALS
+  // ========================
+  [Tokens.EOF,     "EOF"],
+  [Tokens.UNKNOWN, "UNKNOWN"],
+]);
+
+export const RTOKEN_MAP = new Map(Array.from(TOKEN_MAP, ([k, v]) => [v, k]))
 
 export const KEYWORD_MAP = new Map([
   ["fn",         Tokens.FN],
@@ -316,8 +322,8 @@ export class Token {
     this.position = position
   }
   
-  public static createToken(type: Tokens, pos: Position, content?: string) {
-    return new Token(type, content ?? TOKEN_MAP.get(type)!, pos.copy())
+  public static createToken(type: Tokens, pos: Position, content?: string): Token {
+    return new this(type, content ?? TOKEN_MAP.get(type)!, pos.copy())
   }
 
   public is(maybe: Tokens): boolean {
@@ -326,6 +332,10 @@ export class Token {
 
   public cmp(maybe: string): boolean {
     return this.content === maybe
+  }
+
+  public isCompounded(): boolean {
+    return this.type > Tokens.compounds_open && this.type < Tokens.compounds_close
   }
 
   public isKeyword(): boolean {
@@ -347,74 +357,54 @@ export class Token {
   public get TypeContent() { return TOKEN_MAP.get(this.type)! }
 
   public get Precedence(): number {
+    // unary and grouping operators are not included here since them are
+    // instantly parsed before any binary operator
     switch (this.type) {
-      // 0 - Postfijo: highest precedence
-      case Tokens.MOD_ACCESSOR:
-      case Tokens.DOT:
-      case Tokens.LSQRBR:
-      case Tokens.LPAREN:
-      case Tokens.INCREMENT:
-      case Tokens.DECREMENT:
+      case Tokens.MOD_ACCESSOR: // ::
+      case Tokens.DOT:          // .
         return 0
 
-      // 1 - Unarios
-      case Tokens.NOT:     // not
-      case Tokens.BANG:    // !
-      case Tokens.NEW:
-      case Tokens.DROP:
-        return 1
-
-      // 2 - Multiplicativos
       case Tokens.STAR:    // *
       case Tokens.SLASH:   // /
       case Tokens.PERCEN:  // %
-        return 2
+        return 1
 
-      // 3 - Aditivos
       case Tokens.PLUS:    // +
       case Tokens.MINUS:   // -
-        return 3
+        return 2
 
-      // 4 - Relacionales
       case Tokens.LESS:         // <
       case Tokens.GREATER:      // >
       case Tokens.LESS_EQUAL:   // <=
       case Tokens.GREAT_EQUAL:  // >=
-        return 4
+        return 3
 
-      // 5 - Igualdad
       case Tokens.EQUALS:       // ==
       case Tokens.NOT_EQUALS:   // !=
+        return 4
+
+      case Tokens.AND:          // and
         return 5
 
-      // 6 - AND lógico / bitwise
-      case Tokens.AND:          // and
-      case Tokens.AMPER:        // &
+      case Tokens.OR:           // or
         return 6
 
-      // 7 - OR lógico
-      case Tokens.OR:           // or
-        return 7
-
-      // 8 - Asignación
       case Tokens.EQUAL:        // =
       case Tokens.ADD_ASSIGN:   // +=
       case Tokens.MINUS_ASSIGN: // -=
       case Tokens.MULT_ASSIGN:  // *=
       case Tokens.DIV_ASSIGN:   // /=
       case Tokens.MOD_ASSIGN:   // %=
-        return 8
+        return 7
 
-      // 9 - No estándar / sintácticos: menor precedencia
       case Tokens.SLICE:        // ..
       case Tokens.AS:           // as
       case Tokens.INSTANCEOF:   // instanceof
       case Tokens.IN:           // in
-        return 9
+        return 8
 
-      // 10 - Coma como operador
-      case Tokens.COMMA:
-        return 10
+      case Tokens.COMMA: // ,
+        return 9
 
       default: break
     }

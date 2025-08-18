@@ -1,5 +1,6 @@
 import { ASTNode } from "@frontend/ast/ast.ts"
-import type { Position } from "@frontend/typings.ts"
+import { Position } from "@frontend/position.ts"
+import { Token } from "@frontend/tokens/tokens.ts"
 
 /**
  * Enumeration representing the kinds of expressions supported in the AST.
@@ -250,7 +251,7 @@ export class Call extends Expression {
  * Represents a unary operation (e.g., `!a`, `-b`).
  */
 export class Unary extends Expression {
-  private operator: string
+  private operator: Token
   private operand: Expression
 
   /**
@@ -258,7 +259,7 @@ export class Unary extends Expression {
    * @param operand - Operand expression.
    * @param position - Position in the source code.
    */
-  public constructor(operator: string, operand: Expression, position: Position) {
+  public constructor(operator: Token, operand: Expression, position: Position) {
     super(ExpressionKind.UnaryExpr, position)
     this.operator = operator
     this.operand = operand
@@ -275,7 +276,7 @@ export class Unary extends Expression {
  * Represents a binary operation (e.g., `a + b`, `x && y`).
  */
 export class Binary extends Expression {
-  private operator: string
+  private operator: Token
   private lhs: Expression
   private rhs: Expression
 
@@ -285,7 +286,7 @@ export class Binary extends Expression {
    * @param rhs - Right-hand side expression.
    * @param position - Position in the source code.
    */
-  public constructor(operator: string, lhs: Expression, rhs: Expression, position: Position) {
+  public constructor(operator: Token, lhs: Expression, rhs: Expression, position: Position) {
     super(ExpressionKind.BinaryExpr, position)
     this.operator = operator
     this.lhs = lhs

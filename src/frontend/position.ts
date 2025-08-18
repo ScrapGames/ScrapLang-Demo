@@ -2,18 +2,25 @@
  * Represents token position in the source
  */
 export class Position {
-  pos: number
+  idx: number
   line: number
-  linePos: number
+  lineIdx: number
 
-  public constructor(pos: number, line: number, linePos: number) {
-    this.pos     = pos
+  public constructor(idx: number, line: number, lineIdx: number) {
+    this.idx     = idx
     this.line    = line
-    this.linePos = linePos
+    this.lineIdx = lineIdx
+  }
+
+  public setTo(n: number): Position {
+    this.idx = n
+    this.lineIdx = n
+
+    return this
   }
 
   public copy(): Position {
-    return new Position(this.pos, this.line, this.linePos)
+    return new Position(this.idx, this.line, this.lineIdx)
   }
 
 }

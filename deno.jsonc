@@ -8,8 +8,9 @@
     "strictPropertyInitialization": false
   },
   "imports": {
-    "@std/path":  "jsr:@std/path@1.1.1",
-    "@std/cli":   "jsr:@std/cli@1.0.21",
+    "@std/path":   "jsr:@std/path@1.1.1",
+    "@std/cli":    "jsr:@std/cli@1.0.21",
+    "@std/expect": "jsr:@std/expect@1.0.16",
 
     "@/":          "./src/",
     "@frontend/": "./src/frontend/",
