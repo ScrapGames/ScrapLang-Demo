@@ -235,7 +235,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
 
     this.next() // eat closing quote
     const type = quoteType === "'" ? Tokens.CHAR : Tokens.STRING
-    return this.createToken(type, { content, pos })
+    return this.createToken(type, { content, pos, advance: false })
   }
 
   /**
