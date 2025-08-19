@@ -89,8 +89,13 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     opts: Partial<{ content: string, pos: Position, advance: boolean }> = { advance: true }
   ): Token {
     const t = Token.createToken(tok, opts?.pos ?? this.Position, opts?.content);
-    if (opts?.advance && this.next())
+
+    if (opts.advance && t.isCompounded())
       return t
+
+    if (opts.advance && this.next())
+      return t
+
     return t
   }
 
@@ -104,6 +109,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     const type = RTOKEN_MAP.get(content)
     if (!type)
       return Token.createToken(Tokens.UNKNOWN, this.Position, content)
+
     return this.createToken(type, opts)
   }
 
@@ -289,7 +295,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
    * Scans `:` or `::` (module accessor).
    */
   private scanColon() {
-    if (this.check(":") && this.moveN(1))
+    if (this.check(":") && this.moveN(2))
       return this.createToken(Tokens.MOD_ACCESSOR)
 
     return this.createToken(Tokens.COLON)
@@ -299,7 +305,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
    * Scans `=` or `==`.
    */
   private scanEqual() {
-    if (this.check("=") && this.moveN(1))
+    if (this.check("=") && this.moveN(2))
       return this.createToken(Tokens.EQUALS)
 
     return this.createToken(Tokens.EQUAL)
@@ -310,7 +316,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
    */
   private scanDot() {
     if (this.check('.') && this.moveN(1)) {
-      if (this.check('.') && this.moveN(1))
+      if (this.check('.') && this.moveN(2))
         return this.createToken(Tokens.SPREAD)
 
       return this.createToken(Tokens.SLICE)
@@ -325,10 +331,11 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
   private scanIncrement() {
     let type = this.currentTok === '+' ? Tokens.PLUS : Tokens.MINUS
 
-    if (this.check(this.currentTok as '+' | '-') && this.moveN(1)) {
+    if (this.check(this.currentTok as '+' | '-') && this.moveN(2)) {
       type = this.currentTok === '+' ? Tokens.INCREMENT : Tokens.DECREMENT
       return this.createToken(type)
     }
+
     return this.createToken(type)
   }
 
@@ -338,6 +345,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
   private scanBang() {
     if (this.check("=") && this.moveN(2))
       return this.createToken(Tokens.NOT_EQUALS)
+
     return this.createToken(Tokens.BANG)
   }
 
