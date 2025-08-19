@@ -90,10 +90,10 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
   ): Token {
     const t = Token.createToken(tok, opts.pos ?? this.Position, opts.content);
 
-    if (opts.advance && t.isCompounded())
+    if ((opts.advance ?? true) && t.isCompounded())
       return t
 
-    if (opts.advance && this.next())
+    if ((opts.advance ?? true) && this.next())
       return t
 
     return t
