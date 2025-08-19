@@ -13,7 +13,7 @@
 import { Position } from "@frontend/position.ts"
 import { KEYWORD_MAP, RTOKEN_MAP, Token, Tokens } from "@frontend/tokens/tokens.ts"
 
-import { isAlpha, isNumeric, isAlphaNum, isSpace } from "@utils"
+import { isAlpha, isNumeric, isAlphaNum, isSpace, isEOL } from "@utils"
 import { Collectable, Reader } from "@frontend/typings.ts"
 
 /**
@@ -162,8 +162,10 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     }
 
     this.eof = !bytes
-    if (!this.hasEnd())
+    if (!this.hasEnd()) {
       this.position.setTo(this.tellg())
+      this.position.lineIdx++
+    }
 
     return (this.currentTok = this.decoder.decode(this.buffer))
   }
@@ -204,10 +206,10 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
    * Updates line counters accordingly.
    */
   private consumeEOL() {
-    while (this.currentTok === '\r' || this.currentTok === '\n') {
+    while (isEOL(this.currentTok)) {
       this.check('\n') ? this.moveN(2) : this.next()
-      this.position.lineIdx = 1
       this.position.line++
+      this.position.lineIdx = 1
     }
   }
 
@@ -369,7 +371,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     }
 
     // Ignore spaces and newlines by rescanning
-    if (isSpace(this.currentTok) || (this.currentTok === '\r' || this.currentTok === '\n'))
+    if (isSpace(this.currentTok) || isEOL(this.currentTok))
       return this.scan()
 
     return this.createToken(Tokens.UNKNOWN)
@@ -386,7 +388,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     while (isSpace(this.currentTok))
       this.next()
 
-    if (this.currentTok === '\r' || this.currentTok === '\n')
+    if (isEOL(this.currentTok))
       this.consumeEOL()
 
     if (isAlpha(this.currentTok))

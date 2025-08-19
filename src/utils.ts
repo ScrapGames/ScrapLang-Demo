@@ -31,6 +31,10 @@ export function isSpace(char: string): char is ' ' {
     return char === ' '
 }
 
+export function isEOL(char: string): char is '\r' | '\n' {
+    return char === '\r' || char === '\n'
+}
+
 /**
  * Checks that `item` exists inside `array`
  * @param item Item that may exists inside `array`

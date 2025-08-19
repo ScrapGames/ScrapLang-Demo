@@ -14,8 +14,6 @@ export class Position {
 
   public setTo(n: number): Position {
     this.idx = n
-    this.lineIdx = n
-
     return this
   }
 
