@@ -273,7 +273,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
       do {
         this.next()
       // @ts-ignore: the comparison wont overlap, because `next` call changes `currentTok` value
-      } while (this.currentTok !== '\r' || this.currentTok !== '\n');
+      } while (!isEOL(this.currentTok))
     }
 
     // Block comments: /* ... */
