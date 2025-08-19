@@ -121,6 +121,8 @@ export enum Tokens {
   LBRACE,
   RBRACE,
 
+  COMMENT,
+
   EOF,
   UNKNOWN
 }
