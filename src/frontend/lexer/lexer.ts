@@ -1,10 +1,13 @@
 /**
  * Lexer/Scanner prototype for ScrapLang
  * 
- * Lexer scan a file and reads his contents to get tokens that correspond to the tokens defined in the language syntax
- * For example, const, fn, enum... are keywords and Lexer identifies as such
+ * The Lexer scans a file and reads its contents to extract tokens
+ * that correspond to the language syntax definitions.
  * 
- * If Lexer founds a keyword or another token that is invalid, will throw an error
+ * For example, `const`, `fn`, `enum`... are keywords and the Lexer
+ * will recognize them as such.
+ * 
+ * If the Lexer encounters an invalid token, it will throw an error.
  */
 
 import { Position } from "@frontend/position.ts"
@@ -13,24 +16,43 @@ import { KEYWORD_MAP, RTOKEN_MAP, Token, Tokens } from "@frontend/tokens/tokens.
 import { isAlpha, isNumeric, isAlphaNum, isSpace } from "@utils"
 import { Collectable, Reader } from "@frontend/typings.ts"
 
+/**
+ * Defines scanning modes:
+ * - Advance: moves the file pointer and updates `currentTok`
+ * - Check: peeks a character without permanently advancing the pointer
+ */
 enum ScanMode {
   Advance,
   Check
 }
 
+/**
+ * Main Lexer class implementing `Collectable<Token>` and `Reader<string>`.
+ * It reads a source file and transforms it into a sequence of tokens.
+ */
 export default class Lexer implements Collectable<Token>, Reader<string> {
+  /** Source file being scanned */
   private file: Deno.FsFile
   
+  /** UTF-8 decoder to interpret raw bytes as text */
   private decoder: TextDecoder
   
+  /** Temporary byte buffer for file reading */
   private buffer: Uint8Array
   
+  /** Flag indicating whether end of file has been reached */
   private eof: boolean
   
+  /** Current position in the file (line, column, index) */
   private position: Position
 
+  /** Current character being processed by the Lexer */
   currentTok: string
 
+  /**
+   * Private constructor: initializes the Lexer with the given file path.
+   * Use `Lexer.init` instead of calling this directly.
+   */
   private constructor(filePath: string) {
     this.position = new Position(0, 1, 0)
     this.buffer = new Uint8Array(1)
@@ -39,76 +61,95 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     this.eof = false
   }
 
+  /**
+   * Static initializer for creating a new Lexer instance and
+   * performing the first read from the file.
+   * @param filePath Path of the source file to scan
+   * @returns An initialized `Lexer` instance
+   */
   public static init(filePath: string) {
     const l = new this(filePath)
-    l.next() // Gives the first character as initial value to `currenTok`
-
+    l.next() // initializes `currentTok` with the first character
     return l
   }
 
   // ===== HELPER FUNCTIONS =====
+
   /**
-   * Creates a new token based on `currentTok` value
-   * @param tok Type of token for the new created token
-   * @returns A new token based on `currentTok` value and type of token `tok`
+   * Creates a new token based on `currentTok` value.
+   * @param tok Type of token
+   * @param opts Optional parameters:
+   *  - content: string value of the token
+   *  - pos: position of the token in the file
+   *  - advance: whether to advance the Lexer after creating the token
+   * @returns A new Token
    */
   private createToken(
     tok: Tokens,
     opts: Partial<{ content: string, pos: Position, advance: boolean }> = { advance: true }
   ): Token {
     const t = Token.createToken(tok, opts?.pos ?? this.Position, opts?.content);
-
     if (opts?.advance && this.next())
       return t
-
     return t
   }
 
+  /**
+   * Creates a token by matching a string against the reverse token map.
+   * @param content The string representation of the token
+   * @param opts Optional token creation parameters
+   * @returns A Token (known type or UNKNOWN if not mapped)
+   */
   private createTokenFromStr(content: string, opts?: Partial<{ pos: Position, advance: boolean }>) {
     const type = RTOKEN_MAP.get(content)
     if (!type)
       return Token.createToken(Tokens.UNKNOWN, this.Position, content)
-
     return this.createToken(type, opts)
   }
 
   /**
-   * Simulation of C++ istream method
-   * @returns The current position in the source
+   * Equivalent to C++ `istream::tellg`.
+   * @returns The current byte offset in the source file
    */
   private tellg(): number {
     return this.file.seekSync(0, Deno.SeekMode.Current)
   }
 
-  // ===== COLLETABLE FUNCTIONS =====
+  // ===== COLLECTABLE FUNCTIONS =====
+
+  /**
+   * Collects all tokens from the file until EOF.
+   * @returns Array of tokens
+   */
   collect(): Token[] {
     const tokens: Token[] = []
     while (!this.hasEnd())
       tokens.push(this.scan())
-
     return tokens
   }
 
   // ===== READER FUNCTIONS =====
+
+  /**
+   * Reads the next character from the source.
+   * @returns The next character
+   */
   next(): string {
     return this.moveN(1)
   }
 
   /**
-   * Advance n positions in the source
+   * Advances `n` positions in the source file.
    * 
-   * NOTE: `n` must be passed in a human readable format. For example: to get the first character, `n` would be 1.
-   * For more info, visit: https://...
-   * @param n Human readable positions the within file pointer will move, either forward or backward (signed number)
-   * @returns The next token in the target source (`file` property)
+   * NOTE: `n` is human-readable (1 = first char, 2 = second, etc.).
+   * @param n Number of positions to move (positive or negative)
+   * @param mode Whether to advance or just check without moving
+   * @returns The next character
    */
   moveN(n: number, mode: ScanMode = ScanMode.Advance): string {
     if (this.tellg() === 0 && n < 0 || n < -this.position.idx)
-      throw new Error("Any backward operation will cause the program to crash because the file pointer is at the beginning")
+      throw new Error("Backward movement is not allowed at the beginning of the file")
 
-    // If the file has already been entirely readed
-    // we save some resources from avoid
-    // executing some functions for the same result
     if (this.hasEnd())
       return this.currentTok
 
@@ -127,19 +168,41 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     return (this.currentTok = this.decoder.decode(this.buffer))
   }
 
+  /**
+   * Peeks ahead at the next character without consuming it.
+   * @returns The next character
+   */
   ahead(): string {
     return this.moveN(1, ScanMode.Check)
   }
 
+  /**
+   * Checks whether the next character matches a given string.
+   * @param maybe Character to check against
+   * @returns True if match, false otherwise
+   */
   check(maybe: string): boolean {
     return this.ahead() === maybe
   }
 
+  /**
+   * Returns whether the end of the file has been reached.
+   */
   hasEnd(): boolean {
     return this.eof
   }
 
   // ===== LEXER FUNCTIONS =====
+
+  public setTo(pos: Position): Position {
+    this.moveN(pos.idx)
+    return this.position
+  }
+
+  /**
+   * Consumes end-of-line characters (`\r`, `\n`).
+   * Updates line counters accordingly.
+   */
   private consumeEOL() {
     while (this.currentTok === '\r' || this.currentTok === '\n') {
       this.check('\n') ? this.moveN(2) : this.next()
@@ -148,20 +211,29 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     }
   }
 
+  /**
+   * Scans a string or character literal depending on quote type.
+   * @param quoteType Type of quote used ('"', "'", "`")
+   * @returns A STRING or CHAR token
+   */
   private scanText(quoteType: "\"" | "'" | "`") {
     const pos = this.Position
     let content = ""
-    this.next() // eats open quote
+    this.next() // eat opening quote
 
     do {
       content += this.currentTok
     } while (this.next() !== quoteType)
 
-    this.next() // eats closing quote
+    this.next() // eat closing quote
     const type = quoteType === "'" ? Tokens.CHAR : Tokens.STRING
     return this.createToken(type, { content, pos })
   }
 
+  /**
+   * Scans an identifier or keyword.
+   * @returns An IDENTIFIER token or a keyword token
+   */
   private scanIdentifier() {
     const pos = this.Position
     let content = ""
@@ -174,6 +246,10 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     return this.createToken(type, { content, pos, advance: false })
   }
 
+  /**
+   * Scans a numeric literal.
+   * @returns A NUMBER token
+   */
   private scanNumber() {
     const pos = this.Position
     let content = ""
@@ -185,8 +261,12 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     return this.createToken(Tokens.NUMBER, { content, pos, advance: false })
   }
 
+  /**
+   * Scans a slash `/`, checking for comments or division operator.
+   * @returns A SLASH token (comments are skipped)
+   */
   private scanSlash() {
-    // scan for line comments
+    // Line comments: //
     if (this.check('/')) {
       do {
         this.next()
@@ -194,7 +274,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
       } while (this.currentTok !== '\r' || this.currentTok !== '\n');
     }
 
-    // scan for line comments
+    // Block comments: /* ... */
     if (this.check('*')) {
       while (this.currentTok !== '*' && !this.check('/'))
         this.next()
@@ -203,6 +283,9 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     return this.createToken(Tokens.SLASH)
   }
 
+  /**
+   * Scans `:` or `::` (module accessor).
+   */
   private scanColon() {
     if (this.check(":") && this.moveN(1))
       return this.createToken(Tokens.MOD_ACCESSOR)
@@ -210,14 +293,19 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     return this.createToken(Tokens.COLON)
   }
 
+  /**
+   * Scans `=` or `==`.
+   */
   private scanEqual() {
     if (this.check("=") && this.moveN(1))
       return this.createToken(Tokens.EQUALS)
 
-    const tok = this.createToken(Tokens.EQUAL)
-    return tok
+    return this.createToken(Tokens.EQUAL)
   }
 
+  /**
+   * Scans `.`, `..` (slice), or `...` (spread).
+   */
   private scanDot() {
     if (this.check('.') && this.moveN(1)) {
       if (this.check('.') && this.moveN(1))
@@ -229,6 +317,9 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     return this.createToken(Tokens.DOT)
   }
 
+  /**
+   * Scans `+`, `-`, `++`, or `--`.
+   */
   private scanIncrement() {
     let type = this.currentTok === '+' ? Tokens.PLUS : Tokens.MINUS
 
@@ -236,86 +327,91 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
       type = this.currentTok === '+' ? Tokens.INCREMENT : Tokens.DECREMENT
       return this.createToken(type)
     }
-
     return this.createToken(type)
   }
 
+  /**
+   * Scans `!` or `!=`.
+   */
   private scanBang() {
     if (this.check("=") && this.moveN(2))
       return this.createToken(Tokens.NOT_EQUALS)
-
     return this.createToken(Tokens.BANG)
   }
 
+  /**
+   * Handles single-character tokens such as brackets, commas, etc.,
+   * as well as delegating scanning for multi-character tokens.
+   */
   private scanSingleChar(): Token {
     switch (this.currentTok) {
-      case '{':
-      case '}':
-      case '(':
-      case ')':
-      case '[':
-      case ']':
-      case ',':
-      case ';':
-      case '*':
-      case '?':
-      case '>':
-      case '<':
+      case '{': case '}':
+      case '(': case ')':
+      case '[': case ']':
+      case ',': case ';':
+      case '*': case '?':
+      case '>': case '<':
       case '&': return this.createTokenFromStr(this.currentTok)
-      case '\'':
-      case '`':
-      case '"':  return this.scanText(this.currentTok as ("\"" | "'" | "`"))
-      case '+':
-      case '-': return this.scanIncrement()
-      case '=': return this.scanEqual()
-      case '!': return this.scanBang()
-      case '/': return this.scanSlash()
-      case ':': return this.scanColon()
-      case '.': return this.scanDot()
+      case '\'': case '`': case '"':
+        return this.scanText(this.currentTok as ("\"" | "'" | "`"))
+      case '+': case '-':
+        return this.scanIncrement()
+      case '=':
+        return this.scanEqual()
+      case '!':
+        return this.scanBang()
+      case '/':
+        return this.scanSlash()
+      case ':':
+        return this.scanColon()
+      case '.':
+        return this.scanDot()
     }
 
-    // if space or EOL is encountered
-    // then calls to 'scan' again
-    // to consume these spaces
+    // Ignore spaces and newlines by rescanning
     if (isSpace(this.currentTok) || (this.currentTok === '\r' || this.currentTok === '\n'))
       return this.scan()
 
     return this.createToken(Tokens.UNKNOWN)
   }
 
+  /**
+   * Main scan method: processes the current character and returns a token.
+   * @returns The next token from the source
+   */
   public scan(): Token {
-    // Avoding unexpected results and very probably infinite loops
-    // we returns an EOF token if the lexer has ends of scan all the source
     if (this.hasEnd())
       return this.createToken(Tokens.EOF, { content: "EOF" })
 
-    // eats spaces how many there are
     while (isSpace(this.currentTok))
       this.next()
 
-    // consume as much as new lines there are until another token
     if (this.currentTok === '\r' || this.currentTok === '\n')
       this.consumeEOL()
 
-    // Validation only with alphabetic characters
-    // occurs because a variable or another recognizer, token, identifier, etc
-    // can not start with a number, because a comparation between if a token is a number or an identifier will overlap
-    // for example, var 1test = "test" is incorrect
-    // the correct way to declare this variable would be: var test1 = "test"
     if (isAlpha(this.currentTok))
       return this.scanIdentifier()
 
     if (isNumeric(this.currentTok))
       return this.scanNumber()
 
-    const lastScan = this.scanSingleChar()
-    return lastScan
+    return this.scanSingleChar()
   }
 
+  /**
+   * Returns a copy of the current position in the file.
+   */
   public get Position(): Position {
     return this.position.copy()
   }
 
+  public set Position(pos: Position) {
+    this.position = pos
+  }
+
+  /**
+   * Closes the underlying file when disposing the Lexer.
+   */
   [Symbol.dispose]() {
     this.file.close()
   }
