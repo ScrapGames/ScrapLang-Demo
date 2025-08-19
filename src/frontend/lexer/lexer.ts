@@ -274,30 +274,27 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
    * @returns A SLASH token (comments are skipped)
    */
   private scanSlash() {
+    const ahead = this.ahead()
+
+    if (ahead !== '/' && ahead !== '*')
+      return this.createToken(Tokens.SLASH)
+
     const pos = this.Position
-    // Line comments: //
-    if (this.check('/') && this.moveN(2)) {
-      let content = ""
-      do {
-        content += this.currentTok
-      // @ts-ignore: the comparison wont overlap, because `next` call changes `currentTok` value
-      } while (!isEOL(this.next()))
+    let content = ""
 
-      return this.createToken(Tokens.COMMENT, { content, pos })
-    }
-
-    // Block comments: /* ... */
-    if (this.check('*') && this.moveN(2)) {
-      let content = ""
-      do {
+    if (ahead === '/' && this.moveN(2)) {
+      do
         content += this.currentTok
-      } while (this.next() !== '*' && !this.check('/'))
+      while (!isEOL(this.next()))
+    } else if (ahead === '*' && this.moveN(2)) {
+      do
+        content += this.currentTok
+      while (this.next() !== '*' && !this.check('/'))
 
       this.moveN(2) // eats the closing pairs for block comments
-      return this.createToken(Tokens.COMMENT, { content, pos })
     }
 
-    return this.createToken(Tokens.SLASH)
+    return this.createToken(Tokens.COMMENT, { content, pos, advance: false })
   }
 
   /**
