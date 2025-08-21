@@ -216,91 +216,95 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   // ----- EXPRESSION PARSING ----- //
+  private isEndOfExpr(tok: Token): boolean {
+    switch (tok.type) {
+      case Tokens.RPAREN:
+      case Tokens.RSQRBR:
+      case Tokens.SEMICOLON: return true
+    }
+    return false
+  }
 
-  private parseLiteral(): ast.expressions.Expression {
-    const literal = this.currentTok
+  private parseUnary(): ast.expressions.Expression {
+    const op = this.currentTok
+    this.eat(op.type)
+
+    return new ast.expressions.Unary(op, this.parseOperand(), this.Position)
+  }
+
+  private parseParen(): ast.expressions.Expression {
+    this.eat(Tokens.LPAREN)
+    return this.parseExpression()
+  }
+
+  private parseArray(): ast.expressions.Expressions {
+    this.eat(Tokens.LSQRBR)
+
+    const expr = this.parseExpression()
+    return expr
+  }
+
+  private parseOperator(): ast.expressions.Expression {
+    switch (this.currentTok.type) {
+      case Tokens.LSQRBR:
+      case Tokens.PLUS:
+      case Tokens.MINUS:
+      case Tokens.INCREMENT:
+      case Tokens.DECREMENT:
+      case Tokens.BANG:
+      case Tokens.NOT:
+      case Tokens.NEW:
+      case Tokens.DROP:
+      case Tokens.AMPER:  return this.parseUnary()
+      case Tokens.LPAREN: return this.parseParen()
+    }
+  }
+
+  private parseOperand(): ast.expressions.Expression {
+    if (this.currentTok.isOperator())
+      return this.parseOperator()
 
     /**
      * Since not all operators are always treated as such
      * Some tokens that are grouped as operators could mean the begin of an expression.
      * Like this: `[a, b, c]`. Where the left bracket marks the begin of a literal array
      */
-    switch (literal.type) {
-      case Tokens.IDENTIFIER: return new ast.expressions.Identifier(literal.content, this.Position)
-      case Tokens.STRING:     return new ast.expressions.String(literal.content, this.Position)
-      case Tokens.NUMBER:     return new ast.expressions.Numeric(parseInt(literal.content), this.Position)
-
-      /* case Tokens.PLUS:
-      case Tokens.MINUS:
-      case Tokens.INCREMENT:
-      case Tokens.DECREMENT:
-      case Tokens.STAR:
-      case Tokens.SLASH:
-      case Tokens.PERCEN:
-      case Tokens.ADD_ASSIGN:
-      case Tokens.MINUS_ASSIGN:
-      case Tokens.MULT_ASSIGN:
-      case Tokens.DIV_ASSIGN:
-      case Tokens.MOD_ASSIGN:
-      case Tokens.BANG:
-      case Tokens.NOT:
-      case Tokens.AS:
-      case Tokens.NEW:
-      case Tokens.DROP:
-      case Tokens.IN:
-      case Tokens.AND:
-      case Tokens.OR:
-      case Tokens.INSTANCEOF:
-      case Tokens.LESS:
-      case Tokens.GREATER:
-      case Tokens.LESS_EQUAL:
-      case Tokens.GREAT_EQUAL:
-      case Tokens.EQUALS:
-      case Tokens.NOT_EQUALS:
-      case Tokens.LSQRBR:
-      case Tokens.LPAREN:
-      case Tokens.RSQRBR:
-      case Tokens.RPAREN:
-      case Tokens.AMPER:
-      case Tokens.MOD_ACCESSOR:
-      case Tokens.DOT:
-      case Tokens.EQUAL:
-      case Tokens.SLICE:
-      case Tokens.COMMA: */
+    switch (this.currentTok.type) {
+      case Tokens.IDENTIFIER: return new ast.expressions.Identifier(this.currentTok.content, this.Position)
+      case Tokens.STRING:     return new ast.expressions.String(this.currentTok.content, this.Position)
+      case Tokens.NUMBER:     return new ast.expressions.Numeric(parseInt(this.currentTok.content), this.Position)
+      case Tokens.CHAR:       return new ast.expressions.Char(this.currentTok.content, this.Position)
     }
 
-    this.syntaxError(`Unknown literal value '${literal.content}'`)
+    this.syntaxError(`Unknown literal value '${this.currentTok.content}'`)
   }
 
   private parseExpression(prevExpr?: ast.expressions.Expression, prevOp?: Token): ast.expressions.Expression {
-    let expr = this.parseLiteral()
-    let op = this.next()
+    let expr = this.parseOperand()
+    const op = this.next()
 
     // If the end of the expression is reached, then returns the parsed expression until now
-    if (op.is(Tokens.SEMICOLON) && this.eat(Tokens.SEMICOLON)) {
+    if (this.isEndOfExpr(op)) {
       if (prevOp)
-        return new ast.expressions.Binary(prevOp.content, prevExpr!, expr, this.Position)
+        return new ast.expressions.Binary(prevOp, prevExpr!, expr, this.Position)
       
       return expr
     }
 
-    if (prevOp && prevOp.Precedence < op.Precedence) {
-      // If the previous operator was provided, then a valid previous expression
-      // has also been passed
-      return new ast.expressions.Binary(prevOp.content, prevExpr!, expr, this.Position)
+    this.eat(op.type)
+
+    if (prevOp) {
+      if (prevOp.Precedence < op.Precedence) {
+        // If the previous operator was provided, then a valid previous expression
+        // has also been passed
+        expr = new ast.expressions.Binary(prevOp, prevExpr!, expr, this.Position);
+        return this.parseExpression(expr, op)
+      }
+
+      return new ast.expressions.Binary(prevOp, prevExpr!, this.parseExpression(expr, op), this.Position)
     }
 
-    this.next()
-    expr = this.parseExpression(expr, op)
-
-    if (this.currentTok.isOperator()) {
-      op = this.currentTok
-
-      this.next()
-      expr = new ast.expressions.Binary(op.content, expr, this.parseExpression(), this.Position)
-    }
-
-    return expr
+    return this.parseExpression(expr, op)
   }
 
   public parse(): ASTNode {
