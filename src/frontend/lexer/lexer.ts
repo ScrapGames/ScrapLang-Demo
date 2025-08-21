@@ -202,11 +202,6 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
 
   // ===== LEXER FUNCTIONS =====
 
-  public setTo(pos: Position): Position {
-    this.moveN(pos.idx)
-    return this.position
-  }
-
   /**
    * Consumes end-of-line characters (`\r`, `\n`).
    * Updates line counters accordingly.
