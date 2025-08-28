@@ -1,8 +1,7 @@
-fn main(...test) {
-  const verdad=-2::++3;
+fn main() {
+  dissipate fn() -> {
+    const name = "Raxabi";
+  }
+
+  const num = 3;
 }
-
-p
-
-
-class Test {}
