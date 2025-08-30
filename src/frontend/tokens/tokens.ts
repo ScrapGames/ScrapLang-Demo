@@ -55,12 +55,38 @@ export enum Tokens {
 
   // OPERATORS
   operators_open,
-    // ARITHMETIC
-      PLUS,   // +
-      MINUS,  // -
-      STAR,   // *
-      SLASH,  // /
-      PERCEN, // %
+    bin_open,
+      PLUS,         // +
+      MINUS,        // -
+      STAR,         // *
+      SLASH,        // /
+      PERCEN,       // %
+      IN,           // in
+      AND,          // and
+      EXPLICIT_AND, // and!
+      OR,           // or
+      EXPLICIT_OR,  // or!
+      INSTANCEOF,   // instanceof
+      LESS,         // <
+      GREATER,      // >
+      DOT,          // .
+      compounds_open,
+        INCREMENT,    // ++
+        DECREMENT,    // --
+        ADD_ASSIGN,   // +=
+        MINUS_ASSIGN, // -=
+        MULT_ASSIGN,  // *=
+        DIV_ASSIGN,   // /=
+        MOD_ASSIGN,   // %=
+        LESS_EQUAL,   // <=
+        GREAT_EQUAL,  // >=
+        EQUALS,       // ==
+        NOT_EQUALS,   // !=
+        MOD_ACCESSOR, // ::
+        SLICE,        // ..
+        SPREAD,       // ...
+      compounds_close,
+    bin_close,
 
     // BOOLEAN
       BANG, // !
@@ -68,43 +94,19 @@ export enum Tokens {
       AS,
       NEW,
       DROP,
-      IN,
-      EXPLICIT_AND,
-      OR,
-      INSTANCEOF,
-      LESS,
-      EXPLICIT_OR,  // ACCESS
+
+    // ACCESS
       // UNARY
         LSQRBR,
         LPAREN,
         RSQRBR,
         RPAREN,
         AMPER,
-      // BINARY
-        DOT,
 
     // WITHOUT CLASSIFICATION
       EQUAL,
       COMMA,
   operators_close,
-
-  // COMPOUND TOKENS
-  compounds_open,
-    INCREMENT,    // ++
-    DECREMENT,    // --
-    ADD_ASSIGN,   // +=
-    MINUS_ASSIGN, // -=
-    MULT_ASSIGN,  // *=
-    DIV_ASSIGN,   // /=
-    MOD_ASSIGN,   // %=
-    LESS_EQUAL,   // <=
-    GREAT_EQUAL,  // >=
-    EQUALS,       // ==
-    NOT_EQUALS,   // !=
-    MOD_ACCESSOR, // ::
-    SLICE,        // ..
-    SPREAD,       // ...
-  compounds_close,
 
   // LITERAL TOKENS
   literals_open,
@@ -233,6 +235,10 @@ export const TOKEN_MAP = new Map([
   [Tokens.SLICE,        ".."],
   [Tokens.SPREAD,       "..."],
 
+  // WITHOUT CLASSIFICATION
+  [Tokens.EQUAL, "="],
+  [Tokens.COMMA, ","],
+
   // ========================
   // LITERALS
   // ========================
@@ -349,7 +355,7 @@ export class Token {
     return this.content === maybe
   }
 
-  public isCompounded(): boolean {
+  public isCompoundedOp(): boolean {
     return this.type > Tokens.compounds_open && this.type < Tokens.compounds_close
   }
 
