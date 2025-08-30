@@ -48,6 +48,9 @@ export enum Tokens {
     GETTER,
     ASYNC,
     AWAIT,
+    DISSIPATE,
+    INLINE,
+    IMPL,
   keywords_close,
 
   // OPERATORS
@@ -66,13 +69,11 @@ export enum Tokens {
       NEW,
       DROP,
       IN,
-      AND,
+      EXPLICIT_AND,
       OR,
       INSTANCEOF,
       LESS,
-      GREATER,
-
-    // ACCESS
+      EXPLICIT_OR,  // ACCESS
       // UNARY
         LSQRBR,
         LPAREN,
@@ -114,8 +115,9 @@ export enum Tokens {
   literals_close,
 
   IDENTIFIER,
-  COLON,
+  ARROW,
   SEMICOLON,
+  COLON,
   UNDERSCORE,
   QUESTION,
   LBRACE,
@@ -169,6 +171,9 @@ export const TOKEN_MAP = new Map([
   [Tokens.GETTER,     "getter"],
   [Tokens.ASYNC,      "async"],
   [Tokens.AWAIT,      "await"],
+  [Tokens.DISSIPATE,  "dissipate"],
+  [Tokens.INLINE,     "inline"],
+  [Tokens.IMPL,       "impl"],
 
   // ========================
   // OPERATORS
@@ -182,17 +187,19 @@ export const TOKEN_MAP = new Map([
   [Tokens.PERCEN, "%"],
 
   // BOOLEAN
-  [Tokens.BANG,       "!"],
-  [Tokens.NOT,        "not"],
-  [Tokens.AS,         "as"],
-  [Tokens.NEW,        "new"],
-  [Tokens.DROP,       "drop"],
-  [Tokens.IN,         "in"],
-  [Tokens.AND,        "and"],
-  [Tokens.OR,         "or"],
-  [Tokens.INSTANCEOF, "instanceof"],
-  [Tokens.LESS,       "<"],
-  [Tokens.GREATER,    ">"],
+  [Tokens.BANG,         "!"],
+  [Tokens.NOT,          "not"],
+  [Tokens.AS,           "as"],
+  [Tokens.NEW,          "new"],
+  [Tokens.DROP,         "drop"],
+  [Tokens.IN,           "in"],
+  [Tokens.AND,          "and"],
+  [Tokens.EXPLICIT_AND, "and!"],
+  [Tokens.OR,           "or"],
+  [Tokens.EXPLICIT_OR,  "or!"],
+  [Tokens.INSTANCEOF,   "instanceof"],
+  [Tokens.LESS,         "<"],
+  [Tokens.GREATER,      ">"],
 
   // ACCESS
   // UNARY
@@ -237,6 +244,7 @@ export const TOKEN_MAP = new Map([
   // ========================
   // IDENTIFIERS & SYMBOLS
   // ========================
+  [Tokens.ARROW,      "->"],
   [Tokens.IDENTIFIER, "IDENTIFIER"],
   [Tokens.COLON,      ":"],
   [Tokens.SEMICOLON,  ";"],
@@ -293,11 +301,16 @@ export const KEYWORD_MAP = new Map([
   ["getter",     Tokens.GETTER],
   ["async",      Tokens.ASYNC],
   ["await",      Tokens.AWAIT],
+  ["dissipate",  Tokens.DISSIPATE],
+  ["inline",     Tokens.INLINE],
+  ["impl",       Tokens.IMPL],
 
   // operator which are words
   ["in",         Tokens.IN],
   ["and",        Tokens.AND],
+  ["and!",       Tokens.EXPLICIT_AND],
   ["or",         Tokens.OR],
+  ["or!",        Tokens.EXPLICIT_OR],
   ["not",        Tokens.NOT],
   ["instanceof", Tokens.INSTANCEOF],
   ["as",         Tokens.AS],
