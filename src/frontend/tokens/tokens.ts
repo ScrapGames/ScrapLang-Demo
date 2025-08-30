@@ -375,9 +375,15 @@ export class Token {
     return this.is(Tokens.EOF)
   }
 
-  public get TypeContent() { return TOKEN_MAP.get(this.type)! }
+  public get opRules(): { prec: number, assoc: "left" | "right" } | undefined {
+    const assoc = this.Associativity
+    if (!assoc)
+      return undefined
 
-  public get Precedence(): number {
+    return { prec: this.Precedence!, assoc: assoc }
+  }
+
+  private get Precedence(): number | undefined {
     // unary and grouping operators are not included here since them are
     // instantly parsed before any binary operator
     switch (this.type) {
@@ -410,26 +416,45 @@ export class Token {
       case Tokens.OR:           // or
         return 6
 
+      case Tokens.SLICE:        // ..
+        return 7
+
       case Tokens.EQUAL:        // =
       case Tokens.ADD_ASSIGN:   // +=
       case Tokens.MINUS_ASSIGN: // -=
       case Tokens.MULT_ASSIGN:  // *=
       case Tokens.DIV_ASSIGN:   // /=
       case Tokens.MOD_ASSIGN:   // %=
-        return 7
+        return 8
 
-      case Tokens.SLICE:        // ..
       case Tokens.AS:           // as
       case Tokens.INSTANCEOF:   // instanceof
       case Tokens.IN:           // in
-        return 8
-
-      case Tokens.COMMA: // ,
         return 9
 
-      default: break
+      case Tokens.COMMA: // ,
+        return 10
     }
 
-    return -1 // No es un operador reconocido
+    return undefined
   }
+
+  private get Associativity(): ("left" | "right") | undefined {
+    if (!(this.type > Tokens.bin_open && this.type < Tokens.bin_close))
+      return undefined
+
+    switch (this.type) {
+      case Tokens.EQUAL:        // =
+      case Tokens.ADD_ASSIGN:   // +=
+      case Tokens.MINUS_ASSIGN: // -=
+      case Tokens.MULT_ASSIGN:  // *=
+      case Tokens.DIV_ASSIGN:   // /=
+      case Tokens.MOD_ASSIGN:   // %=
+        return "right"
+    }
+
+    return "left"
+  }
+
+  public get TypeContent() { return stringify(this.type)! }
 }
