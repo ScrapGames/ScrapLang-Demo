@@ -343,8 +343,8 @@ export class Token {
     this.position = position
   }
   
-  public static createToken(type: Tokens, pos: Position, content?: string): Token {
-    return new this(type, content ?? TOKEN_MAP.get(type)!, pos.copy())
+  public static createToken(type: Tokens, pos: Position, content: string): Token {
+    return new this(type, content, pos.copy())
   }
 
   public is(maybe: Tokens): boolean {
