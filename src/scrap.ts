@@ -1,6 +1,6 @@
 import { parseArgs } from "@std/cli"
 
-import { CLIError } from "@errors"
+import { CLIError } from "@/errors.ts"
 import Lexer from "@frontend/lexer/lexer.ts"
 import Parser from "@frontend/parser/index.ts"
 

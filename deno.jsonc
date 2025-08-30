@@ -14,12 +14,6 @@
 
     "@/":          "./src/",
     "@frontend/": "./src/frontend/",
-    "@engine/":   "./src/engine/",
-    "@lang/":     "./src/lang/",
-    "@repl":      "./src/repl.ts",
-    "@scrap":     "./src/scrap.ts",
-    "@typings":   "./src/typings.ts",
-    "@utils":     "./src/utils.ts",
-    "@errors":    "./src/errors.ts"
+    "@engine/":   "./src/engine/"
   }
 }

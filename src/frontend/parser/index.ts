@@ -1,3 +1,4 @@
+import { SyntaxError } from "@/errors.ts"
 import { Position } from "@frontend/position.ts"
 
 // TOKENS

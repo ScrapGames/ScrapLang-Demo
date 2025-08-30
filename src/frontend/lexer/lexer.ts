@@ -13,7 +13,7 @@
 import { Position } from "@frontend/position.ts"
 import { KEYWORD_MAP, RTOKEN_MAP, Token, Tokens } from "@frontend/tokens/tokens.ts"
 
-import { isAlpha, isNumeric, isAlphaNum, isSpace, isEOL } from "@utils"
+import { isAlpha, isNumeric, isAlphaNum, isSpace, isEOL } from "@/utils.ts"
 import { Collectable, Reader } from "@frontend/typings.ts"
 
 /**
