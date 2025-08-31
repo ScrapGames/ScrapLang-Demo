@@ -280,32 +280,29 @@ export default class Parser implements Reader<Token, Tokens> {
     this.syntaxError(`Unknown literal value '${this.currentTok.content}'`)
   }
 
-  private parseExpression(prevExpr?: ast.expressions.Expression, prevOp?: Token): ast.expressions.Expression {
-    let expr = this.parseOperand()
-    const op = this.next()
+  private parseExpression(expr?: ast.expressions.ExpressionNode, prevOp?: Token): ast.expressions.ExpressionNode {
+    const start = this.Position
+    if (!expr)
+      expr = this.parseLiteral()
 
-    // If the end of the expression is reached, then returns the parsed expression until now
-    if (this.isEndOfExpr(op)) {
-      if (prevOp)
-        return new ast.expressions.Binary(prevOp, prevExpr!, expr, this.Position)
-      
-      return expr
-    }
+    while (true) {
+      const op      = this.current
+      const opRules = op.opRules
+      if (!opRules)
+        return expr
 
-    this.eat(op.type)
-
-    if (prevOp) {
-      if (prevOp.Precedence < op.Precedence) {
-        // If the previous operator was provided, then a valid previous expression
-        // has also been passed
-        expr = new ast.expressions.Binary(prevOp, prevExpr!, expr, this.Position);
-        return this.parseExpression(expr, op)
+      if (prevOp) {
+        const prevOpRules = prevOp.opRules!
+        const higherPrec  = prevOpRules.prec < opRules.prec
+        const leftAssoc   = prevOpRules.prec === opRules.prec && opRules.assoc === "left"
+        if (higherPrec || leftAssoc)
+          return expr
       }
 
-      return new ast.expressions.Binary(prevOp, prevExpr!, this.parseExpression(expr, op), this.Position)
+      this.next()
+      const rhs = this.parseExpression(undefined, op)
+      expr = new ast.expressions.Binary(op, expr, rhs, start, this.Position)
     }
-
-    return this.parseExpression(expr, op)
   }
 
   public parse(): ASTNode {
