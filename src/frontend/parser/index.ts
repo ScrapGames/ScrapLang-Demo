@@ -436,30 +436,36 @@ export default class Parser implements Reader<Token, Tokens> {
   }
   // ----- EXPRESSION PARSING ----- //
 
+  private parseDefaultStatement(start: Position): ast.statements.Default {
+    this.eat(Tokens.ARROW)
+    const stmt: ast.statements.StatementNode[] = []
+    if (!this.wheter(Tokens.LBRACE))
+      stmt.push(this.parseStatement(this.Position))
+    else
+      stmt.concat(this.parseBlock(start))
+
+    return new ast.statements.Default(stmt, start, this.Position)
+  }
+
   /**
    * Parses a case/default statement inside a match block.
    * @param start Start position.
    * @returns Case or Default AST node.
    */
-  private parseCaseStatement(start: Position): ast.statements.StatementNode {
-    const isDefault = !!(this.wheter(Tokens.DEFAULT) && this.eat(Tokens.ARROW))
+  private parseCaseStatement(start: Position): ast.statements.Case | ast.statements.Default {
+    const isDefault = !!(this.wheter(Tokens.DEFAULT))
+    if (isDefault)
+      return this.parseDefaultStatement(start)
 
-    if (isDefault) {
-      if (!this.wheter(Tokens.LBRACE))
-        return new ast.statements.Default([this.parseStatement(this.Position)], start, this.Position)
-
-      const body = this.parseBlock(this.Position)
-      return new ast.statements.Default(body, start, this.Position)
-    }
-
-    const cmp = this.parseExpression()
+    const stmt: ast.statements.StatementNode[] = []
+    const subject = this.parseExpression()
     this.eat(Tokens.ARROW)
     if (!this.wheter(Tokens.LBRACE))
-      return new ast.statements.Case(cmp, [this.parseStatement(this.Position)], start, this.Position)
-
-    const body = this.parseBlock(start)
-    this.eat(Tokens.RBRACE)
-    return new ast.statements.Case(cmp, body, start, this.Position)
+      stmt.push(this.parseStatement(this.Position))
+    else
+      stmt.concat(this.parseBlock(start))
+    
+    return new ast.statements.Case(subject, stmt, start, this.Position)
   }
 
   /**
@@ -476,14 +482,13 @@ export default class Parser implements Reader<Token, Tokens> {
     let fallThrough: Undefinedable<ast.statements.Default> = undefined
     while (!this.current.is(Tokens.RBRACE)) {
       const stmt = this.parseCaseStatement(this.Position)
-      if (fallThrough)
-        this.syntaxError("A default statement has been already declared")
-      else if (stmt.kind === ast.statements.StatementKind.Default)
-        fallThrough = stmt as ast.statements.Default
-      else
-        body.push(stmt as ast.statements.Case)
+      switch (true) {
+        case !!fallThrough: this.syntaxError("A default statement has been already declared"); break
+        case stmt.kind === ast.statements.StatementKind.Default: fallThrough = stmt as ast.statements.Default; break
+        default: body.push(stmt as ast.statements.Case); break
+      }
 
-      this.wheter(Tokens.COMMA) // this allows trailing comma
+      this.wheter(Tokens.COMMA) // this allows trailing comma, because only eats them if they exist
     }
 
     this.eat(Tokens.RBRACE)
