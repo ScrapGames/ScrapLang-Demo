@@ -3,7 +3,7 @@ import { Undefinedable } from "@/typings.ts"
 
 import { Position } from "@frontend/position.ts"
 import type { Reader } from "@frontend/typings.ts"
-import { Token, Tokens, TOKEN_MAP } from "@frontend/tokens/tokens.ts"
+import { Token, Tokens, TOKEN_MAP, stringify } from "@frontend/tokens/tokens.ts"
 import Lexer from "@frontend/lexer/lexer.ts"
 import { FunctionFlags } from "@frontend/ast/nodes/unclassified.ts"
 import * as ast from "@frontend/ast/nodes/index.ts"
@@ -115,15 +115,14 @@ export default class Parser implements Reader<Token, Tokens> {
   /**
    * Ensures the next token matches the expected type, otherwise throws a syntax error.
    * @param expected Expected token type.
-   * @param message Error message if expectation fails.
    * @returns The next token.
    */
-  private expects(expected: Tokens, message: string) {
+  private expects(expected: Tokens) {
     const nextToken = this.next()
     if (nextToken.type === expected)
       return nextToken
 
-    this.syntaxError(`${message}\nFound ${TOKEN_MAP.get(nextToken.type)}`)
+    this.syntaxError(`Found ${stringify(nextToken.type)}, expected ${stringify(expected)}`)
   }
 
   /**
@@ -133,7 +132,7 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private eat(type: Tokens): Token {
     if (!this.current.is(type)) {
-      const expected = TOKEN_MAP.get(type)
+      const expected = stringify(type)
       const found    = this.current.TypeContent
       this.syntaxError(`Missing '${expected}', found '${found}'`)
     }
