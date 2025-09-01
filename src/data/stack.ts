@@ -1,19 +1,13 @@
-export default class Stack<T> {
-  private storage: T[] = [];
+export default interface Stack<T> {
+  storage: T[]
 
-  push(item: T): void {
-    this.storage.push(item);
-  }
+  push(item: T): number;
 
-  pop(): T | undefined {
-    return this.storage.pop();
-  }
+  pop(): T;
 
-  peek(): T | undefined {
-    return this.storage[this.size() - 1];
-  }
+  peek(): T;
 
-  size(): number {
-    return this.storage.length;
-  }
+  peekIs(maybe: T): boolean;
+
+  size(): number;
 }

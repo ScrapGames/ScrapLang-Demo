@@ -1,7 +1,12 @@
-fn main() {
-  dissipate fn() -> {
-    const name = "Raxabi";
-  }
+from std import io, audio
 
-  const num = 3;
+async fn main() {
+  dissipate fn() -> std::print("¡Limpiando memoria al salir!")
+
+  std::print("¡Vamos a abrir un archivo!")
+  const file   = await io::open("./main.scrap")
+  const opened = match file {
+    null    -> false,
+    default -> true
+  }
 }

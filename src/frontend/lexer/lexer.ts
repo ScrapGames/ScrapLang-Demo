@@ -10,8 +10,9 @@
  * If the Lexer encounters an invalid token, it will throw an error.
  */
 
+import { basename } from "@std/path/basename"
 import { Position } from "@frontend/position.ts"
-import { KEYWORD_MAP, RTOKEN_MAP, Token, Tokens } from "@frontend/tokens/tokens.ts"
+import { KEYWORD_MAP, TOKEN_MAP, RTOKEN_MAP, Token, Tokens } from "@frontend/tokens/tokens.ts"
 
 import { isAlpha, isNumeric, isAlphaNum, isSpace, isEOL } from "@/utils.ts"
 import { Collectable, Reader } from "@frontend/typings.ts"
@@ -33,6 +34,9 @@ enum ScanMode {
 export default class Lexer implements Collectable<Token>, Reader<string> {
   /** Source file being scanned */
   private file: Deno.FsFile
+
+  /** Source file name */
+  public name: string
   
   /** UTF-8 decoder to interpret raw bytes as text */
   private decoder: TextDecoder
@@ -47,7 +51,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
   private position: Position
 
   /** Current character being processed by the Lexer */
-  currentTok: string
+  current: string
 
   /**
    * Private constructor: initializes the Lexer with the given file path.
@@ -59,6 +63,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     this.decoder = new TextDecoder("utf8")
     this.file = Deno.openSync(filePath)
     this.eof = false
+    this.name = basename(filePath)
   }
 
   /**
@@ -86,16 +91,14 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
    */
   private createToken(
     tok: Tokens,
-    opts: Partial<{ content: string, pos: Position, advance: boolean }> = { advance: true }
+    opts: Partial<{ content: string, pos: Position, advance: boolean }> = {}
   ): Token {
-    const t = Token.createToken(tok, opts.pos ?? this.Position, opts.content);
-
-    if ((opts.advance ?? true) && t.isCompounded())
+    const t = Token.createToken(tok, opts.pos ?? this.Position, opts.content ?? TOKEN_MAP.get(tok)!);
+    opts.advance ??= true
+    if (!opts.advance)
       return t
 
-    if ((opts.advance ?? true) && this.next())
-      return t
-
+    this.next()
     return t
   }
 
@@ -108,7 +111,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
   private createTokenFromStr(content: string, opts?: Partial<{ pos: Position, advance: boolean }>) {
     const type = RTOKEN_MAP.get(content)
     if (!type)
-      return Token.createToken(Tokens.UNKNOWN, this.Position, content)
+      return this.createToken(Tokens.UNKNOWN, { content })
 
     return this.createToken(type, opts)
   }
@@ -128,10 +131,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
    * @returns Array of tokens
    */
   collect(): Token[] {
-    const tokens: Token[] = []
-    while (!this.hasEnd())
-      tokens.push(this.scan())
-    return tokens
+    return Array.from(this)
   }
 
   // ===== READER FUNCTIONS =====
@@ -157,7 +157,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
       throw new Error("Backward movement is not allowed at the beginning of the file")
 
     if (this.hasEnd())
-      return this.currentTok
+      return this.current
 
     this.file.seekSync(n > 0 ? n - 1 : n, Deno.SeekMode.Current)
     const bytes = this.file.readSync(this.buffer)
@@ -173,7 +173,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
       this.position.lineIdx++
     }
 
-    return (this.currentTok = this.decoder.decode(this.buffer))
+    return (this.current = this.decoder.decode(this.buffer))
   }
 
   /**
@@ -181,6 +181,8 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
    * @returns The next character
    */
   ahead(): string {
+    // TODO: fix bug where if the next character is EOF
+    // Some methods who use `check` (and ahead), would return a wrong token when the next character is EOF
     return this.moveN(1, ScanMode.Check)
   }
 
@@ -207,10 +209,13 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
    * Updates line counters accordingly.
    */
   private consumeEOL() {
-    while (isEOL(this.currentTok)) {
+    while (isEOL(this.current)) {
       this.check('\n') ? this.moveN(2) : this.next()
       this.position.line++
       this.position.lineIdx = 1
+
+      if (this.hasEnd())
+        break
     }
   }
 
@@ -225,7 +230,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     this.next() // eat opening quote
 
     do {
-      content += this.currentTok
+      content += this.current
     } while (this.next() !== quoteType)
 
     this.next() // eat closing quote
@@ -242,7 +247,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     let content = ""
 
     do {
-      content += this.currentTok
+      content += this.current
     } while (isAlphaNum(this.next()) && !this.hasEnd())
 
     const type = KEYWORD_MAP.get(content) ?? Tokens.IDENTIFIER
@@ -258,7 +263,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     let content = ""
 
     do {
-      content += this.currentTok
+      content += this.current
     } while (isNumeric(this.next()) && !this.hasEnd())
 
     return this.createToken(Tokens.NUMBER, { content, pos, advance: false })
@@ -279,11 +284,11 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
 
     if (ahead === '/' && this.moveN(2)) {
       do
-        content += this.currentTok
+        content += this.current
       while (!isEOL(this.next()))
     } else if (ahead === '*' && this.moveN(2)) {
       do
-        content += this.currentTok
+        content += this.current
       while (this.next() !== '*' && !this.check('/'))
 
       this.moveN(2) // eats the closing pairs for block comments
@@ -296,7 +301,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
    * Scans `:` or `::` (module accessor).
    */
   private scanColon() {
-    if (this.check(":") && this.moveN(2))
+    if (this.check(":") && this.next())
       return this.createToken(Tokens.MOD_ACCESSOR)
 
     return this.createToken(Tokens.COLON)
@@ -316,8 +321,8 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
    * Scans `.`, `..` (slice), or `...` (spread).
    */
   private scanDot() {
-    if (this.check('.') && this.moveN(1)) {
-      if (this.check('.') && this.moveN(2))
+    if (this.check('.') && this.next()) {
+      if (this.check('.') && this.next())
         return this.createToken(Tokens.SPREAD)
 
       return this.createToken(Tokens.SLICE)
@@ -330,10 +335,16 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
    * Scans `+`, `-`, `++`, or `--`.
    */
   private scanIncrement() {
-    let type = this.currentTok === '+' ? Tokens.PLUS : Tokens.MINUS
+    const isMinus = this.current === '-'
 
-    if (this.check(this.currentTok as '+' | '-') && this.moveN(2)) {
-      type = this.currentTok === '+' ? Tokens.INCREMENT : Tokens.DECREMENT
+    if (isMinus && this.check('>')) {
+      this.moveN(2)
+      return this.createToken(Tokens.ARROW)
+    }
+
+    let type = isMinus ? Tokens.MINUS : Tokens.PLUS
+    if (this.check(this.current) && this.moveN(2)) {
+      type = this.current === '+' ? Tokens.INCREMENT : Tokens.DECREMENT
       return this.createToken(type)
     }
 
@@ -355,16 +366,16 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
    * as well as delegating scanning for multi-character tokens.
    */
   private scanSingleChar(): Token {
-    switch (this.currentTok) {
+    switch (this.current) {
       case '{': case '}':
       case '(': case ')':
       case '[': case ']':
       case ',': case ';':
       case '*': case '?':
       case '>': case '<':
-      case '&': return this.createTokenFromStr(this.currentTok)
+      case '&': return this.createTokenFromStr(this.current)
       case '\'': case '`': case '"':
-        return this.scanText(this.currentTok as ("\"" | "'" | "`"))
+        return this.scanText(this.current as ("\"" | "'" | "`"))
       case '+': case '-':
         return this.scanIncrement()
       case '=':
@@ -380,7 +391,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     }
 
     // Ignore spaces and newlines by rescanning
-    if (isSpace(this.currentTok) || isEOL(this.currentTok))
+    if (isSpace(this.current) || isEOL(this.current))
       return this.scan()
 
     return this.createToken(Tokens.UNKNOWN)
@@ -394,16 +405,16 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     if (this.hasEnd())
       return this.createToken(Tokens.EOF, { content: "EOF" })
 
-    while (isSpace(this.currentTok))
+    while (isSpace(this.current))
       this.next()
 
-    if (isEOL(this.currentTok))
+    if (isEOL(this.current))
       this.consumeEOL()
 
-    if (isAlpha(this.currentTok))
+    if (isAlpha(this.current))
       return this.scanIdentifier()
 
-    if (isNumeric(this.currentTok))
+    if (isNumeric(this.current))
       return this.scanNumber()
 
     return this.scanSingleChar()
@@ -418,6 +429,10 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
 
   public set Position(pos: Position) {
     this.position = pos
+  }
+
+  *[Symbol.iterator]() {
+
   }
 
   /**

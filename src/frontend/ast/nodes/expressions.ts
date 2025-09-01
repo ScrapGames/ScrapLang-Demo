@@ -1,341 +1,152 @@
-import { ASTNode } from "@frontend/ast/ast.ts"
-import { Position } from "@frontend/position.ts"
-import { Token } from "@frontend/tokens/tokens.ts"
+/**
+ * AST Nodes for Expressions
+ *
+ * This file defines the abstract syntax tree (AST) representation for expressions
+ * within the language. Each expression type (atomic value, identifier, string,
+ * unary operation, binary operation, function definition, match expression,
+ * function call, etc.) has its own class, all inheriting from `ExpressionNode`.
+ *
+ * These nodes are created during parsing and later used in semantic analysis,
+ * interpretation or code generation.
+ */
+
+import { Undefinedable } from "@/typings.ts"
+import { Position }      from "@frontend/position.ts"
+import { Token }         from "@frontend/tokens/tokens.ts"
+import { ASTNode }       from "@frontend/ast/ast.ts"
+import { Default, Statement }     from "@frontend/ast/nodes/statements.ts"
+import { FunctionFlags, Param } from "@frontend/ast/nodes/unclassified.ts"
 
 /**
- * Enumeration representing the kinds of expressions supported in the AST.
+ * Enum that classifies the kind of expression represented by an `ExpressionNode`.
  */
 export enum ExpressionKind {
-  Numeric,
-  Float,
-  String,
-  Char,
+  Atomic,
   Identifier,
-  Call,
-  Object,
-  Array,
-  ModAccess,
-  ObjAccess,
-  Reference,
-  Reassignment,
+  String,
   Function,
-  Boolean,
-  BinaryExpr,
-  UnaryExpr,
-  Ternary,
-  Slice,
-  Indexing,
-  Casting
+  Unary,
+  Binary,
+  Match,
+  Call
+}
+
+/**
+ * Base interface for any expression.
+ */
+export interface Expression {
+  kind: ExpressionKind
 }
 
 /**
  * Base class for all expressions in the AST.
+ * Stores the `kind` of expression and the source code positions.
  */
-export class Expression extends ASTNode {
-  public kind: ExpressionKind
-
-  /**
-   * Creates a new Expression node.
-   * @param kind - The kind of expression.
-   * @param position - Position in the source code.
-   */
-  public constructor(kind: ExpressionKind, position: Position) {
-    super(position)
-    this.kind = kind
+export class ExpressionNode extends ASTNode implements Expression {
+  public constructor(public kind: ExpressionKind, start: Position, end: Position) {
+    super(start, end)
   }
 }
 
 /**
- * Represents a numeric literal expression (e.g., integer).
+ * Represents an atomic value (literal).
+ * Examples: numbers, booleans, null.
  */
-export class Numeric extends Expression {
-  private value: number
-
-  /**
-   * @param value - Numeric literal value.
-   * @param position - Position in the source code.
-   */
-  public constructor(value: number, position: Position) {
-    super(ExpressionKind.Numeric, position)
-    this.value = value
+export class Atomic extends ExpressionNode {
+  public constructor(public value: unknown, start: Position, end: Position) {
+    super(ExpressionKind.Atomic, start, end)
   }
-
-  /** Gets the numeric value. */
-  public get Value() { return this.value }
 }
 
 /**
- * Represents a floating-point literal expression.
+ * Represents an identifier (a variable or symbol name).
  */
-export class Float extends Expression {
-  private value: number
-
-  /**
-   * @param value - Float literal value.
-   * @param position - Position in the source code.
-   */
-  public constructor(value: number, position: Position) {
-    super(ExpressionKind.Float, position)
-    this.value = value
+export class Identifier extends ExpressionNode {
+  public constructor(public symbol: string, start: Position, end: Position) {
+    super(ExpressionKind.Identifier, start, end)
   }
-
-  /** Gets the float value. */
-  public get Value() { return this.value }
 }
 
 /**
- * Represents a character literal expression.
+ * Represents a string literal.
  */
-export class Char extends Expression {
-  private value: string
-
-  /**
-   * @param value - Character value.
-   * @param position - Position in the source code.
-   */
-  public constructor(value: string, position: Position) {
-    super(ExpressionKind.Char, position)
-    this.value = value
+export class String extends ExpressionNode {
+  public constructor(public content: string, start: Position, end: Position) {
+    super(ExpressionKind.String, start, end)
   }
-
-  /** Gets the character value. */
-  public get Value() { return this.value }
 }
 
 /**
- * Represents a string literal expression.
+ * Represents a unary operation.
+ * Example: `!expr`, `-expr`
  */
-export class String extends Expression {
-  private value: string
-
-  /**
-   * @param value - String literal.
-   * @param position - Position in the source code.
-   */
-  public constructor(value: string, position: Position) {
-    super(ExpressionKind.String, position)
-    this.value = value
+export class Unary extends ExpressionNode {
+  public constructor(
+    public operator: Token,
+    public operand: Expression,
+    start: Position, end: Position
+  ) {
+    super(ExpressionKind.Unary, start, end)
   }
-
-  /** Gets the string value. */
-  public get Value() { return this.value }
 }
 
 /**
- * Represents an object literal expression.
+ * Represents a binary operation.
+ * Example: `lhs + rhs`, `lhs * rhs`
  */
-export class Object extends Expression {
-  private entries: Map<string, Expression>
-
-  /**
-   * @param entries - Map of keys and corresponding expression values.
-   * @param position - Position in the source code.
-   */
-  public constructor(entries: Map<string, Expression>, position: Position) {
-    super(ExpressionKind.Object, position)
-    this.entries = entries
+export class Binary extends ExpressionNode {
+  public constructor(
+    public operator: Token,
+    public lhs: Expression, public rhs: Expression,
+    start: Position, end: Position
+  ) {
+    super(ExpressionKind.Binary, start, end)
   }
-
-  /** Gets the object entries. */
-  public get Entries() { return this.entries }
 }
 
 /**
- * Represents access to a member
+ * Represents a function declaration or anonymous function expression.
+ * - `name`: function name (may be empty for anonymous).
+ * - `params`: function parameters.
+ * - `body`: statements or a single expression (in case of concise bodies).
  */
-export class Access extends Expression {
-  private target: Expression
-  private member: Expression
-
-  /**
-   * @param target - The object being accessed.
-   * @param member - The member accessed within the object.
-   * @param position - Position in the source code.
-   */
-  public constructor(type: ExpressionKind, target: Expression, member: Expression, position: Position) {
-    super(type, position)
-    this.target = target
-    this.member = member
+export class Function extends ExpressionNode {
+  public constructor(
+    public name: string, public params: Param[],
+    public body: Statement[], public flag: Undefinedable<FunctionFlags>,
+    start: Position, end: Position,
+  ) {
+    super(ExpressionKind.Function, start, end)
   }
-
-  /** Gets the target object. */
-  public get Target() { return this.target }
-
-  /** Gets the accessed member. */
-  public get Member() { return this.member }
 }
 
 /**
- * Represents an identifier (variable, function name, etc.).
+ * Represents a `match` expression (similar to `switch` in other languages).
+ * - `subject`: the expression to match against.
+ * - `body`: list of case clauses/statements.
  */
-export class Identifier extends Expression {
-  private symbol: string
-
-  /**
-   * @param symbol - Identifier name.
-   * @param position - Position in the source code.
-   */
-  public constructor(symbol: string, position: Position) {
-    super(ExpressionKind.Identifier, position)
-    this.symbol = symbol
+export class Match extends ExpressionNode {
+  public constructor(
+    public subjet: Expression,
+    public body: Statement[],
+    public fallThrough: Undefinedable<Default>,
+    start: Position, end: Position
+  ) {
+    super(ExpressionKind.Match, start, end)
   }
-
-  /** Gets the identifier symbol. */
-  public get Symbol() { return this.symbol }
-}
-
-/**
- * Represents an array literal expression.
- */
-export class Array<T> extends Expression {
-  private array: T[]
-
-  /**
-   * @param array - Array of expressions.
-   * @param position - Position in the source code.
-   */
-  public constructor(array: T[], position: Position) {
-    super(ExpressionKind.Array, position)
-    this.array = array
-  }
-
-  /** Gets the array elements. */
-  public get Array() { return this.array }
-}
-
-/**
- * Represents a reference to a named entity.
- */
-export class Reference extends Expression {
-  private target: string
-
-  /**
-   * @param target - Name of the referenced symbol.
-   * @param position - Position in the source code.
-   */
-  public constructor(target: string, position: Position) {
-    super(ExpressionKind.Reference, position)
-    this.target = target
-  }
-
-  /** Gets the referenced target name. */
-  public get Target() { return this.target }
 }
 
 /**
  * Represents a function call expression.
+ * - `callee`: the function being called.
+ * - `args`: list of argument expressions.
  */
-export class Call extends Expression {
-  private callee: Expression
-  private args: Expression[]
-
-  /**
-   * @param callee - Expression being called.
-   * @param args - Argument expressions.
-   * @param position - Position in the source code.
-   */
-  public constructor(callee: Expression, args: Expression[], position: Position) {
-    super(ExpressionKind.Call, position)
-    this.callee = callee
-    this.args = args
-  }
-
-  /** Gets the function or expression being called. */
-  public get Callee() { return this.callee }
-
-  /** Gets the arguments of the call. */
-  public get Args() { return this.args }
-}
-
-/**
- * Represents a unary operation (e.g., `!a`, `-b`).
- */
-export class Unary extends Expression {
-  private operator: Token
-  private operand: Expression
-
-  /**
-   * @param operator - Unary operator.
-   * @param operand - Operand expression.
-   * @param position - Position in the source code.
-   */
-  public constructor(operator: Token, operand: Expression, position: Position) {
-    super(ExpressionKind.UnaryExpr, position)
-    this.operator = operator
-    this.operand = operand
-  }
-
-  /** Gets the unary operator. */
-  public get Operator() { return this.operator }
-
-  /** Gets the operand expression. */
-  public get Operand() { return this.operand }
-}
-
-/**
- * Represents a binary operation (e.g., `a + b`, `x && y`).
- */
-export class Binary extends Expression {
-  private operator: Token
-  private lhs: Expression
-  private rhs: Expression
-
-  /**
-   * @param operator - Binary operator.
-   * @param lhs - Left-hand side expression.
-   * @param rhs - Right-hand side expression.
-   * @param position - Position in the source code.
-   */
-  public constructor(operator: Token, lhs: Expression, rhs: Expression, position: Position) {
-    super(ExpressionKind.BinaryExpr, position)
-    this.operator = operator
-    this.lhs = lhs
-    this.rhs = rhs
-  }
-
-  /** Gets the binary operator. */
-  public get Operator() { return this.operator }
-
-  /** Gets the left-hand side expression. */
-  public get LHS() { return this.lhs }
-
-  /** Gets the right-hand side expression. */
-  public get RHS() { return this.rhs }
-}
-
-/**
- * Represents array indexing access (e.g., `arr[0]`).
- */
-export class Indexing extends Expression {
-  private target: Expression
-  private index: Expression
-
-  /**
-   * @param target - The array or structure being indexed.
-   * @param index - The index expression.
-   * @param position - Position in the source code.
-   */
-  public constructor(target: Expression, index: Expression, position: Position) {
-    super(ExpressionKind.Indexing, position)
-    this.target = target
-    this.index = index
-  }
-
-  /** Gets the target being indexed. */
-  public get Target() { return this.target }
-
-  /** Gets the index expression. */
-  public get Index() { return this.index }
-}
-
-/**
- * Represents an inline or anonymous function expression.
- */
-export class Function extends Expression {
-  /**
-   * @param position - Position in the source code.
-   */
-  public constructor(position: Position) {
-    super(ExpressionKind.Function, position)
+export class Call extends ExpressionNode {
+  public constructor(
+    public callee: Expression,
+    public args: Expression[],
+    start: Position, end: Position
+  ) {
+    super(ExpressionKind.Call, start, end)
   }
 }

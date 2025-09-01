@@ -1,285 +1,649 @@
 import { SyntaxError } from "@/errors.ts"
+import { Undefinedable } from "@/typings.ts"
+
 import { Position } from "@frontend/position.ts"
-
-// TOKENS
-import { Token, Tokens, TOKEN_MAP } from "@frontend/tokens/tokens.ts"
-
-// READER INTERFACE
 import type { Reader } from "@frontend/typings.ts"
-
-// LEXER
+import { Token, Tokens, TOKEN_MAP } from "@frontend/tokens/tokens.ts"
 import Lexer from "@frontend/lexer/lexer.ts"
-
-// CONTEXT
-import Context, { ContextType } from "@frontend/parser/context.ts"
-
-// AST
+import { FunctionFlags } from "@frontend/ast/nodes/unclassified.ts"
 import * as ast from "@frontend/ast/nodes/index.ts"
-import { ASTNode } from "@frontend/ast/ast.ts"
 
-import { SyntaxError } from "@errors"
-
-
+/**
+ * Parser class responsible for converting a stream of tokens
+ * from the lexer into an Abstract Syntax Tree (AST).
+ *
+ * It implements the Reader interface and provides methods to parse
+ * declarations, statements and expressions
+ */
 export default class Parser implements Reader<Token, Tokens> {
+  /**
+   * The lexer instance used to generate tokens from the source code.
+   */
   private lexer: Lexer
-  private context: Context
-  currentTok: Token
 
+  /**
+   * The current token being processed by the parser.
+   */
+  current: Token
+
+  /**
+   * Creates a new parser instance with a given lexer.
+   * @param lexer The lexer providing tokens.
+   */
   private constructor(lexer: Lexer) {
     this.lexer = lexer
-    this.context = new Context(ContextType.MODULE)
   }
 
+  /**
+   * Initializes a new Parser instance.
+   * @param lexer The lexer providing tokens.
+   * @returns A new Parser object.
+   */
   public static init(lexer: Lexer) {
     const p = new this(lexer)
-    p.next()
-
     return p
   }
 
   /**
-   * Causes the program stop showing an error message
-   * @param message Error message
+   * Throws a syntax error with detailed position information.
+   * @param message Error message.
+   * @throws {SyntaxError}
    */
   public syntaxError(message: string): never {
-    throw new SyntaxError(message, "MODULE", this.currentTok.position)
+    throw new SyntaxError(message, this.lexer.name, this.current.position)
   }
 
   /**
-   * Prints a warning in console
-   * @param message Warning message
+   * Prints a syntax warning to the console.
+   * @param message Warning message.
    */
   public syntaxWarn(message: string): void {
     console.warn(message)
   }
 
+  /**
+   * Consumes and returns the next token.
+   * @returns The next token.
+   */
   next(): Token {
-    return this.nextN(1)
+    return this.moveN(1)
   }
 
-  nextN(n: number): Token {
+  /**
+   * Moves forward by `n` tokens.
+   * Skips comments automatically.
+   * @param n Number of tokens to advance.
+   * @returns The last token consumed.
+   */
+  moveN(n: number): Token {
     for (let i = 0; i < n; i++)
-      this.currentTok = this.lexer.scan()
+      this.current = this.lexer.scan()
 
-    return this.currentTok
+    if (this.current.is(Tokens.COMMENT))
+      return this.moveN(n)
+
+    return this.current
   }
 
+  /**
+   * Returns the current token without consuming it.
+   * @returns The current token.
+   */
   ahead(): Token {
-    const pos = this.Position
-    const tok = this.lexer.scan()
-
-    this.setTo(pos)
-    return tok
+    return this.current
   }
 
+  /**
+   * Checks if the lexer has reached the end of the input.
+   * @returns True if the end of input is reached, otherwise false.
+   */
   hasEnd(): boolean {
     return this.lexer.hasEnd()
   }
 
-  setTo(newPos: Position): void {
-    this.lexer.setTo(newPos)
-  }
-
+  /**
+   * Checks if the current token matches the given type.
+   * @param maybe Token type to compare.
+   * @returns True if it matches, otherwise false.
+   */
   check(maybe: Tokens): boolean {
     return this.lexer.check(TOKEN_MAP.get(maybe)!)
   }
 
+  // ===== HELPER FUNCTIONS =====
+
   /**
-   * Consumes the current token advancing in the `lexer source` and checks if the actual token after the advancement is equals to `shouldBe`
-   * @param expected Token to compare with `currentTok`
-   * @param message Error message if `currenTok.content` is not equal to `shouldBe`
-   * @throws `ParsingError` if `currenTok.content` is not equal to `shouldBe`
-   * @returns The next token in the source
+   * Ensures the next token matches the expected type, otherwise throws a syntax error.
+   * @param expected Expected token type.
+   * @param message Error message if expectation fails.
+   * @returns The next token.
    */
   private expects(expected: Tokens, message: string) {
     const nextToken = this.next()
     if (nextToken.type === expected)
       return nextToken
-      
-    this.syntaxError(message)
+
+    this.syntaxError(`${message}\nFound ${TOKEN_MAP.get(nextToken.type)}`)
   }
 
   /**
-   * Safety syntactic sugar of `next`
-   * @param type `Tokens` value which correspond to the current token
-   * @returns The next token in the source
+   * Consumes the current token if it matches the expected type, otherwise throws.
+   * @param type Token type to expect.
+   * @returns The consumed token.
    */
   private eat(type: Tokens): Token {
-    if (!this.currentTok.is(type))
-      this.syntaxError(`The current token was supposed to be a '${TOKEN_MAP.get(type)}' but a '${TOKEN_MAP.get(this.currentTok.type)}' was encountered`)
+    if (!this.current.is(type)) {
+      const expected = TOKEN_MAP.get(type)
+      const found    = this.current.TypeContent
+      this.syntaxError(`The current token was supposed to be a '${expected}' but a '${found}' was encountered`)
+    }
 
-    const current = this.currentTok
+    const current = this.current
     this.next()
 
     return current
   }
 
-  private parseModule(): ast.declarations.Module {
-    if (this.context.Type !== ContextType.MODULE)
-      this.syntaxError("A module only can be declared inside another module")
+  /**
+   * Conditionally consumes the current token if it matches the expected type.
+   * @param type Token type to check.
+   * @returns The consumed token or undefined.
+   */
+  private wheter(type: Tokens): Token | undefined {
+    if (!this.current.is(type))
+      return undefined
 
-    this.eat(Tokens.MODULE)
-    const name = this.eat(Tokens.IDENTIFIER).content
-
-    this.eat(Tokens.LBRACE)
-    const body: ast.declarations.Declaration[] = []
-    while (!this.currentTok.is(Tokens.RBRACE)) {
-      body.push(this.parseDeclaration())
-    }
-
-    return new ast.declarations.Module(name, body, this.Position)
+    return this.eat(type)
   }
 
-  private parseClass(): ast.declarations.Class {
-    if (this.context.Type !== ContextType.MODULE)
-      this.syntaxError("A class only can be declared inside a module")
+  // ===== UNCLASSIFIED PARSING =====
 
-    this.eat(Tokens.CLASS)
-    const name = this.eat(Tokens.IDENTIFIER).content
-
-    this.eat(Tokens.LBRACE)
-    while (!this.currentTok.is(Tokens.RBRACE)) {
-      this.next()
-    }
-
-    this.eat(Tokens.RBRACE)
-
-    return new ast.declarations.Class(name, [], this.Position)
-  }
-
-  private parseVar(): ast.declarations.Variable {
-    const isConst = this.currentTok.is(Tokens.CONST)
-    this.eat(Tokens.VAR | Tokens.CONST)
-
-    const name = this.eat(Tokens.IDENTIFIER).content
-
-    this.eat(Tokens.EQUAL)
-    const value = this.parseExpression()
-
-    return new ast.declarations.Variable(name, isConst, value, this.Position)
+  /**
+   * Parses the root file/module.
+   * @returns The AST node representing a module.
+   */
+  public parseFile(): ast.declarations.Module {
+    return new ast.declarations.Module(
+      [this.parseDecl(this.Position)],
+      this.lexer.name,
+      new Position(1, 1, 0),
+      this.Position
+    )
   }
 
   /**
-   * TODO: Make the type parsing
-   * @returns
+   * Parses a function (declaration or expression).
+   * @param start Starting position.
+   * @returns A Function AST node.
    */
-  private parseType(): ast.declarations.Type {
-    this.syntaxWarn(`${this.currentTok.content} yet not supported`)
+  private parseFunction(start: Position): ast.declarations.Function | ast.expressions.Function {
+    const [flag, name, params, isAnon, hasArrow] = this.parseFunctionSign()
+    const isExpr = isAnon || hasArrow
+    if (isExpr)
+      return this.parseFunctionExpr(start, flag, name, params, hasArrow)
 
-    if (this.context.Type !== ContextType.MODULE)
-      this.syntaxError("A type only can be declared inside a module")
+    return this.parseFunctionDecl(start, flag, name, params)
+  }
 
+  /**
+   * Parses a block of statements enclosed in braces.
+   * @param start Starting position.
+   * @returns Array of statement AST nodes.
+   */
+  private parseBlock(start: Position): ast.statements.StatementNode[] {
+    const body: ast.statements.StatementNode[] = []
+    
+    while (!this.current.is(Tokens.RBRACE))
+      body.push(this.parseStatement(start))
+
+    return body
+  }
+
+  // ===== DECLARATION PARSING =====
+
+  /**
+   * Parses a class declaration.
+   * @param start Starting position.
+   * @returns Class AST node.
+   */
+  private parseClass(start: Position): ast.declarations.Class {
+    const name = this.eat(Tokens.IDENTIFIER).content
+
+    do
+      this.next()
+    while (!this.current.is(Tokens.RBRACE))
+
+    return new ast.declarations.Class([], name, start, this.Position)
+  }
+
+  /**
+   * Parses a variable declaration.
+   * @param start Starting position.
+   * @returns Variable AST node.
+   */
+  private parseVar(
+    start: Position
+  ): ast.declarations.Variable {
+    const isConst = !!this.wheter(Tokens.CONST)
     const name = this.eat(Tokens.IDENTIFIER).content
     this.eat(Tokens.EQUAL)
 
-    while (!this.currentTok.cmp("\n")) {
-      this.next()
-    }
-
-    return new ast.declarations.Type(name, this.Position)
+    const value = this.parseExpression()
+    return new ast.declarations.Variable(name, isConst, value, start, this.Position)
   }
 
-  private parseFunctionDecl(): ast.declarations.Function  {
-    this.eat(Tokens.FN) // safety call: this function is reached only if 'fn' kw was found
-    const pos = this.Position
-    const name = this.eat(Tokens.IDENTIFIER)
-    
-    const body: ASTNode[] = []
-    // PARAMETER CONSUMING
+  /**
+   * Parses a type declaration.
+   * @throws Always throws "Unimplemented declaration".
+   */
+  private parseType(_start: Position): ast.declarations.Type {
+    this.syntaxError("Unimplemented declaration")
+  }
+
+  /**
+   * Parses function parameters.
+   * @returns Array of Param AST nodes.
+   */
+  private parseFunctionParams(): ast.unclassified.Param[] {
     this.eat(Tokens.LPAREN)
-    while (!this.currentTok.is(Tokens.RPAREN)) {
-      // TODO: Add a parameter ast node and store them
-      this.next()
-    }
+
     this.eat(Tokens.RPAREN)
+    return []
+  }
+
+  /**
+   * Parses a function body, supporting arrow or block syntax.
+   * @param hasArrow True if it's an arrow function.
+   * @returns Array of statement AST nodes.
+   */
+  private parseFunctionBody(hasArrow: boolean): ast.statements.Statement[] {
+    if (hasArrow) {
+      const expr = this.parseExpression()
+      return [new ast.statements.ExpressionStmt(expr, expr.start, this.Position)]
+    }
 
     this.eat(Tokens.LBRACE)
-    while (!this.currentTok.is(Tokens.RBRACE)) {
-      body.push(this.parseDeclaration())
+    const body = []
+
+    while (!this.current.is(Tokens.RBRACE)) {
+      body.push(this.parseStatement(this.Position))
     }
 
     this.eat(Tokens.RBRACE)
-    return new ast.declarations.Function(name.content, new Map(), pos, [], body)
+    return body
   }
 
-  private parseDeclaration(): ast.declarations.Declaration {
-    const statement = this.currentTok
+  /**
+   * Parses a function signature.
+   * @returns Tuple [flag, name, params, isAnonymous, hasArrow].
+   */
+  private parseFunctionSign(): [Undefinedable<FunctionFlags>, string, ast.unclassified.Param[], boolean, boolean] {
+    const flag = (this.wheter(Tokens.INLINE) || this.wheter(Tokens.ASYNC))?.type as Undefinedable<FunctionFlags>
+    if (!this.wheter(Tokens.FN))
+      this.syntaxError("Functions can only has one flag")
 
-    switch(statement.type) {
+    const name     = this.wheter(Tokens.IDENTIFIER)?.content
+    const params   = this.parseFunctionParams()
+    const hasArrow = !!this.wheter(Tokens.ARROW)
+    return [flag, name ?? "anonymous", params, !name, hasArrow]
+  }
+
+  /**
+   * Parses a function declaration.
+   * @param start Start position.
+   * @param flag Function flag (inline, async).
+   * @param name Function name.
+   * @param params Function parameters.
+   * @returns Function AST node.
+   */
+  private parseFunctionDecl(
+    start: Position,
+    flag: Undefinedable<FunctionFlags>,
+    name: string,
+    params: ast.unclassified.Param[]
+  ): ast.declarations.Function {
+    const body = this.parseFunctionBody(false)
+    return new ast.declarations.Function(params, body, flag, name, start, this.Position)
+  }
+
+  /**
+   * Parses the body of a module.
+   * @returns Array of declaration AST nodes.
+   */
+  private parseModuleBody(): ast.declarations.Declaration[] {
+    this.eat(Tokens.LBRACE)
+    const body = []
+
+    while (!this.current.is(Tokens.RBRACE))
+      body.push(this.parseDecl(this.Position))
+
+    this.eat(Tokens.RBRACE)
+    return body
+  }
+
+  /**
+   * Parses a module declaration.
+   * @param start Start position.
+   * @returns Module AST node.
+   */
+  private parseModule(start: Position): ast.declarations.Module {
+    const name = this.eat(Tokens.IDENTIFIER).content
+    const body = this.parseModuleBody()
+    return new ast.declarations.Module(body, name, start, this.Position)
+  }
+
+  /**
+   * Parses an import declaration.
+   * @param start Start position.
+   * @param from Optional module name.
+   * @returns Import AST node.
+   */
+  private parseImport(start: Position, from?: string): ast.declarations.Import {
+    this.eat(Tokens.IMPORT)
+
+    if (!from)
+      return new ast.declarations.Import([], this.eat(Tokens.IDENTIFIER).content, start, this.Position)
+
+    if (this.wheter(Tokens.STAR))
+      return new ast.declarations.Import("*", from, start, this.Position)
+
+    const symbols: string[] = []
+    while (this.current.is(Tokens.IDENTIFIER)) {
+      const ident = this.eat(Tokens.IDENTIFIER)
+      symbols.push(ident.content)
+      this.wheter(Tokens.COMMA)
+    }
+
+    return new ast.declarations.Import(symbols, from, start, this.Position)
+  }
+
+  /**
+   * Parses a 'from' import statement.
+   * @param start Start position.
+   * @returns Import AST node.
+   */
+  private parseFrom(start: Position): ast.declarations.Import {
+    this.eat(Tokens.FROM)
+    const module = this.eat(Tokens.IDENTIFIER).content
+    return this.parseImport(start, module)
+  }
+
+  /**
+   * Parses a declaration (var, const, module, function, import, from).
+   * @param start Start position.
+   * @returns Declaration AST node.
+   */
+  public parseDecl(start: Position): ast.declarations.DeclarationNode {
+    switch(this.current.type) {
       case Tokens.VAR:
-      case Tokens.CONST:  return this.parseVar()
-      case Tokens.MODULE: return this.parseModule()
-      case Tokens.TYPE:   return this.parseType()
-      case Tokens.FN:     return this.parseFunctionDecl()
+      case Tokens.CONST:  return this.parseVar(start)
+      case Tokens.MODULE: return this.parseModule(start)
+      case Tokens.INLINE:
+      case Tokens.ASYNC:
+      case Tokens.FN:     return this.parseFunction(start) as ast.declarations.Function
+      case Tokens.FROM:   return this.parseFrom(start)
+      case Tokens.IMPORT: return this.parseImport(start)
     }
 
-    this.syntaxError(`'${statement.TypeContent}' is not a valid statement`)
+    this.syntaxError(`Unknown declaration '${this.current.TypeContent}'`)
   }
 
+  // ----- STATEMENT PARSING ----- //
+
+  /**
+   * Parses a 'dissipate' statement.
+   * @param start Start position.
+   * @returns Dissipate AST node.
+   */
+  private parseDissipate(start: Position): ast.statements.Dissipate {
+    this.eat(Tokens.DISSIPATE)
+    let fn: ast.declarations.Function | ast.expressions.ExpressionNode
+    switch (this.current.type) {
+      case Tokens.FN: fn = this.parseFunction(start); break
+      default:        fn = this.parseExpression(); break
+    }
+
+    return new ast.statements.Dissipate(fn, start, this.Position)
+  }
+
+  /**
+   * Parses an expression statement.
+   * @param start Start position.
+   * @returns ExpressionStmt AST node.
+   */
+  private parseExprStmt(start: Position): ast.statements.ExpressionStmt {
+    let expr: ast.expressions.ExpressionNode
+    switch (this.current.type) {
+      case Tokens.MATCH: expr = this.parseMatch(start); break
+      default:           expr = this.parseExpression(); break
+    }
+
+    return new ast.statements.ExpressionStmt(expr, start, expr.end)
+  }
+
+  /**
+   * Parses a generic statement.
+   * @param start Start position.
+   * @returns Statement AST node.
+   */
+  private parseStatement(start: Position): ast.statements.StatementNode {
+    switch (this.current.type) {
+      case Tokens.VAR:
+      case Tokens.CONST: {
+        const decl = this.parseDecl(start)
+        return new ast.statements.DeclarationStmt(decl, start, decl.end)
+      }
+      case Tokens.MATCH:
+      case Tokens.IDENTIFIER: return this.parseExprStmt(start)
+      case Tokens.DISSIPATE:  return this.parseDissipate(start)
+    }
+
+    this.syntaxError(`Unknown statement '${this.current.TypeContent}'`)
+  }
   // ----- EXPRESSION PARSING ----- //
-  private isEndOfExpr(tok: Token): boolean {
-    switch (tok.type) {
-      case Tokens.RPAREN:
-      case Tokens.RSQRBR:
-      case Tokens.SEMICOLON: return true
+
+  /**
+   * Parses a case/default statement inside a match block.
+   * @param start Start position.
+   * @returns Case or Default AST node.
+   */
+  private parseCaseStatement(start: Position): ast.statements.StatementNode {
+    const isDefault = !!(this.wheter(Tokens.DEFAULT) && this.eat(Tokens.ARROW))
+
+    if (isDefault) {
+      if (!this.wheter(Tokens.LBRACE))
+        return new ast.statements.Default([this.parseStatement(this.Position)], start, this.Position)
+
+      const body = this.parseBlock(this.Position)
+      return new ast.statements.Default(body, start, this.Position)
     }
-    return false
+
+    const cmp = this.parseExpression()
+    this.eat(Tokens.ARROW)
+    if (!this.wheter(Tokens.LBRACE))
+      return new ast.statements.Case(cmp, [this.parseStatement(this.Position)], start, this.Position)
+
+    const body = this.parseBlock(start)
+    this.eat(Tokens.RBRACE)
+    return new ast.statements.Case(cmp, body, start, this.Position)
   }
 
-  private parseUnary(): ast.expressions.Expression {
-    const op = this.currentTok
-    this.eat(op.type)
+  /**
+   * Parses a match expression.
+   * @param start Start position.
+   * @returns Match AST node.
+   */
+  private parseMatch(start: Position): ast.expressions.Match {
+    this.eat(Tokens.MATCH)
+    const subject = this.parseExpression()
+    this.eat(Tokens.LBRACE)
 
-    return new ast.expressions.Unary(op, this.parseOperand(), this.Position)
+    const body: ast.statements.Case[] = []
+    let fallThrough: Undefinedable<ast.statements.Default> = undefined
+    while (!this.current.is(Tokens.RBRACE)) {
+      const stmt = this.parseCaseStatement(this.Position)
+      if (fallThrough)
+        this.syntaxError("A default statement has been already declared")
+      else if (stmt.kind === ast.statements.StatementKind.Default)
+        fallThrough = stmt as ast.statements.Default
+      else
+        body.push(stmt as ast.statements.Case)
+
+      this.wheter(Tokens.COMMA) // this allows trailing comma
+    }
+
+    this.eat(Tokens.RBRACE)
+    return new ast.expressions.Match(subject, body, fallThrough, start, this.Position)
   }
 
-  private parseParen(): ast.expressions.Expression {
+  /**
+   * Parses a function expression (arrow function, anonymous).
+   * @param start Start position.
+   * @param flag Function flag.
+   * @param name Function name.
+   * @param params Function parameters.
+   * @param hasArrow True if arrow function syntax is used.
+   * @returns Function expression AST node.
+   */
+  private parseFunctionExpr(
+    start: Position,
+    flag: Undefinedable<FunctionFlags>,
+    name: string,
+    params: ast.unclassified.Param[],
+    hasArrow: boolean
+  ): ast.expressions.Function {
+    if (flag && flag === Tokens.INLINE)
+      this.syntaxError("A function expression cannot be inlined")
+
+    const body = this.parseFunctionBody(hasArrow)
+    return new ast.expressions.Function(name, params, body, flag, start, this.Position)
+  }
+
+  /**
+   * Parses a parenthesized expression.
+   * @returns Expression AST node.
+   */
+  private parseParen(): ast.expressions.ExpressionNode {
     this.eat(Tokens.LPAREN)
-    return this.parseExpression()
-  }
-
-  private parseArray(): ast.expressions.Expressions {
-    this.eat(Tokens.LSQRBR)
-
     const expr = this.parseExpression()
+    this.eat(Tokens.RPAREN)
     return expr
   }
 
-  private parseOperator(): ast.expressions.Expression {
-    switch (this.currentTok.type) {
-      case Tokens.LSQRBR:
+  /**
+   * Parses a function call expression.
+   * @param start Start position.
+   * @param callee The callee expression.
+   * @returns Call AST node.
+   */
+  private parseCall(start: Position, callee: ast.expressions.ExpressionNode): ast.expressions.Call {
+    this.eat(Tokens.LPAREN)
+    const args: ast.expressions.ExpressionNode[] = []
+    while (!this.current.is(Tokens.RPAREN)) {
+      args.push(this.parseExpression())
+      this.wheter(Tokens.COMMA)
+    }
+
+    this.eat(Tokens.RPAREN)
+    return new ast.expressions.Call(callee, args, start, this.Position)
+  }
+
+  /**
+   * Parses array access or index expressions.
+   * @returns Expression AST node.
+   */
+  private parseArrayOrIndex(): ast.expressions.ExpressionNode {
+    this.eat(Tokens.LSQRBR)
+    const expr = this.parseExpression()
+    this.eat(Tokens.RSQRBR)
+    return expr
+  }
+
+  /**
+   * Parses grouping constructs (arrays, parentheses).
+   * @returns Expression AST node.
+   */
+  private parsePairs(): ast.expressions.ExpressionNode {
+    switch (this.current.type) {
+      case Tokens.LSQRBR: return this.parseArrayOrIndex()
+      case Tokens.LPAREN: return this.parseParen()
+    }
+
+    this.syntaxError(`Unkown grouping token '${this.current.content}'`)
+  }
+
+  /**
+   * Parses unary expressions (negation, increment, etc.).
+   * @returns Unary expression AST node.
+   */
+  private parseUnary(): ast.expressions.ExpressionNode {
+    const start = this.Position
+
+    switch (this.current.type) {
       case Tokens.PLUS:
       case Tokens.MINUS:
       case Tokens.INCREMENT:
       case Tokens.DECREMENT:
       case Tokens.BANG:
+      case Tokens.AWAIT:
       case Tokens.NOT:
       case Tokens.NEW:
       case Tokens.DROP:
-      case Tokens.AMPER:  return this.parseUnary()
-      case Tokens.LPAREN: return this.parseParen()
-    }
-  }
-
-  private parseOperand(): ast.expressions.Expression {
-    if (this.currentTok.isOperator())
-      return this.parseOperator()
-
-    /**
-     * Since not all operators are always treated as such
-     * Some tokens that are grouped as operators could mean the begin of an expression.
-     * Like this: `[a, b, c]`. Where the left bracket marks the begin of a literal array
-     */
-    switch (this.currentTok.type) {
-      case Tokens.IDENTIFIER: return new ast.expressions.Identifier(this.currentTok.content, this.Position)
-      case Tokens.STRING:     return new ast.expressions.String(this.currentTok.content, this.Position)
-      case Tokens.NUMBER:     return new ast.expressions.Numeric(parseInt(this.currentTok.content), this.Position)
-      case Tokens.CHAR:       return new ast.expressions.Char(this.currentTok.content, this.Position)
+      case Tokens.AMPER: {
+        const op = this.eat(this.current.type)
+        return new ast.expressions.Unary(op, this.parseExpression(), start, this.Position)
+      }
     }
 
-    this.syntaxError(`Unknown literal value '${this.currentTok.content}'`)
+    return this.parsePairs()
   }
 
+  /**
+   * Parses literal values (numbers, strings, identifiers, etc.).
+   * @returns Literal AST node.
+   */
+  private parseLiteral(): ast.expressions.ExpressionNode {
+    const start = this.Position
+
+    switch (this.current.type) {
+      case Tokens.FN:
+      case Tokens.ASYNC:
+      case Tokens.INLINE: return this.parseFunction(start) as ast.expressions.Function
+      case Tokens.MATCH:  return this.parseMatch(start)
+      case Tokens.NUMBER:
+      case Tokens.CHAR: {
+        const lit = new ast.expressions.Atomic(this.current.content, start, this.Position)
+        
+        this.next()
+        return lit
+      }
+      case Tokens.STRING: {
+        const str = new ast.expressions.String(this.current.content, start, this.Position)
+
+        this.next()
+        return str
+      }
+      case Tokens.IDENTIFIER:  {
+        const ident = new ast.expressions.Identifier(this.current.content, start, this.Position)
+        const forward = this.next()
+        
+        switch (forward.type) {
+          case Tokens.LPAREN: return this.parseCall(start, ident)
+        }
+
+        return ident
+      }
+    }
+
+    return this.parseUnary()
+  }
+
+  /**
+   * Parses an expression (entry point for expression parsing).
+   * @param expr Optional left-hand side expression.
+   * @param prevOp Optional operator for precedence handling.
+   * @returns Expression AST node.
+   */
   private parseExpression(expr?: ast.expressions.ExpressionNode, prevOp?: Token): ast.expressions.ExpressionNode {
     const start = this.Position
     if (!expr)
@@ -305,11 +669,10 @@ export default class Parser implements Reader<Token, Tokens> {
     }
   }
 
-  public parse(): ASTNode {
-    return this.parseDeclaration()
-  }
-
-  private get Position(): Position {
+  /**
+   * Gets the current lexer position.
+   */
+  public get Position(): Position {
     return this.lexer.Position
   }
 }

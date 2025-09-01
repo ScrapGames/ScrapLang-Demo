@@ -3,7 +3,7 @@ export interface Collectable<T> {
 }
 
 export interface Reader<T, C = T> {
-  currentTok: T
+  current: T
 
   next(): T
 

@@ -1,9 +1,5 @@
-import type { Position } from "@frontend/typings.ts"
+import { Position } from "@frontend/position.ts"
 
 export class ASTNode {
-    public position: Position
-
-    public constructor(position: Position) {
-        this.position = position
-    }
+  public constructor(public start: Position, public end: Position) {}
 }

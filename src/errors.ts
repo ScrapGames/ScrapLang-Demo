@@ -1,9 +1,9 @@
-import { Position } from "@frontend/typings.ts"
+import { Position } from "@frontend/position.ts"
 
 export class SyntaxError extends Error {
   public constructor(message: string, file: string, position: Position) {
-    super(message)
-    this.message += `\nAt ${file}:${position.line}:${position.linePos}`
+    super(`${message}\nAt ${file}:${position.line}:${position.lineIdx}`)
+    this.name = "SyntaxError"
   }
 }
 

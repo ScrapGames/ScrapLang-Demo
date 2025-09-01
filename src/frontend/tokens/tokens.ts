@@ -213,13 +213,7 @@ export const TOKEN_MAP = new Map([
   // BINARY
   [Tokens.DOT,    "."],
 
-  // WITHOUT CLASSIFICATION
-  [Tokens.EQUAL, "="],
-  [Tokens.COMMA, ","],
-
-  // ========================
   // COMPOUND TOKENS
-  // ========================
   [Tokens.INCREMENT,    "++"],
   [Tokens.DECREMENT,    "--"],
   [Tokens.ADD_ASSIGN,   "+="],
@@ -262,6 +256,7 @@ export const TOKEN_MAP = new Map([
   // ========================
   // SPECIALS
   // ========================
+  [Tokens.COMMENT, "COMMENT"],
   [Tokens.EOF,     "EOF"],
   [Tokens.UNKNOWN, "UNKNOWN"],
 ]);
@@ -371,16 +366,27 @@ export class Token {
     return this.type > Tokens.operators_open && this.type < Tokens.operators_close
   }
 
+  public isClosingExpr(): boolean {
+    switch (this.type) {
+      case Tokens.RPAREN:
+      case Tokens.RSQRBR:
+      case Tokens.SEMICOLON: return true
+    }
+
+    return false
+  }
+
   public isEOF(): this is Tokens.EOF {
     return this.is(Tokens.EOF)
   }
 
   public get opRules(): { prec: number, assoc: "left" | "right" } | undefined {
-    const assoc = this.Associativity
-    if (!assoc)
+    const prec  = this.Precedence
+    if (prec === undefined)
       return undefined
-
-    return { prec: this.Precedence!, assoc: assoc }
+    
+    const assoc = this.Associativity
+    return { prec, assoc }
   }
 
   private get Precedence(): number | undefined {
@@ -431,18 +437,12 @@ export class Token {
       case Tokens.INSTANCEOF:   // instanceof
       case Tokens.IN:           // in
         return 9
-
-      case Tokens.COMMA: // ,
-        return 10
     }
 
     return undefined
   }
 
-  private get Associativity(): ("left" | "right") | undefined {
-    if (!(this.type > Tokens.bin_open && this.type < Tokens.bin_close))
-      return undefined
-
+  private get Associativity(): ("left" | "right") {
     switch (this.type) {
       case Tokens.EQUAL:        // =
       case Tokens.ADD_ASSIGN:   // +=

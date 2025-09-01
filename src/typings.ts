@@ -1,10 +1,4 @@
-/**
- * Represents an entity that can be identified by a unique name.
- */
-export interface Nameable {
-  /** The unique identifier of the entity */
-  name: string
-}
+export type Undefinedable<T> = T | undefined
 
 /**
  * Represents a chainable environment for symbol resolution.

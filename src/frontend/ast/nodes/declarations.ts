@@ -1,6 +1,18 @@
-import { ASTNode } from "@frontend/ast/ast.ts"
-import { Expression } from "@frontend/ast/nodes/expressions.ts"
-import type { Position } from "@frontend/typings.ts"
+/**
+ * AST Nodes for Declarations
+ *
+ * This file defines the abstract syntax tree (AST) representation for declarations
+ * in the language. Declarations include variables, functions, modules, classes,
+ * interfaces, types, and enums. Each declaration type has its own class extending
+ * `DeclarationNode`, which provides the common structure for all declarations.
+ */
+
+import { Undefinedable } from "@/typings.ts"
+import { Position }      from "@frontend/position.ts"
+import { ASTNode }       from "@frontend/ast/ast.ts"
+import { Expression }    from "@frontend/ast/nodes/expressions.ts"
+import { Statement }     from "@frontend/ast/nodes/statements.ts"
+import { FunctionFlags, Param } from "@frontend/ast/nodes/unclassified.ts"
 
 /**
  * Enumeration representing different kinds of declarations.
@@ -11,150 +23,121 @@ export enum DeclarationKind {
   Function,
   Variable,
   Interface,
-  Type
+  Type,
+  Enum,
+  Import,
+  Export
 }
 
 /**
- * Flags that can be applied to function declarations.
+ * Base interface for any declaration node.
  */
-export type FunctionFlags = | "inline" | "async"
+export interface Declaration {
+  kind: DeclarationKind
+}
 
 /**
- * Represents a generic declaration node in the AST.
- * Serves as a base class for more specific declaration types.
+ * Base class for all declarations in the AST.
+ * Stores the `kind` of declaration, its name, and source code positions.
  */
-export class Declaration extends ASTNode {
-  public kind: DeclarationKind
-  public name: string
-
-  /**
-   * Creates a new Declaration instance.
-   * @param kind - The kind of the declaration (e.g., Function, Variable).
-   * @param name - The identifier name of the declaration.
-   * @param position - The source code position of the declaration.
-   */
-  public constructor(kind: DeclarationKind, name: string, position: Position) {
-    super(position)
-    this.name = name
+export class DeclarationNode extends ASTNode implements Declaration {
+  public constructor(
+    public kind: DeclarationKind, public name: string,
+    start: Position, end: Position
+  ) {
+    super(start, end)
     this.kind = kind
+  }
+}
+
+export class Import extends DeclarationNode {
+  public constructor(
+    public symbols: string[] | "*",
+    name: string,
+    start: Position, end: Position
+  ) {
+    super(DeclarationKind.Import, name, start, end)
+  }
+}
+
+/**
+ * Represents a variable declaration in the AST.
+ * - `isConst`: whether the variable is declared as a constant.
+ * - `value`: the assigned expression value.
+ */
+export class Variable extends DeclarationNode {
+  public constructor(
+    name: string, public isConst: boolean, public value: Expression,
+    start: Position, end: Position
+  ) {
+    super(DeclarationKind.Variable, name, start, end)
   }
 }
 
 /**
  * Represents a function declaration in the AST.
- * Includes function name, flags, and its position in the source.
+ * - `params`: function parameters.
+ * - `body`: list of statements forming the function body.
  */
-export class Function extends Declaration {
-  private flags: Map<FunctionFlags, boolean>
-  private params: any[]
-  private body: ASTNode[]
-
-  /**
-   * Creates a new FunctionStmtNode instance.
-   * @param name - The name of the function.
-   * @param flags - A map of flags applied to this function.
-   * @param position - The source code position of the function.
-   * @param body - The function instructions
-   */
-  public constructor(name: string, flags: Map<FunctionFlags, boolean>, position: Position, params: any[], body: ASTNode[]) {
-    super(DeclarationKind.Function, name, position)
-    this.flags = flags
-    this.body = body
+export class Function extends DeclarationNode {
+  public constructor(
+    public params: Param[], public body: Statement[],
+    public flag: Undefinedable<FunctionFlags>, name: string,
+    start: Position, end: Position,
+  ) {
+    super(DeclarationKind.Function, name, start, end)
   }
-
-  /**
-   * Returns the flags set on the function.
-   */
-  public get Flags() { return this.flags }
-
-  /**
-   * Returns the body 
-   */
-  public get Body() { return this.body }
 }
 
 /**
- * Represents a variable declaration in the AST.
- * Stores whether it's constant and its assigned value.
+ * Represents a module declaration in the AST.
+ * A module groups together other declarations such as classes, functions, or variables.
  */
-export class Variable extends Declaration {
-  private isConst: boolean
-  private value: Expression
-
-  /**
-   * Creates a new VariableNode instance.
-   * @param name - The variable name.
-   * @param isConst - Whether the variable is declared as a constant.
-   * @param value - The expression assigned to the variable.
-   * @param pos - The position in the source code.
-   */
-  public constructor(name: string, isConst: boolean, value: Expression, pos: Position) {
-    super(DeclarationKind.Variable, name, pos)
-    this.isConst = isConst
-    this.value = value
+export class Module extends DeclarationNode {
+  public constructor(
+    public body: Declaration[], name: string,
+    start: Position, end: Position
+  ) {
+    super(DeclarationKind.Module, name, start, end)
   }
-
-  /**
-   * Returns whether the variable is constant.
-   */
-  public get IsConst() { return this.isConst }
-
-  /**
-   * Returns the expression assigned to the variable.
-   */
-  public get Value() { return this.value }
 }
 
 /**
- * Represents a module declaration.
- * Modules can contain other declarations (classes, functions, etc.).
+ * Represents a generic class-like declaration.
+ * Used as a base for more specific class-related declarations.
  */
-export class Module extends Declaration {
-  private body: Declaration[]
-
-  /**
-   * Creates a new ModuleNode instance.
-   * @param name - The module's name.
-   * @param body - The list of declarations contained in the module.
-   * @param pos - The position in the source code.
-   */
-  public constructor(name: string, body: Declaration[], pos: Position) {
-    super(DeclarationKind.Module, name, pos)
-    this.body = body
+export class ClassDeclaration extends DeclarationNode {
+  public constructor(kind: DeclarationKind, name: string, start: Position, end: Position) {
+    super(kind, name, start, end)
   }
-
-  /**
-   * Returns the list of declarations in the module.
-   */
-  public get Body() { return this.body }
 }
 
-export class Class extends Declaration {
-  private body: Declaration[]
-
-  public constructor(name: string, body: Declaration[], pos: Position) {
-    super(DeclarationKind.Class, name, pos)
-    this.body = body
+/**
+ * Represents a class declaration in the AST.
+ * - `body`: list of member declarations (methods, properties, etc.).
+ */
+export class Class extends DeclarationNode {
+  public constructor(public body: Declaration[], name: string, start: Position, end: Position) {
+    super(DeclarationKind.Class, name, start, end)
   }
-
-  /**
-   * Returns the list of declarations in the class.
-   */
-  public get Body() { return this.body }
 }
 
-export class Interface extends Declaration {
-
-  public constructor(name: string, pos: Position) {
-    super(DeclarationKind.Interface, name, pos)
+/**
+ * Represents an interface declaration in the AST.
+ * - `body`: list of member declarations defining the contract of the interface.
+ */
+export class Interface extends DeclarationNode {
+  public constructor(public body: Declaration[], name: string, start: Position, end: Position) {
+    super(DeclarationKind.Interface, name, start, end)
   }
-
 }
 
-export class Type extends Declaration {
-  
-  public constructor(name: string, pos: Position) {
-    super(DeclarationKind.Type, name, pos)
+/**
+ * Represents a type alias declaration in the AST.
+ * Currently only stores the alias name.
+ */
+export class Type extends DeclarationNode {
+  public constructor(name: string, start: Position, end: Position) {
+    super(DeclarationKind.Type, name, start, end)
   }
-
 }
