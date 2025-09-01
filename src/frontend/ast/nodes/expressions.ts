@@ -124,6 +124,7 @@ export class Function extends ExpressionNode {
  * Represents a `match` expression (similar to `switch` in other languages).
  * - `subject`: the expression to match against.
  * - `body`: list of case clauses/statements.
+ * - `fallThrough`: optional default case if no other matches.
  */
 export class Match extends ExpressionNode {
   public constructor(
