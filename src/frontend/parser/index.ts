@@ -231,6 +231,8 @@ export default class Parser implements Reader<Token, Tokens> {
     start: Position
   ): ast.declarations.Variable {
     const isConst = !!this.wheter(Tokens.CONST)
+
+    !isConst && this.eat(Tokens.VAR)
     const name = this.eat(Tokens.IDENTIFIER).content
     this.eat(Tokens.EQUAL)
 
