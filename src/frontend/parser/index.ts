@@ -191,11 +191,13 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns Array of statement AST nodes.
    */
   private parseBlock(start: Position): ast.statements.StatementNode[] {
+    this.eat(Tokens.LBRACE)
     const body: ast.statements.StatementNode[] = []
     
     while (!this.current.is(Tokens.RBRACE))
       body.push(this.parseStatement(start))
 
+    this.eat(Tokens.RBRACE)
     return body
   }
 
@@ -262,15 +264,7 @@ export default class Parser implements Reader<Token, Tokens> {
       return [new ast.statements.ExpressionStmt(expr, expr.start, this.Position)]
     }
 
-    this.eat(Tokens.LBRACE)
-    const body = []
-
-    while (!this.current.is(Tokens.RBRACE)) {
-      body.push(this.parseStatement(this.Position))
-    }
-
-    this.eat(Tokens.RBRACE)
-    return body
+    return this.parseBlock(this.Position)
   }
 
   /**
