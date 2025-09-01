@@ -342,11 +342,11 @@ export default class Parser implements Reader<Token, Tokens> {
       return new ast.declarations.Import("*", from, start, this.Position)
 
     const symbols: string[] = []
-    while (this.current.is(Tokens.IDENTIFIER)) {
-      const ident = this.eat(Tokens.IDENTIFIER)
+    do {
+      const ident = (this.wheter(Tokens.IDENTIFIER) || this.wheter(Tokens.STRING)) || this.syntaxError("Expected identifier or string")
       symbols.push(ident.content)
       this.wheter(Tokens.COMMA)
-    }
+    } while (this.current.is(Tokens.IDENTIFIER))
 
     return new ast.declarations.Import(symbols, from, start, this.Position)
   }
