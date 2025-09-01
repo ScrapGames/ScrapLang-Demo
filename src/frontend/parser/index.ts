@@ -135,7 +135,7 @@ export default class Parser implements Reader<Token, Tokens> {
     if (!this.current.is(type)) {
       const expected = TOKEN_MAP.get(type)
       const found    = this.current.TypeContent
-      this.syntaxError(`The current token was supposed to be a '${expected}' but a '${found}' was encountered`)
+      this.syntaxError(`Missing '${expected}', found '${found}'`)
     }
 
     const current = this.current
