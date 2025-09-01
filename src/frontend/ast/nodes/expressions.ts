@@ -109,6 +109,7 @@ export class Binary extends ExpressionNode {
  * - `name`: function name (may be empty for anonymous).
  * - `params`: function parameters.
  * - `body`: statements or a single expression (in case of concise bodies).
+ * - `flag`: optional function flag (e.g., async, inline).
  */
 export class Function extends ExpressionNode {
   public constructor(

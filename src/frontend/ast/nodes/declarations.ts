@@ -50,6 +50,11 @@ export class DeclarationNode extends ASTNode implements Declaration {
   }
 }
 
+/**
+ * Represents an import declaration in the AST.
+ * - `symbols`: list of symbols being imported or `*` for all.
+ * - `name`: module name from which symbols are imported.
+ */
 export class Import extends DeclarationNode {
   public constructor(
     public symbols: string[] | "*",
