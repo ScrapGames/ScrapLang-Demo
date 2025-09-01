@@ -162,10 +162,15 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns The AST node representing a module.
    */
   public parseFile(): ast.declarations.Module {
+    const start = this.Position
+    const body: ast.declarations.DeclarationNode[] = this.next() && []
+    while (!this.lexer.hasEnd())
+      body.push(this.parseDecl(start))
+
     return new ast.declarations.Module(
-      [this.parseDecl(this.Position)],
+      body,
       this.lexer.name,
-      new Position(1, 1, 0),
+      start,
       this.Position
     )
   }
