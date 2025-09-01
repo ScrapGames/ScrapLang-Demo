@@ -406,12 +406,7 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns ExpressionStmt AST node.
    */
   private parseExprStmt(start: Position): ast.statements.ExpressionStmt {
-    let expr: ast.expressions.ExpressionNode
-    switch (this.current.type) {
-      case Tokens.MATCH: expr = this.parseMatch(start); break
-      default:           expr = this.parseExpression(); break
-    }
-
+    const expr = this.parseExpression()
     return new ast.statements.ExpressionStmt(expr, start, expr.end)
   }
 
