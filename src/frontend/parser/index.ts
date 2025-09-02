@@ -383,7 +383,6 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseDecl(start: Position): ast.declarations.Declaration {
     switch(this.current.type) {
-      case Tokens.VAR:
       case Tokens.CONST:  return this.parseVar(start)
       case Tokens.MODULE: return this.parseModule(start)
       case Tokens.INLINE:
@@ -478,7 +477,7 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseStatement(start: Position): ast.statements.Statement {
     switch (this.current.type) {
-      case Tokens.VAR:
+      case Tokens.VAR:        return new ast.statements.DeclarationStmt(this.parseVar(start), start, this.Position)
       case Tokens.CONST:      return this.parseDeclStmt(start)
       case Tokens.MATCH:
       case Tokens.IDENTIFIER: return this.parseExprStmt(start)
