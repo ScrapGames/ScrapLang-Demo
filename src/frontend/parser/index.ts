@@ -425,26 +425,10 @@ export default class Parser implements Reader<Token, Tokens> {
     return new ast.statements.ExpressionStmt(expr, start, expr.end)
   }
 
-  /**
-   * Parses a generic statement.
-   * @param start Start position.
-   * @returns Statement AST node.
-   */
-  private parseStatement(start: Position): ast.statements.StatementNode {
-    switch (this.current.type) {
-      case Tokens.VAR:
-      case Tokens.CONST: {
-        const decl = this.parseDecl(start)
-        return new ast.statements.DeclarationStmt(decl, start, decl.end)
-      }
-      case Tokens.MATCH:
-      case Tokens.IDENTIFIER: return this.parseExprStmt(start)
-      case Tokens.DISSIPATE:  return this.parseDissipate(start)
-    }
-
-    this.syntaxError(`Unknown statement '${this.current.TypeContent}'`)
+  private parseDeclStmt(start: Position): ast.statements.DeclarationStmt {
+    const decl = this.parseDecl(start)
+    return new ast.statements.DeclarationStmt(decl, start, decl.end)
   }
-  // ----- EXPRESSION PARSING ----- //
 
   private parseDefaultStatement(start: Position): ast.statements.Default {
     this.eat(Tokens.ARROW)
@@ -477,6 +461,24 @@ export default class Parser implements Reader<Token, Tokens> {
     
     return new ast.statements.Case(subject, stmt, start, this.Position)
   }
+
+  /**
+   * Parses a generic statement.
+   * @param start Start position.
+   * @returns Statement AST node.
+   */
+  private parseStatement(start: Position): ast.statements.StatementNode {
+    switch (this.current.type) {
+      case Tokens.VAR:
+      case Tokens.CONST:      return this.parseDeclStmt(start)
+      case Tokens.MATCH:
+      case Tokens.IDENTIFIER: return this.parseExprStmt(start)
+      case Tokens.DISSIPATE:  return this.parseDissipate(start)
+    }
+
+    this.syntaxError(`Unknown statement '${this.current.TypeContent}'`)
+  }
+  // ----- EXPRESSION PARSING ----- //
 
   /**
    * Parses a match expression.
