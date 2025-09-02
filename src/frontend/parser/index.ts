@@ -1,12 +1,11 @@
-import { SyntaxError } from "@/errors.ts"
-import { Undefinedable } from "@/typings.ts"
-
-import { Position } from "@frontend/position.ts"
-import type { Reader } from "@frontend/typings.ts"
+import { SyntaxError }    from "@/errors.ts"
+import { Undefinedable }  from "@/typings.ts"
+import { Position }       from "@frontend/position.ts"
+import type { Reader }    from "@frontend/typings.ts"
 import { Token, Tokens, TOKEN_MAP, stringify } from "@frontend/tokens/tokens.ts"
-import Lexer from "@frontend/lexer/lexer.ts"
+import Lexer             from "@frontend/lexer/lexer.ts"
 import { FunctionFlags } from "@frontend/ast/nodes/unclassified.ts"
-import * as ast from "@frontend/ast/nodes/index.ts"
+import * as ast          from "@frontend/ast/nodes/index.ts"
 
 /**
  * Parser class responsible for converting a stream of tokens
