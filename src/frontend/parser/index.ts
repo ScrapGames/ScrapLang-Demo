@@ -424,11 +424,21 @@ export default class Parser implements Reader<Token, Tokens> {
     return new ast.statements.ExpressionStmt(expr, start, expr.end)
   }
 
+  /**
+   * Parses a declaration statement.
+   * @param start Start position.
+   * @returns DeclarationStmt AST node.
+   */
   private parseDeclStmt(start: Position): ast.statements.DeclarationStmt {
     const decl = this.parseDecl(start)
     return new ast.statements.DeclarationStmt(decl, start, decl.end)
   }
 
+  /**
+   * Parses a default statement inside a match block.
+   * @param start Start position.
+   * @returns Default AST node.
+   */
   private parseDefaultStatement(start: Position): ast.statements.Default {
     this.eat(Tokens.ARROW)
     const stmt: ast.statements.Statement[] = []
