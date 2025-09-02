@@ -350,10 +350,15 @@ export default class Parser implements Reader<Token, Tokens> {
 
     const symbols: string[] = []
     do {
-      const ident = (this.wheter(Tokens.IDENTIFIER) || this.wheter(Tokens.STRING)) || this.syntaxError("Expected identifier or string")
-      symbols.push(ident.content)
-      this.wheter(Tokens.COMMA)
-    } while (this.current.is(Tokens.IDENTIFIER))
+      let symbol = (this.wheter(Tokens.IDENTIFIER) || this.wheter(Tokens.STRING))?.content
+      if (!symbol)
+        this.syntaxError("Expected identifier or string as import symbol")
+
+      while (this.wheter(Tokens.MOD_ACCESSOR))
+        symbol = `${symbol}::${this.eat(Tokens.IDENTIFIER).content}`
+
+      symbols.push(symbol)
+    } while (this.wheter(Tokens.COMMA))
 
     return new ast.declarations.Import(symbols, from, start, this.Position)
   }
@@ -365,7 +370,10 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseFrom(start: Position): ast.declarations.Import {
     this.eat(Tokens.FROM)
-    const module = this.eat(Tokens.IDENTIFIER).content
+    let module = this.eat(Tokens.IDENTIFIER).content
+    while (this.wheter(Tokens.MOD_ACCESSOR))
+      module = `${module}::${this.eat(Tokens.IDENTIFIER).content}`
+
     return this.parseImport(start, module)
   }
 
