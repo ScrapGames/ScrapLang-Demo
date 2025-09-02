@@ -167,9 +167,10 @@ export default class Parser implements Reader<Token, Tokens> {
     while (!this.lexer.hasEnd())
       body.push(this.parseDecl(start))
 
+    const name = this.lexer.name.split(/(\/|\\)/).pop()!.split(".")[0]
     return new ast.declarations.Module(
       body,
-      this.lexer.name,
+      name,
       start,
       this.Position
     )
