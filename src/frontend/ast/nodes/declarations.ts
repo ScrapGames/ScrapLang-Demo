@@ -30,23 +30,25 @@ export enum DeclarationKind {
 }
 
 /**
- * Base interface for any declaration node.
- */
-export interface Declaration {
-  kind: DeclarationKind
-}
-
-/**
  * Base class for all declarations in the AST.
  * Stores the `kind` of declaration, its name, and source code positions.
  */
-export class DeclarationNode extends ASTNode implements Declaration {
+export class Declaration extends ASTNode {
   public constructor(
-    public kind: DeclarationKind, public name: string,
+    public kind: DeclarationKind,
     start: Position, end: Position
   ) {
     super(start, end)
     this.kind = kind
+  }
+}
+
+export class NameableDeclarationNode extends Declaration {
+  public constructor(
+    public name: string, kind: DeclarationKind,
+    start: Position, end: Position
+  ) {
+    super(kind, start, end)
   }
 }
 
@@ -55,13 +57,13 @@ export class DeclarationNode extends ASTNode implements Declaration {
  * - `symbols`: list of symbols being imported or `*` for all.
  * - `name`: module name from which symbols are imported.
  */
-export class Import extends DeclarationNode {
+export class Import extends Declaration {
   public constructor(
     public symbols: string[] | "*",
-    name: string,
+    public module: string,
     start: Position, end: Position
   ) {
-    super(DeclarationKind.Import, name, start, end)
+    super(DeclarationKind.Import, start, end)
   }
 }
 
@@ -70,12 +72,12 @@ export class Import extends DeclarationNode {
  * - `isConst`: whether the variable is declared as a constant.
  * - `value`: the assigned expression value.
  */
-export class Variable extends DeclarationNode {
+export class Variable extends NameableDeclarationNode {
   public constructor(
     name: string, public isConst: boolean, public value: Expression,
     start: Position, end: Position
   ) {
-    super(DeclarationKind.Variable, name, start, end)
+    super(name, DeclarationKind.Variable, start, end)
   }
 }
 
@@ -84,13 +86,13 @@ export class Variable extends DeclarationNode {
  * - `params`: function parameters.
  * - `body`: list of statements forming the function body.
  */
-export class Function extends DeclarationNode {
+export class Function extends NameableDeclarationNode {
   public constructor(
     public params: Param[], public body: Statement[],
     public flag: Undefinedable<FunctionFlags>, name: string,
     start: Position, end: Position,
   ) {
-    super(DeclarationKind.Function, name, start, end)
+    super(name, DeclarationKind.Function, start, end)
   }
 }
 
@@ -98,12 +100,12 @@ export class Function extends DeclarationNode {
  * Represents a module declaration in the AST.
  * A module groups together other declarations such as classes, functions, or variables.
  */
-export class Module extends DeclarationNode {
+export class Module extends NameableDeclarationNode {
   public constructor(
     public body: Declaration[], name: string,
     start: Position, end: Position
   ) {
-    super(DeclarationKind.Module, name, start, end)
+    super(name, DeclarationKind.Module, start, end)
   }
 }
 
@@ -111,9 +113,9 @@ export class Module extends DeclarationNode {
  * Represents a generic class-like declaration.
  * Used as a base for more specific class-related declarations.
  */
-export class ClassDeclaration extends DeclarationNode {
+export class ClassDeclaration extends NameableDeclarationNode {
   public constructor(kind: DeclarationKind, name: string, start: Position, end: Position) {
-    super(kind, name, start, end)
+    super(name, kind, start, end)
   }
 }
 
@@ -121,9 +123,9 @@ export class ClassDeclaration extends DeclarationNode {
  * Represents a class declaration in the AST.
  * - `body`: list of member declarations (methods, properties, etc.).
  */
-export class Class extends DeclarationNode {
+export class Class extends NameableDeclarationNode {
   public constructor(public body: Declaration[], name: string, start: Position, end: Position) {
-    super(DeclarationKind.Class, name, start, end)
+    super(name, DeclarationKind.Class, start, end)
   }
 }
 
@@ -131,9 +133,9 @@ export class Class extends DeclarationNode {
  * Represents an interface declaration in the AST.
  * - `body`: list of member declarations defining the contract of the interface.
  */
-export class Interface extends DeclarationNode {
+export class Interface extends NameableDeclarationNode {
   public constructor(public body: Declaration[], name: string, start: Position, end: Position) {
-    super(DeclarationKind.Interface, name, start, end)
+    super(name, DeclarationKind.Interface, start, end)
   }
 }
 
@@ -141,8 +143,8 @@ export class Interface extends DeclarationNode {
  * Represents a type alias declaration in the AST.
  * Currently only stores the alias name.
  */
-export class Type extends DeclarationNode {
+export class Type extends NameableDeclarationNode {
   public constructor(name: string, start: Position, end: Position) {
-    super(DeclarationKind.Type, name, start, end)
+    super(name, DeclarationKind.Type, start, end)
   }
 }

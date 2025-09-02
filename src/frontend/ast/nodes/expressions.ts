@@ -14,7 +14,7 @@ import { Undefinedable } from "@/typings.ts"
 import { Position }      from "@frontend/position.ts"
 import { Token }         from "@frontend/tokens/tokens.ts"
 import { ASTNode }       from "@frontend/ast/ast.ts"
-import { Default, Statement }     from "@frontend/ast/nodes/statements.ts"
+import { Default, Statement }   from "@frontend/ast/nodes/statements.ts"
 import { FunctionFlags, Param } from "@frontend/ast/nodes/unclassified.ts"
 
 /**
@@ -32,17 +32,10 @@ export enum ExpressionKind {
 }
 
 /**
- * Base interface for any expression.
- */
-export interface Expression {
-  kind: ExpressionKind
-}
-
-/**
  * Base class for all expressions in the AST.
  * Stores the `kind` of expression and the source code positions.
  */
-export class ExpressionNode extends ASTNode implements Expression {
+export class Expression extends ASTNode {
   public constructor(public kind: ExpressionKind, start: Position, end: Position) {
     super(start, end)
   }
@@ -52,7 +45,7 @@ export class ExpressionNode extends ASTNode implements Expression {
  * Represents an atomic value (literal).
  * Examples: numbers, booleans, null.
  */
-export class Atomic extends ExpressionNode {
+export class Atomic extends Expression {
   public constructor(public value: unknown, start: Position, end: Position) {
     super(ExpressionKind.Atomic, start, end)
   }
@@ -61,7 +54,7 @@ export class Atomic extends ExpressionNode {
 /**
  * Represents an identifier (a variable or symbol name).
  */
-export class Identifier extends ExpressionNode {
+export class Identifier extends Expression {
   public constructor(public symbol: string, start: Position, end: Position) {
     super(ExpressionKind.Identifier, start, end)
   }
@@ -70,7 +63,7 @@ export class Identifier extends ExpressionNode {
 /**
  * Represents a string literal.
  */
-export class String extends ExpressionNode {
+export class String extends Expression {
   public constructor(public content: string, start: Position, end: Position) {
     super(ExpressionKind.String, start, end)
   }
@@ -80,7 +73,7 @@ export class String extends ExpressionNode {
  * Represents a unary operation.
  * Example: `!expr`, `-expr`
  */
-export class Unary extends ExpressionNode {
+export class Unary extends Expression {
   public constructor(
     public operator: Token,
     public operand: Expression,
@@ -94,7 +87,7 @@ export class Unary extends ExpressionNode {
  * Represents a binary operation.
  * Example: `lhs + rhs`, `lhs * rhs`
  */
-export class Binary extends ExpressionNode {
+export class Binary extends Expression {
   public constructor(
     public operator: Token,
     public lhs: Expression, public rhs: Expression,
@@ -111,7 +104,7 @@ export class Binary extends ExpressionNode {
  * - `body`: statements or a single expression (in case of concise bodies).
  * - `flag`: optional function flag (e.g., async, inline).
  */
-export class Function extends ExpressionNode {
+export class Function extends Expression {
   public constructor(
     public name: string, public params: Param[],
     public body: Statement[], public flag: Undefinedable<FunctionFlags>,
@@ -127,7 +120,7 @@ export class Function extends ExpressionNode {
  * - `body`: list of case clauses/statements.
  * - `fallThrough`: optional default case if no other matches.
  */
-export class Match extends ExpressionNode {
+export class Match extends Expression {
   public constructor(
     public subjet: Expression,
     public body: Statement[],
@@ -143,7 +136,7 @@ export class Match extends ExpressionNode {
  * - `callee`: the function being called.
  * - `args`: list of argument expressions.
  */
-export class Call extends ExpressionNode {
+export class Call extends Expression {
   public constructor(
     public callee: Expression,
     public args: Expression[],

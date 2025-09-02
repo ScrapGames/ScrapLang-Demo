@@ -163,7 +163,7 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   public parseFile(): ast.declarations.Module {
     const start = this.Position
-    const body: ast.declarations.DeclarationNode[] = this.next() && []
+    const body: ast.declarations.Declaration[] = this.next() && []
     while (!this.lexer.hasEnd())
       body.push(this.parseDecl(start))
 
@@ -195,9 +195,9 @@ export default class Parser implements Reader<Token, Tokens> {
    * @param start Starting position.
    * @returns Array of statement AST nodes.
    */
-  private parseBlock(start: Position): ast.statements.StatementNode[] {
+  private parseBlock(start: Position): ast.statements.Statement[] {
     this.eat(Tokens.LBRACE)
-    const body: ast.statements.StatementNode[] = []
+    const body: ast.statements.Statement[] = []
     
     while (!this.current.is(Tokens.RBRACE))
       body.push(this.parseStatement(start))
@@ -382,7 +382,7 @@ export default class Parser implements Reader<Token, Tokens> {
    * @param start Start position.
    * @returns Declaration AST node.
    */
-  private parseDecl(start: Position): ast.declarations.DeclarationNode {
+  private parseDecl(start: Position): ast.declarations.Declaration {
     switch(this.current.type) {
       case Tokens.VAR:
       case Tokens.CONST:  return this.parseVar(start)
@@ -406,7 +406,7 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseDissipate(start: Position): ast.statements.Dissipate {
     this.eat(Tokens.DISSIPATE)
-    let fn: ast.declarations.Function | ast.expressions.ExpressionNode
+    let fn: ast.declarations.Function | ast.expressions.Expression
     switch (this.current.type) {
       case Tokens.FN: fn = this.parseFunction(start); break
       default:        fn = this.parseExpression(); break
@@ -432,7 +432,7 @@ export default class Parser implements Reader<Token, Tokens> {
 
   private parseDefaultStatement(start: Position): ast.statements.Default {
     this.eat(Tokens.ARROW)
-    const stmt: ast.statements.StatementNode[] = []
+    const stmt: ast.statements.Statement[] = []
     if (!this.wheter(Tokens.LBRACE))
       stmt.push(this.parseStatement(this.Position))
     else
@@ -451,7 +451,7 @@ export default class Parser implements Reader<Token, Tokens> {
     if (isDefault)
       return this.parseDefaultStatement(start)
 
-    const stmt: ast.statements.StatementNode[] = []
+    const stmt: ast.statements.Statement[] = []
     const subject = this.parseExpression()
     this.eat(Tokens.ARROW)
     if (!this.wheter(Tokens.LBRACE))
@@ -467,7 +467,7 @@ export default class Parser implements Reader<Token, Tokens> {
    * @param start Start position.
    * @returns Statement AST node.
    */
-  private parseStatement(start: Position): ast.statements.StatementNode {
+  private parseStatement(start: Position): ast.statements.Statement {
     switch (this.current.type) {
       case Tokens.VAR:
       case Tokens.CONST:      return this.parseDeclStmt(start)
@@ -534,7 +534,7 @@ export default class Parser implements Reader<Token, Tokens> {
    * Parses a parenthesized expression.
    * @returns Expression AST node.
    */
-  private parseParen(): ast.expressions.ExpressionNode {
+  private parseParen(): ast.expressions.Expression {
     this.eat(Tokens.LPAREN)
     const expr = this.parseExpression()
     this.eat(Tokens.RPAREN)
@@ -547,9 +547,9 @@ export default class Parser implements Reader<Token, Tokens> {
    * @param callee The callee expression.
    * @returns Call AST node.
    */
-  private parseCall(start: Position, callee: ast.expressions.ExpressionNode): ast.expressions.Call {
+  private parseCall(start: Position, callee: ast.expressions.Expression): ast.expressions.Call {
     this.eat(Tokens.LPAREN)
-    const args: ast.expressions.ExpressionNode[] = []
+    const args: ast.expressions.Expression[] = []
     while (!this.current.is(Tokens.RPAREN)) {
       args.push(this.parseExpression())
       this.wheter(Tokens.COMMA)
@@ -563,7 +563,7 @@ export default class Parser implements Reader<Token, Tokens> {
    * Parses array access or index expressions.
    * @returns Expression AST node.
    */
-  private parseArrayOrIndex(): ast.expressions.ExpressionNode {
+  private parseArrayOrIndex(): ast.expressions.Expression {
     this.eat(Tokens.LSQRBR)
     const expr = this.parseExpression()
     this.eat(Tokens.RSQRBR)
@@ -574,7 +574,7 @@ export default class Parser implements Reader<Token, Tokens> {
    * Parses grouping constructs (arrays, parentheses).
    * @returns Expression AST node.
    */
-  private parsePairs(): ast.expressions.ExpressionNode {
+  private parsePairs(): ast.expressions.Expression {
     switch (this.current.type) {
       case Tokens.LSQRBR: return this.parseArrayOrIndex()
       case Tokens.LPAREN: return this.parseParen()
@@ -587,7 +587,7 @@ export default class Parser implements Reader<Token, Tokens> {
    * Parses unary expressions (negation, increment, etc.).
    * @returns Unary expression AST node.
    */
-  private parseUnary(): ast.expressions.ExpressionNode {
+  private parseUnary(): ast.expressions.Expression {
     const start = this.Position
 
     switch (this.current.type) {
@@ -613,7 +613,7 @@ export default class Parser implements Reader<Token, Tokens> {
    * Parses literal values (numbers, strings, identifiers, etc.).
    * @returns Literal AST node.
    */
-  private parseLiteral(): ast.expressions.ExpressionNode {
+  private parseLiteral(): ast.expressions.Expression {
     const start = this.Position
 
     switch (this.current.type) {
@@ -655,7 +655,7 @@ export default class Parser implements Reader<Token, Tokens> {
    * @param prevOp Optional operator for precedence handling.
    * @returns Expression AST node.
    */
-  private parseExpression(expr?: ast.expressions.ExpressionNode, prevOp?: Token): ast.expressions.ExpressionNode {
+  private parseExpression(expr?: ast.expressions.Expression, prevOp?: Token): ast.expressions.Expression {
     const start = this.Position
     if (!expr)
       expr = this.parseLiteral()
