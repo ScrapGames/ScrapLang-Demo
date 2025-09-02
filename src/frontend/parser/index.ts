@@ -447,13 +447,38 @@ export default class Parser implements Reader<Token, Tokens> {
   private parseImport(start: Position, from?: string): ast.declarations.Import {
     this.eat(Tokens.IMPORT)
 
+    /**
+     * If `from` is not provided, it means the syntax is something like:
+     * 
+     * ```
+     * import express
+     * or
+     * import "code_gen"
+     * ```
+     */
     if (!from) {
       const module = this.wheter(Tokens.IDENTIFIER) || this.eat(Tokens.STRING)
       return new ast.declarations.Import([], module.content, start, this.Position)
     }
+
+    /**
+     * If `from` is provided and the next token is a star (`*`), it means all symbols are being imported:
+     * 
+     * ```
+     * from std::io import *
+     * ```
+     */
     if (this.wheter(Tokens.STAR))
       return new ast.declarations.Import("*", from, start, this.Position)
 
+    /**
+     * Otherwise, it means specific symbols are being imported:
+     * 
+     * ```
+     * from std::io import File
+     * from internal::"code-gen" import ir::Functions, ir::Types
+     * ```
+     */
     const symbols: string[] = []
     do {
       symbols.push(this.parseDeepImport())
