@@ -424,6 +424,20 @@ export default class Parser implements Reader<Token, Tokens> {
     return new ast.declarations.Module(body, name, start, this.Position)
   }
 
+  private parseDeepImport(): string {
+    let symbol = (this.wheter(Tokens.IDENTIFIER) || this.wheter(Tokens.STRING))?.content
+    if (!symbol)
+      this.syntaxError("Expected identifier or string as import symbol")
+
+    while (this.wheter(Tokens.MOD_ACCESSOR)) {
+      const prevS: string = symbol
+      symbol = (this.wheter(Tokens.IDENTIFIER) || this.eat(Tokens.STRING)).content
+      symbol = `${prevS}::${symbol}`
+    }
+
+    return symbol
+  }
+
   /**
    * Parses an import declaration.
    * @param start Start position.
@@ -442,14 +456,7 @@ export default class Parser implements Reader<Token, Tokens> {
 
     const symbols: string[] = []
     do {
-      let symbol = (this.wheter(Tokens.IDENTIFIER) || this.wheter(Tokens.STRING))?.content
-      if (!symbol)
-        this.syntaxError("Expected identifier or string as import symbol")
-
-      while (this.wheter(Tokens.MOD_ACCESSOR))
-        symbol = `${symbol}::${this.eat(Tokens.IDENTIFIER).content}`
-
-      symbols.push(symbol)
+      symbols.push(this.parseDeepImport())
     } while (this.wheter(Tokens.COMMA))
 
     return new ast.declarations.Import(symbols, from, start, this.Position)
@@ -462,10 +469,7 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseFrom(start: Position): ast.declarations.Import {
     this.eat(Tokens.FROM)
-    let module = this.eat(Tokens.IDENTIFIER).content
-    while (this.wheter(Tokens.MOD_ACCESSOR))
-      module = `${module}::${this.eat(Tokens.IDENTIFIER).content}`
-
+    const module = this.parseDeepImport()
     return this.parseImport(start, module)
   }
 
