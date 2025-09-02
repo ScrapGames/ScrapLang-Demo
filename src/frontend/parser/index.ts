@@ -79,7 +79,7 @@ export default class Parser implements Reader<Token, Tokens> {
       this.current = this.lexer.scan()
 
     if (this.current.is(Tokens.COMMENT))
-      return this.moveN(n)
+      return this.moveN(1)
 
     return this.current
   }
