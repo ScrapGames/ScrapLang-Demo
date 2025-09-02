@@ -433,9 +433,10 @@ export default class Parser implements Reader<Token, Tokens> {
   private parseImport(start: Position, from?: string): ast.declarations.Import {
     this.eat(Tokens.IMPORT)
 
-    if (!from)
-      return new ast.declarations.Import([], this.eat(Tokens.IDENTIFIER).content, start, this.Position)
-
+    if (!from) {
+      const module = this.wheter(Tokens.IDENTIFIER) || this.eat(Tokens.STRING)
+      return new ast.declarations.Import([], module.content, start, this.Position)
+    }
     if (this.wheter(Tokens.STAR))
       return new ast.declarations.Import("*", from, start, this.Position)
 
