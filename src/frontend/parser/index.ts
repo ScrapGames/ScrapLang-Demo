@@ -205,6 +205,98 @@ export default class Parser implements Reader<Token, Tokens> {
     return body
   }
 
+  // ----- STATEMENT PARSING ----- //
+
+  /**
+   * Parses a 'dissipate' statement.
+   * @param start Start position.
+   * @returns Dissipate AST node.
+   */
+  private parseDissipate(start: Position): ast.statements.Dissipate {
+    this.eat(Tokens.DISSIPATE)
+    let fn: ast.declarations.Function | ast.expressions.Expression
+    switch (this.current.type) {
+      case Tokens.FN: fn = this.parseFunction(start); break
+      default:        fn = this.parseExpression(); break
+    }
+
+    return new ast.statements.Dissipate(fn, start, this.Position)
+  }
+
+  /**
+   * Parses an expression statement.
+   * @param start Start position.
+   * @returns ExpressionStmt AST node.
+   */
+  private parseExprStmt(start: Position): ast.statements.ExpressionStmt {
+    const expr = this.parseExpression()
+    return new ast.statements.ExpressionStmt(expr, start, expr.end)
+  }
+
+  /**
+   * Parses a declaration statement.
+   * @param start Start position.
+   * @returns DeclarationStmt AST node.
+   */
+  private parseDeclStmt(start: Position): ast.statements.DeclarationStmt {
+    const decl = this.parseDecl(start)
+    return new ast.statements.DeclarationStmt(decl, start, decl.end)
+  }
+
+  /**
+   * Parses a default statement inside a match block.
+   * @param start Start position.
+   * @returns Default AST node.
+   */
+  private parseDefaultStatement(start: Position): ast.statements.Default {
+    this.eat(Tokens.ARROW)
+    const stmt: ast.statements.Statement[] = []
+    if (!this.wheter(Tokens.LBRACE))
+      stmt.push(this.parseStatement(this.Position))
+    else
+      stmt.concat(this.parseBlock(start))
+
+    return new ast.statements.Default(stmt, start, this.Position)
+  }
+
+  /**
+   * Parses a case/default statement inside a match block.
+   * @param start Start position.
+   * @returns Case or Default AST node.
+   */
+  private parseCaseStatement(start: Position): ast.statements.Case | ast.statements.Default {
+    const isDefault = !!(this.wheter(Tokens.DEFAULT))
+    if (isDefault)
+      return this.parseDefaultStatement(start)
+
+    const stmt: ast.statements.Statement[] = []
+    const subject = this.parseExpression()
+    this.eat(Tokens.ARROW)
+    if (!this.wheter(Tokens.LBRACE))
+      stmt.push(this.parseStatement(this.Position))
+    else
+      stmt.concat(this.parseBlock(start))
+    
+    return new ast.statements.Case(subject, stmt, start, this.Position)
+  }
+
+  /**
+   * Parses a generic statement.
+   * @param start Start position.
+   * @returns Statement AST node.
+   */
+  private parseStatement(start: Position): ast.statements.Statement {
+    switch (this.current.type) {
+      case Tokens.VAR:        return new ast.statements.DeclarationStmt(this.parseVar(start), start, this.Position)
+      case Tokens.CONST:      return this.parseDeclStmt(start)
+      case Tokens.MATCH:
+      case Tokens.IDENTIFIER: return this.parseExprStmt(start)
+      case Tokens.DISSIPATE:  return this.parseDissipate(start)
+    }
+
+    this.syntaxError(`Unknown statement '${this.current.TypeContent}'`)
+  }
+
   // ===== DECLARATION PARSING =====
 
   /**
@@ -395,97 +487,6 @@ export default class Parser implements Reader<Token, Tokens> {
     this.syntaxError(`Unknown declaration '${this.current.TypeContent}'`)
   }
 
-  // ----- STATEMENT PARSING ----- //
-
-  /**
-   * Parses a 'dissipate' statement.
-   * @param start Start position.
-   * @returns Dissipate AST node.
-   */
-  private parseDissipate(start: Position): ast.statements.Dissipate {
-    this.eat(Tokens.DISSIPATE)
-    let fn: ast.declarations.Function | ast.expressions.Expression
-    switch (this.current.type) {
-      case Tokens.FN: fn = this.parseFunction(start); break
-      default:        fn = this.parseExpression(); break
-    }
-
-    return new ast.statements.Dissipate(fn, start, this.Position)
-  }
-
-  /**
-   * Parses an expression statement.
-   * @param start Start position.
-   * @returns ExpressionStmt AST node.
-   */
-  private parseExprStmt(start: Position): ast.statements.ExpressionStmt {
-    const expr = this.parseExpression()
-    return new ast.statements.ExpressionStmt(expr, start, expr.end)
-  }
-
-  /**
-   * Parses a declaration statement.
-   * @param start Start position.
-   * @returns DeclarationStmt AST node.
-   */
-  private parseDeclStmt(start: Position): ast.statements.DeclarationStmt {
-    const decl = this.parseDecl(start)
-    return new ast.statements.DeclarationStmt(decl, start, decl.end)
-  }
-
-  /**
-   * Parses a default statement inside a match block.
-   * @param start Start position.
-   * @returns Default AST node.
-   */
-  private parseDefaultStatement(start: Position): ast.statements.Default {
-    this.eat(Tokens.ARROW)
-    const stmt: ast.statements.Statement[] = []
-    if (!this.wheter(Tokens.LBRACE))
-      stmt.push(this.parseStatement(this.Position))
-    else
-      stmt.concat(this.parseBlock(start))
-
-    return new ast.statements.Default(stmt, start, this.Position)
-  }
-
-  /**
-   * Parses a case/default statement inside a match block.
-   * @param start Start position.
-   * @returns Case or Default AST node.
-   */
-  private parseCaseStatement(start: Position): ast.statements.Case | ast.statements.Default {
-    const isDefault = !!(this.wheter(Tokens.DEFAULT))
-    if (isDefault)
-      return this.parseDefaultStatement(start)
-
-    const stmt: ast.statements.Statement[] = []
-    const subject = this.parseExpression()
-    this.eat(Tokens.ARROW)
-    if (!this.wheter(Tokens.LBRACE))
-      stmt.push(this.parseStatement(this.Position))
-    else
-      stmt.concat(this.parseBlock(start))
-    
-    return new ast.statements.Case(subject, stmt, start, this.Position)
-  }
-
-  /**
-   * Parses a generic statement.
-   * @param start Start position.
-   * @returns Statement AST node.
-   */
-  private parseStatement(start: Position): ast.statements.Statement {
-    switch (this.current.type) {
-      case Tokens.VAR:        return new ast.statements.DeclarationStmt(this.parseVar(start), start, this.Position)
-      case Tokens.CONST:      return this.parseDeclStmt(start)
-      case Tokens.MATCH:
-      case Tokens.IDENTIFIER: return this.parseExprStmt(start)
-      case Tokens.DISSIPATE:  return this.parseDissipate(start)
-    }
-
-    this.syntaxError(`Unknown statement '${this.current.TypeContent}'`)
-  }
   // ----- EXPRESSION PARSING ----- //
 
   /**
