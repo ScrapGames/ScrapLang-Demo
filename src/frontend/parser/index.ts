@@ -382,7 +382,7 @@ export default class Parser implements Reader<Token, Tokens> {
    * @param start Start position.
    * @returns Declaration AST node.
    */
-  public parseDecl(start: Position): ast.declarations.DeclarationNode {
+  private parseDecl(start: Position): ast.declarations.DeclarationNode {
     switch(this.current.type) {
       case Tokens.VAR:
       case Tokens.CONST:  return this.parseVar(start)
