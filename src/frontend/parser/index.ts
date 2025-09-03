@@ -213,6 +213,8 @@ export default class Parser implements Reader<Token, Tokens> {
     return this.parseFunctionDecl(start, flag, name, params)
   }
 
+  // ----- STATEMENT PARSING ----- //
+
   /**
    * Parses a block of statements enclosed in braces.
    * @param start Starting position.
@@ -228,8 +230,6 @@ export default class Parser implements Reader<Token, Tokens> {
     this.eat(Tokens.RBRACE)
     return body
   }
-
-  // ----- STATEMENT PARSING ----- //
 
   /**
    * Parses a 'dissipate' statement.
@@ -388,6 +388,14 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   /**
+   * Parses an interface declaration.
+   * @throws Always throws "Unimplemented declaration".
+   */
+  private parseInterface(_start: Position): ast.declarations.Interface {
+    this.syntaxError("Unimplemented declaration")
+  }
+
+  /**
    * Parses a type declaration.
    * @throws Always throws "Unimplemented declaration".
    */
@@ -464,6 +472,10 @@ export default class Parser implements Reader<Token, Tokens> {
     return new ast.declarations.Module(body, name, start, this.Position)
   }
 
+  /**
+   * Parses a deep import symbol (e.g., `std::io::File`).
+   * @returns The full import symbol as a string.
+   */
   private parseDeepImport(): string {
     let symbol = (this.wheter(Tokens.IDENTIFIER) || this.wheter(Tokens.STRING))?.content
     if (!symbol)
@@ -554,6 +566,8 @@ export default class Parser implements Reader<Token, Tokens> {
       case Tokens.MODULE:    return this.parseModule(start)
       case Tokens.FROM:      return this.parseFrom(start)
       case Tokens.IMPORT:    return this.parseImport(start)
+      case Tokens.INTERFACE: return this.parseInterface(start)
+      case Tokens.TYPE:      return this.parseType(start)
     }
 
     this.syntaxError(`Unknown declaration '${this.current.TypeContent}'`)
