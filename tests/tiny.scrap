@@ -1,4 +1,19 @@
-from std import io, audio
+from std::net import servers::http, clients::http
+from std::io  import fs, net::http, open
+from internal::"code-gen" import ir::Functions
+
+class Test {
+
+  /*interface Closeable {
+    close: fn(): bool
+  }*/
+
+  //type Greetable = fn(name: string): void
+
+  fn test() {
+    std::print("¡Esto es una prueba!")
+  }
+}
 
 async fn main() {
   dissipate fn() -> std::print("¡Limpiando memoria al salir!")
@@ -7,6 +22,7 @@ async fn main() {
   const file   = await io::open("./main.scrap")
   const opened = match file {
     null    -> false,
+    false   -> file,
     default -> true
   }
 }
