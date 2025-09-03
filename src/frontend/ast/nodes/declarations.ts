@@ -113,9 +113,13 @@ export class Module extends NameableDeclarationNode {
  * Represents a generic class-like declaration.
  * Used as a base for more specific class-related declarations.
  */
-export class ClassDeclaration extends NameableDeclarationNode {
-  public constructor(kind: DeclarationKind, name: string, start: Position, end: Position) {
-    super(name, kind, start, end)
+export class ClassDecl extends Declaration {
+  public constructor(
+    public specifier: Tokens.PUBLIC | Tokens.PRIVATE | Tokens.PROTECTED,
+    public decl: NameableDecl,
+    start: Position, end: Position
+  ) {
+    super(decl.kind, start, end)
   }
 }
 

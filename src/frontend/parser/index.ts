@@ -323,19 +323,47 @@ export default class Parser implements Reader<Token, Tokens> {
 
   // ===== DECLARATION PARSING =====
 
+  private parseClassDecl(start: Position): ast.declarations.ClassDecl {
+    let specifier: Tokens.PUBLIC | Tokens.PRIVATE | Tokens.PROTECTED = Tokens.PUBLIC
+    let decl: ast.declarations.NameableDecl
+
+    switch (this.current.type) {
+      case Tokens.PUBLIC:
+      case Tokens.PRIVATE:
+      case Tokens.PROTECTED:
+        specifier = this.eat(this.current.type).type as Tokens.PUBLIC | Tokens.PRIVATE | Tokens.PROTECTED
+    }
+
+    switch (this.current.type) {
+      case Tokens.FN:
+      case Tokens.VAR:
+      case Tokens.TYPE:
+      case Tokens.CONST:
+      case Tokens.CLASS:
+      case Tokens.ASYNC:
+      case Tokens.INTERFACE: decl = this.parseDecl(start) as ast.declarations.NameableDecl; break
+      default: this.syntaxError(`Invalid class member '${this.current.TypeContent}'`)
+    }
+
+    return new ast.declarations.ClassDecl(specifier, decl, start, this.Position)
+  }
+
   /**
    * Parses a class declaration.
    * @param start Starting position.
    * @returns Class AST node.
    */
   private parseClass(start: Position): ast.declarations.Class {
+    this.eat(Tokens.CLASS)
     const name = this.eat(Tokens.IDENTIFIER).content
+    const body = []
 
-    do
-      this.next()
+    this.eat(Tokens.LBRACE)
     while (!this.current.is(Tokens.RBRACE))
+      body.push(this.parseClassDecl(this.Position))
 
-    return new ast.declarations.Class([], name, start, this.Position)
+    this.eat(Tokens.RBRACE)
+    return new ast.declarations.Class(body, name, start, this.Position)
   }
 
   /**
@@ -514,11 +542,15 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseDecl(start: Position): ast.declarations.Declaration {
     switch(this.current.type) {
-      case Tokens.CONST:  return this.parseVar(start)
-      case Tokens.MODULE: return this.parseModule(start)
       case Tokens.INLINE:
       case Tokens.ASYNC:
       case Tokens.FN:        return this.parseFunction(start, false)
+      case Tokens.VAR:
+      case Tokens.CONST:     return this.parseVar(start)
+      case Tokens.CLASS:     return this.parseClass(start)
+      case Tokens.MODULE:    return this.parseModule(start)
+      case Tokens.FROM:      return this.parseFrom(start)
+      case Tokens.IMPORT:    return this.parseImport(start)
     }
 
     this.syntaxError(`Unknown declaration '${this.current.TypeContent}'`)
