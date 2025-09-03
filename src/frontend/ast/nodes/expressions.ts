@@ -123,7 +123,7 @@ export class Function extends Expression {
 export class Match extends Expression {
   public constructor(
     public subjet: Expression,
-    public body: Statement[],
+    public body: Case[],
     public fallThrough: Undefinedable<Default>,
     start: Position, end: Position
   ) {

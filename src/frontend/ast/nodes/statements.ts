@@ -139,7 +139,7 @@ export class Default extends Statement {
  * Represents a `case` block inside a `switch` statement.
  */
 export class Case extends Statement {
-  public constructor(public expr: Expression, public body: Statement[], start: Position, end: Position) {
+  public constructor(public expr: Expression[], public body: Statement[], start: Position, end: Position) {
     super(StatementKind.Case, start, end)
   }
 }
