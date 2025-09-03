@@ -4,8 +4,8 @@ import { Position }       from "@frontend/position.ts"
 import type { Reader }    from "@frontend/typings.ts"
 import { Token, Tokens, TOKEN_MAP, stringify } from "@frontend/tokens/tokens.ts"
 import Lexer             from "@frontend/lexer/lexer.ts"
-import { FunctionFlags } from "@frontend/ast/nodes/unclassified.ts"
 import * as ast          from "@frontend/ast/nodes/index.ts"
+import { FunctionFlags } from "@frontend/ast/nodes/functions.ts"
 
 /**
  * Parser class responsible for converting a stream of tokens
@@ -176,13 +176,37 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   /**
+   * Parses a function signature.
+   * @returns Tuple [flag, name, params, isAnonymous, hasArrow].
+   */
+  private parseFunctionSign(): [Undefinedable<FunctionFlags>, string, ast.functions.Param[], boolean] {
+    const flag = (this.wheter(Tokens.INLINE) || this.wheter(Tokens.ASYNC))?.type as Undefinedable<FunctionFlags>
+    if (!this.wheter(Tokens.FN))
+      this.syntaxError("Functions can only has one flag")
+
+    const name     = this.wheter(Tokens.IDENTIFIER)?.content
+    const params   = this.parseFunctionParams()
+    const hasArrow = !!this.wheter(Tokens.ARROW)
+    return [flag, name ?? "anonymous", params, hasArrow]
+  }
+
+  private parseFunction(
+    start: Position,
+    isExpr: true
+  ): ReturnType<typeof this.parseFunctionExpr>
+
+  private parseFunction(
+    start: Position,
+    isExpr: false
+  ): ReturnType<typeof this.parseFunctionDecl>
+
+  /**
    * Parses a function (declaration or expression).
    * @param start Starting position.
    * @returns A Function AST node.
    */
-  private parseFunction(start: Position): ast.declarations.Function | ast.expressions.Function {
-    const [flag, name, params, isAnon, hasArrow] = this.parseFunctionSign()
-    const isExpr = isAnon || hasArrow
+  private parseFunction(start: Position, isExpr: boolean) {
+    const [flag, name, params, hasArrow] = this.parseFunctionSign()
     if (isExpr)
       return this.parseFunctionExpr(start, flag, name, params, hasArrow)
 
@@ -366,21 +390,6 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   /**
-   * Parses a function signature.
-   * @returns Tuple [flag, name, params, isAnonymous, hasArrow].
-   */
-  private parseFunctionSign(): [Undefinedable<FunctionFlags>, string, ast.unclassified.Param[], boolean, boolean] {
-    const flag = (this.wheter(Tokens.INLINE) || this.wheter(Tokens.ASYNC))?.type as Undefinedable<FunctionFlags>
-    if (!this.wheter(Tokens.FN))
-      this.syntaxError("Functions can only has one flag")
-
-    const name     = this.wheter(Tokens.IDENTIFIER)?.content
-    const params   = this.parseFunctionParams()
-    const hasArrow = !!this.wheter(Tokens.ARROW)
-    return [flag, name ?? "anonymous", params, !name, hasArrow]
-  }
-
-  /**
    * Parses a function declaration.
    * @param start Start position.
    * @param flag Function flag (inline, async).
@@ -392,10 +401,10 @@ export default class Parser implements Reader<Token, Tokens> {
     start: Position,
     flag: Undefinedable<FunctionFlags>,
     name: string,
-    params: ast.unclassified.Param[]
-  ): ast.declarations.Function {
+    params: ast.functions.Param[]
+  ): ast.declarations.FunctionDecl {
     const body = this.parseFunctionBody(false)
-    return new ast.declarations.Function(params, body, flag, name, start, this.Position)
+    return new ast.declarations.FunctionDecl(params, body, flag, name, start, this.Position)
   }
 
   /**
@@ -509,9 +518,7 @@ export default class Parser implements Reader<Token, Tokens> {
       case Tokens.MODULE: return this.parseModule(start)
       case Tokens.INLINE:
       case Tokens.ASYNC:
-      case Tokens.FN:     return this.parseFunction(start) as ast.declarations.Function
-      case Tokens.FROM:   return this.parseFrom(start)
-      case Tokens.IMPORT: return this.parseImport(start)
+      case Tokens.FN:        return this.parseFunction(start, false)
     }
 
     this.syntaxError(`Unknown declaration '${this.current.TypeContent}'`)
@@ -559,14 +566,14 @@ export default class Parser implements Reader<Token, Tokens> {
     start: Position,
     flag: Undefinedable<FunctionFlags>,
     name: string,
-    params: ast.unclassified.Param[],
+    params: ast.functions.Param[],
     hasArrow: boolean
-  ): ast.expressions.Function {
+  ): ast.expressions.FunctionExpr {
     if (flag && flag === Tokens.INLINE)
       this.syntaxError("A function expression cannot be inlined")
 
     const body = this.parseFunctionBody(hasArrow)
-    return new ast.expressions.Function(name, params, body, flag, start, this.Position)
+    return new ast.expressions.FunctionExpr(name, params, body, flag, start, this.Position)
   }
 
   /**
@@ -658,7 +665,7 @@ export default class Parser implements Reader<Token, Tokens> {
     switch (this.current.type) {
       case Tokens.FN:
       case Tokens.ASYNC:
-      case Tokens.INLINE: return this.parseFunction(start) as ast.expressions.Function
+      case Tokens.INLINE: return this.parseFunction(start, true)
       case Tokens.MATCH:  return this.parseMatch(start)
       case Tokens.NUMBER:
       case Tokens.CHAR: {
