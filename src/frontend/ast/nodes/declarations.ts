@@ -7,12 +7,13 @@
  * `DeclarationNode`, which provides the common structure for all declarations.
  */
 
-import { Undefinedable } from "@/typings.ts"
-import { Position }      from "@frontend/position.ts"
-import { ASTNode }       from "@frontend/ast/ast.ts"
-import { Expression }    from "@frontend/ast/nodes/expressions.ts"
-import { Statement }     from "@frontend/ast/nodes/statements.ts"
-import { FunctionFlags, Param } from "@frontend/ast/nodes/unclassified.ts"
+import { Undefinedable }        from "@/typings.ts"
+import { Tokens }               from "@frontend/tokens/tokens.ts"
+import { Position }             from "@frontend/position.ts"
+import { ASTNode }              from "@frontend/ast/ast.ts"
+import { Expression }           from "@frontend/ast/nodes/expressions.ts"
+import { Statement }            from "@frontend/ast/nodes/statements.ts"
+import { Function, FunctionFlags, Param } from "@frontend/ast/nodes/functions.ts"
 
 /**
  * Enumeration representing different kinds of declarations.
@@ -86,7 +87,7 @@ export class Variable extends NameableDeclarationNode {
  * - `params`: function parameters.
  * - `body`: list of statements forming the function body.
  */
-export class Function extends NameableDeclarationNode {
+export class FunctionDecl extends NameableDecl implements Function {
   public constructor(
     public params: Param[], public body: Statement[],
     public flag: Undefinedable<FunctionFlags>, name: string,

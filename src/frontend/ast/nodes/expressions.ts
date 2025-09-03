@@ -10,12 +10,12 @@
  * interpretation or code generation.
  */
 
-import { Undefinedable } from "@/typings.ts"
-import { Position }      from "@frontend/position.ts"
-import { Token }         from "@frontend/tokens/tokens.ts"
-import { ASTNode }       from "@frontend/ast/ast.ts"
-import { Default, Statement }   from "@frontend/ast/nodes/statements.ts"
-import { FunctionFlags, Param } from "@frontend/ast/nodes/unclassified.ts"
+import { Undefinedable }      from "@/typings.ts"
+import { Position }           from "@frontend/position.ts"
+import { Token }              from "@frontend/tokens/tokens.ts"
+import { ASTNode }            from "@frontend/ast/ast.ts"
+import { Case, Default, Statement }       from "@frontend/ast/nodes/statements.ts"
+import { Function, FunctionFlags, Param } from "@frontend/ast/nodes/functions.ts"
 
 /**
  * Enum that classifies the kind of expression represented by an `ExpressionNode`.
@@ -104,7 +104,7 @@ export class Binary extends Expression {
  * - `body`: statements or a single expression (in case of concise bodies).
  * - `flag`: optional function flag (e.g., async, inline).
  */
-export class Function extends Expression {
+export class FunctionExpr extends Expression implements Function {
   public constructor(
     public name: string, public params: Param[],
     public body: Statement[], public flag: Undefinedable<FunctionFlags>,

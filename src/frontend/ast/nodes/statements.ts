@@ -17,11 +17,8 @@
 import { Position }       from "@frontend/position.ts"
 import { ASTNode }        from "@frontend/ast/ast.ts"
 import { Expression }     from "@frontend/ast/nodes/expressions.ts"
-import {
-  Declaration,
-  Variable,
-  Function as FunctionDecl
-} from "@frontend/ast/nodes/declarations.ts"
+import { Function }       from "@frontend/ast/nodes/functions.ts"
+import { Declaration, Variable } from "@frontend/ast/nodes/declarations.ts"
 
 /**
  * Enumeration of all statement kinds supported by the language.
@@ -171,7 +168,7 @@ export class ExpressionStmt extends Statement {
  * current function returns or crashes, ensuring cleanup or deferred behavior.
  */
 export class Dissipate extends Statement {
-  public constructor(public fn: FunctionDecl | Expression, start: Position, end: Position) {
+  public constructor(public fn: Function | Expression, start: Position, end: Position) {
     super(StatementKind.Dissipate, start, end)
   }
 }

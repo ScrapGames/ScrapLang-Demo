@@ -238,13 +238,11 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseDissipate(start: Position): ast.statements.Dissipate {
     this.eat(Tokens.DISSIPATE)
-    let fn: ast.declarations.Function | ast.expressions.Expression
-    switch (this.current.type) {
-      case Tokens.FN: fn = this.parseFunction(start); break
-      default:        fn = this.parseExpression(); break
-    }
+    if (this.current.is(Tokens.FN))
+      return new ast.statements.Dissipate(this.parseFunction(start, true), start, this.Position)
 
-    return new ast.statements.Dissipate(fn, start, this.Position)
+    // tries to parse an expression which could be a function contained in a array access, a mod access or similar expressions
+    return new ast.statements.Dissipate(this.parseExpression(), start, this.Position)
   }
 
   /**
@@ -401,7 +399,7 @@ export default class Parser implements Reader<Token, Tokens> {
    * Parses function parameters.
    * @returns Array of Param AST nodes.
    */
-  private parseFunctionParams(): ast.unclassified.Param[] {
+  private parseFunctionParams(): ast.functions.Param[] {
     this.eat(Tokens.LPAREN)
 
     this.eat(Tokens.RPAREN)
