@@ -44,7 +44,7 @@ export class Declaration extends ASTNode {
   }
 }
 
-export class NameableDeclarationNode extends Declaration {
+export class NameableDecl extends Declaration {
   public constructor(
     public name: string, kind: DeclarationKind,
     start: Position, end: Position
@@ -73,7 +73,7 @@ export class Import extends Declaration {
  * - `isConst`: whether the variable is declared as a constant.
  * - `value`: the assigned expression value.
  */
-export class Variable extends NameableDeclarationNode {
+export class Variable extends NameableDecl {
   public constructor(
     name: string, public isConst: boolean, public value: Expression,
     start: Position, end: Position
@@ -101,7 +101,7 @@ export class FunctionDecl extends NameableDecl implements Function {
  * Represents a module declaration in the AST.
  * A module groups together other declarations such as classes, functions, or variables.
  */
-export class Module extends NameableDeclarationNode {
+export class Module extends NameableDecl {
   public constructor(
     public body: Declaration[], name: string,
     start: Position, end: Position
@@ -128,7 +128,7 @@ export class ClassDecl extends Declaration {
  * Represents a class declaration in the AST.
  * - `body`: list of member declarations (methods, properties, etc.).
  */
-export class Class extends NameableDeclarationNode {
+export class Class extends NameableDecl {
   public constructor(public body: Declaration[], name: string, start: Position, end: Position) {
     super(name, DeclarationKind.Class, start, end)
   }
@@ -138,7 +138,7 @@ export class Class extends NameableDeclarationNode {
  * Represents an interface declaration in the AST.
  * - `body`: list of member declarations defining the contract of the interface.
  */
-export class Interface extends NameableDeclarationNode {
+export class Interface extends NameableDecl {
   public constructor(public body: Declaration[], name: string, start: Position, end: Position) {
     super(name, DeclarationKind.Interface, start, end)
   }
@@ -148,7 +148,7 @@ export class Interface extends NameableDeclarationNode {
  * Represents a type alias declaration in the AST.
  * Currently only stores the alias name.
  */
-export class Type extends NameableDeclarationNode {
+export class Type extends NameableDecl {
   public constructor(name: string, start: Position, end: Position) {
     super(name, DeclarationKind.Type, start, end)
   }
