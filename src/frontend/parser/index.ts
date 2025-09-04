@@ -327,14 +327,14 @@ export default class Parser implements Reader<Token, Tokens> {
   // ===== DECLARATION PARSING =====
 
   private parseClassDecl(start: Position): ast.declarations.ClassDecl {
-    let specifier: Tokens.PUBLIC | Tokens.PRIVATE | Tokens.PROTECTED = Tokens.PUBLIC
+    let specifier: Tokens.PUB | Tokens.PRIVATE | Tokens.PROTECTED = Tokens.PUB
     let decl: ast.declarations.NameableDecl
 
     switch (this.current.type) {
-      case Tokens.PUBLIC:
+      case Tokens.PUB:
       case Tokens.PRIVATE:
       case Tokens.PROTECTED:
-        specifier = this.eat(this.current.type).type as Tokens.PUBLIC | Tokens.PRIVATE | Tokens.PROTECTED
+        specifier = this.eat(this.current.type).type as Tokens.PUB | Tokens.PRIVATE | Tokens.PROTECTED
     }
 
     switch (this.current.type) {

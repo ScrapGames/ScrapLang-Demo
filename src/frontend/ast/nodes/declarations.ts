@@ -116,7 +116,7 @@ export class Module extends NameableDecl {
  */
 export class ClassDecl extends Declaration {
   public constructor(
-    public specifier: Tokens.PUBLIC | Tokens.PRIVATE | Tokens.PROTECTED,
+    public specifier: Tokens.PUB | Tokens.PRIVATE | Tokens.PROTECTED,
     public decl: NameableDecl,
     start: Position, end: Position
   ) {
