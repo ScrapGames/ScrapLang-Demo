@@ -467,7 +467,8 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns Module AST node.
    */
   private parseModule(start: Position): ast.declarations.Module {
-    const name = this.eat(Tokens.IDENTIFIER).content
+    this.eat(Tokens.MODULE)
+    const name = (this.wheter(Tokens.IDENTIFIER) || this.eat(Tokens.STRING)).content
     const body = this.parseModuleBody()
     return new ast.declarations.Module(body, name, start, this.Position)
   }
