@@ -16,7 +16,7 @@
       "--allow-all",
       "${workspaceFolder}/src/scrap.ts",
       "--debug",
-      "${workspaceFolder}/tests/tiny.scrap"
+      "${workspaceFolder}/tests/main.scrap"
     ],
     "attachSimplePort": 9229
   }, {
@@ -33,7 +33,7 @@
         "--allow-net",
         "${workspaceFolder}/src/scrap.ts",
         "--debug",
-        "${workspaceFolder}/tests/tiny.scrap"
+        "${workspaceFolder}/tests/main.scrap"
       ],
       "attachSimplePort": 9229
   }, {

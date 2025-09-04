@@ -1,7 +1,7 @@
 {
   "version": "beta-1.0.0",
   "tasks": {
-    "dev": "deno run --allow-read --allow-net --watch src/scrap.ts --debug tests/tiny.scrap"
+    "dev": "deno run --allow-read --allow-net --watch src/scrap.ts --debug tests/main.scrap"
   },
   "compilerOptions": {
     "strict": true,
