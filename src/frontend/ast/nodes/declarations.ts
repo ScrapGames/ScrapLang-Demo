@@ -7,12 +7,12 @@
  * `DeclarationNode`, which provides the common structure for all declarations.
  */
 
-import { Undefinedable }        from "@/typings.ts"
-import { Tokens }               from "@frontend/tokens/tokens.ts"
-import { Position }             from "@frontend/position.ts"
-import { ASTNode }              from "@frontend/ast/ast.ts"
-import { Expression }           from "@frontend/ast/nodes/expressions.ts"
-import { Statement }            from "@frontend/ast/nodes/statements.ts"
+import { Undefinedable } from "@/typings.ts"
+import { Tokens }        from "@frontend/tokens/tokens.ts"
+import { Position }      from "@frontend/position.ts"
+import { ASTNode }       from "@frontend/ast/ast.ts"
+import { Expression }    from "@frontend/ast/nodes/expressions.ts"
+import { Statement }     from "@frontend/ast/nodes/statements.ts"
 import { Function, FunctionFlags, Param } from "@frontend/ast/nodes/functions.ts"
 
 /**
@@ -21,13 +21,16 @@ import { Function, FunctionFlags, Param } from "@frontend/ast/nodes/functions.ts
 export enum DeclarationKind {
   Module,
   Class,
-  Function,
-  Variable,
+  FunctionDecl,
+  FunctionDef,
+  VariableDecl,
+  VariableDef,
   Interface,
   Type,
   Enum,
   Import,
-  Export
+  Export,
+  Extern
 }
 
 /**
@@ -68,17 +71,35 @@ export class Import extends Declaration {
   }
 }
 
+export class VariableDecl extends NameableDecl {
+  public constructor(
+    public isConst: boolean, name: string,
+    start: Position, end: Position,
+  ) {
+    super(name, DeclarationKind.VariableDecl, start, end)
+  }
+}
+
 /**
  * Represents a variable declaration in the AST.
  * - `isConst`: whether the variable is declared as a constant.
  * - `value`: the assigned expression value.
  */
-export class Variable extends NameableDecl {
+export class VariableDef extends NameableDecl {
   public constructor(
-    name: string, public isConst: boolean, public value: Expression,
+    public isConst: boolean, public value: Expression, name: string,
     start: Position, end: Position
   ) {
-    super(name, DeclarationKind.Variable, start, end)
+    super(name, DeclarationKind.VariableDef, start, end)
+  }
+}
+
+export class FunctionDecl extends NameableDecl {
+  public constructor(
+    public params: Param[], name: string,
+    start: Position, end: Position
+  ) {
+    super(name, DeclarationKind.FunctionDecl, start, end)
   }
 }
 
@@ -87,13 +108,22 @@ export class Variable extends NameableDecl {
  * - `params`: function parameters.
  * - `body`: list of statements forming the function body.
  */
-export class FunctionDecl extends NameableDecl implements Function {
+export class FunctionDef extends NameableDecl implements Function {
   public constructor(
     public params: Param[], public body: Statement[],
     public flag: Undefinedable<FunctionFlags>, name: string,
     start: Position, end: Position,
   ) {
-    super(name, DeclarationKind.Function, start, end)
+    super(name, DeclarationKind.FunctionDef, start, end)
+  }
+}
+
+export class Extern extends Declaration {
+  public constructor(
+    public decl: FunctionDecl,
+    start: Position, end: Position
+  ) {
+    super(DeclarationKind.Extern, start, end)
   }
 }
 
