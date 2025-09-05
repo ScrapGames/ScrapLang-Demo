@@ -198,7 +198,7 @@ export default class Parser implements Reader<Token, Tokens> {
   private parseFunction(
     start: Position,
     isExpr: false
-  ): ReturnType<typeof this.parseFunctionDecl>
+  ): ReturnType<typeof this.parseFunctionDef>
 
   /**
    * Parses a function (declaration or expression).
@@ -210,7 +210,7 @@ export default class Parser implements Reader<Token, Tokens> {
     if (isExpr)
       return this.parseFunctionExpr(start, flag, name, params, hasArrow)
 
-    return this.parseFunctionDecl(start, flag, name, params)
+    return this.parseFunctionDef(start, flag, name, params)
   }
 
   // ----- STATEMENT PARSING ----- //
@@ -307,6 +307,50 @@ export default class Parser implements Reader<Token, Tokens> {
     return new ast.statements.Case(subject, stmt, start, this.Position)
   }
 
+  private parseWhile(start: Position): ast.statements.While {
+    this.eat(Tokens.WHILE)
+
+    const expr = this.parseExpression()
+    const body = this.parseBlock(start)
+    return new ast.statements.While(expr, body, start, this.Position)
+  }
+
+  private parseFor(start: Position): ast.statements.For | ast.statements.ForOf | ast.statements.ForIn {
+    this.eat(Tokens.FOR)
+    const decl: (ast.declarations.VariableDecl | ast.declarations.VariableDef)[] = [this.parseVar(this.Position, false)]
+
+    switch (this.current.type) {
+      case Tokens.OF:
+      case Tokens.IN: {
+        const forStmt = this.wheter(Tokens.OF) ? ast.statements.ForOf : ast.statements.ForIn
+
+        const subject = this.parseExpression()
+        const body = this.parseBlock(this.Position)
+        return new forStmt(decl[0], subject, body, start, this.Position)
+      }
+      case Tokens.EQUAL: {
+        this.eat(Tokens.EQUAL)
+        const first = decl[0]
+        decl[0] = new ast.declarations.VariableDef(first.isConst, this.parseExpression(), first.name, first.start, first.end)
+
+        while (!this.current.is(Tokens.SEMICOLON))
+          decl.push(this.parseVar(start, true))
+      } break
+    }
+    const expr = this.eat(Tokens.SEMICOLON) && this.parseExpression()
+    const inc  = this.eat(Tokens.SEMICOLON) && this.parseExpression()
+    const body = this.parseBlock(this.Position)
+    return new ast.statements.For(decl as ast.declarations.VariableDef[], expr, inc, body, start, this.Position)
+  }
+
+  private parseIf(start: Position): ast.statements.If {
+    this.eat(Tokens.IF)
+    const expr = this.parseExpression()
+
+    const body = this.parseBlock(start)
+    return new ast.statements.If(expr, body, start, this.Position)
+  }
+
   /**
    * Parses a generic statement.
    * @param start Start position.
@@ -314,11 +358,14 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseStatement(start: Position): ast.statements.Statement {
     switch (this.current.type) {
-      case Tokens.VAR:        return new ast.statements.DeclarationStmt(this.parseVar(start), start, this.Position)
+      case Tokens.VAR:
       case Tokens.CONST:      return this.parseDeclStmt(start)
       case Tokens.MATCH:
       case Tokens.IDENTIFIER: return this.parseExprStmt(start)
       case Tokens.DISSIPATE:  return this.parseDissipate(start)
+      case Tokens.IF:         return this.parseIf(start)
+      case Tokens.WHILE:      return this.parseWhile(start)
+      case Tokens.FOR:        return this.parseFor(start)
     }
 
     this.syntaxError(`Unknown statement '${this.current.TypeContent}'`)
@@ -344,7 +391,8 @@ export default class Parser implements Reader<Token, Tokens> {
       case Tokens.CONST:
       case Tokens.CLASS:
       case Tokens.ASYNC:
-      case Tokens.INTERFACE: decl = this.parseDecl(start) as ast.declarations.NameableDecl; break
+      case Tokens.INTERFACE:
+        decl = this.parseDecl(start) as ast.declarations.NameableDecl; break
       default: this.syntaxError(`Invalid class member '${this.current.TypeContent}'`)
     }
 
@@ -369,22 +417,36 @@ export default class Parser implements Reader<Token, Tokens> {
     return new ast.declarations.Class(body, name, start, this.Position)
   }
 
+  private parseVar(
+    start: Position,
+    forceDef: true
+  ): ast.declarations.VariableDef
+
+  private parseVar(
+    start: Position,
+    forceDef: false
+  ): ast.declarations.VariableDecl
+
   /**
    * Parses a variable declaration.
    * @param start Starting position.
    * @returns Variable AST node.
    */
   private parseVar(
-    start: Position
-  ): ast.declarations.Variable {
+    start: Position,
+    def: boolean
+  ): ast.declarations.VariableDef | ast.declarations.VariableDecl {
     const isConst = !!this.wheter(Tokens.CONST)
 
     !isConst && this.eat(Tokens.VAR)
     const name = this.eat(Tokens.IDENTIFIER).content
-    this.eat(Tokens.EQUAL)
+    
+    if (!def)
+      return new ast.declarations.VariableDecl(isConst, name, start, this.Position)
 
+    this.eat(Tokens.EQUAL)
     const value = this.parseExpression()
-    return new ast.declarations.Variable(name, isConst, value, start, this.Position)
+    return new ast.declarations.VariableDef(isConst, value, name, start, this.Position)
   }
 
   /**
@@ -436,26 +498,44 @@ export default class Parser implements Reader<Token, Tokens> {
    * @param params Function parameters.
    * @returns Function AST node.
    */
-  private parseFunctionDecl(
+  private parseFunctionDef(
     start: Position,
     flag: Undefinedable<FunctionFlags>,
     name: string,
     params: ast.functions.Param[]
-  ): ast.declarations.FunctionDecl {
+  ): ast.declarations.FunctionDef {
     const body = this.parseFunctionBody(false)
-    return new ast.declarations.FunctionDecl(params, body, flag, name, start, this.Position)
+    return new ast.declarations.FunctionDef(params, body, flag, name, start, this.Position)
+  }
+
+  private parseModuleDecl(start: Position): ast.declarations.Declaration {
+    switch (this.current.type) {
+      case Tokens.FN:
+      case Tokens.ASYNC:
+      case Tokens.INLINE:
+      case Tokens.EXTERN:
+      case Tokens.MODULE:
+      case Tokens.INTERFACE:
+      case Tokens.IMPORT:
+      case Tokens.CONST:
+      case Tokens.CLASS:
+      case Tokens.FROM:
+      case Tokens.TYPE: return this.parseDecl(start)
+    }
+
+    this.syntaxError(`Invalid module declaration '${this.current.TypeContent}'`)
   }
 
   /**
    * Parses the body of a module.
    * @returns Array of declaration AST nodes.
    */
-  private parseModuleBody(): ast.declarations.Declaration[] {
+  private parseModuleBody(start: Position): ast.declarations.Declaration[] {
     this.eat(Tokens.LBRACE)
     const body = []
 
     while (!this.current.is(Tokens.RBRACE))
-      body.push(this.parseDecl(this.Position))
+      body.push(this.parseModuleDecl(start))
 
     this.eat(Tokens.RBRACE)
     return body
@@ -469,7 +549,7 @@ export default class Parser implements Reader<Token, Tokens> {
   private parseModule(start: Position): ast.declarations.Module {
     this.eat(Tokens.MODULE)
     const name = (this.wheter(Tokens.IDENTIFIER) || this.eat(Tokens.STRING)).content
-    const body = this.parseModuleBody()
+    const body = this.parseModuleBody(start)
     return new ast.declarations.Module(body, name, start, this.Position)
   }
 
@@ -551,6 +631,21 @@ export default class Parser implements Reader<Token, Tokens> {
     return this.parseImport(start, module)
   }
 
+  private parseExtern(start: Position): ast.declarations.Extern {
+    this.eat(Tokens.EXTERN) && this.eat(Tokens.FN)
+    const [flag, name, params, hasArrow, isAnon] = this.parseFunctionSign()
+
+    switch (true) {
+      case hasArrow:
+      case isAnon:   this.syntaxError("Anonymous function can not be extern"); break
+      case !!flag:   this.syntaxError("Extern functions can not have any flag"); break
+    }
+
+
+    const fn = new ast.declarations.FunctionDecl(params, name, start, this.Position)
+    return new ast.declarations.Extern(fn, start, this.Position)
+  }
+
   /**
    * Parses a declaration (var, const, module, function, import, from).
    * @param start Start position.
@@ -561,8 +656,9 @@ export default class Parser implements Reader<Token, Tokens> {
       case Tokens.INLINE:
       case Tokens.ASYNC:
       case Tokens.FN:        return this.parseFunction(start, false)
+      case Tokens.EXTERN:    return this.parseExtern(start)
       case Tokens.VAR:
-      case Tokens.CONST:     return this.parseVar(start)
+      case Tokens.CONST:     return this.parseVar(start, true)
       case Tokens.CLASS:     return this.parseClass(start)
       case Tokens.MODULE:    return this.parseModule(start)
       case Tokens.FROM:      return this.parseFrom(start)

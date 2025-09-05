@@ -18,7 +18,7 @@ import { Position }       from "@frontend/position.ts"
 import { ASTNode }        from "@frontend/ast/ast.ts"
 import { Expression }     from "@frontend/ast/nodes/expressions.ts"
 import { Function }       from "@frontend/ast/nodes/functions.ts"
-import { Declaration, Variable } from "@frontend/ast/nodes/declarations.ts"
+import { Declaration, VariableDecl, VariableDef } from "@frontend/ast/nodes/declarations.ts"
 
 /**
  * Enumeration of all statement kinds supported by the language.
@@ -83,7 +83,7 @@ export class DoWhile extends Statement {
  */
 export class For extends Statement {
   public constructor(
-    public decl: Variable[],         // Initialization variables
+    public decl: VariableDef[],         // Initialization variables
     public expr: Expression,     // Loop condition
     public inc: Expression,      // Increment expression
     public body: Statement[],        // Loop body
@@ -99,7 +99,7 @@ export class For extends Statement {
  */
 export class ForIn extends Statement {
   public constructor(
-    public decl: Variable,
+    public decl: VariableDecl,
     public subject: Expression,
     public body: Statement[],
     start: Position, end: Position
@@ -114,7 +114,7 @@ export class ForIn extends Statement {
  */
 export class ForOf extends Statement {
   public constructor(
-    public decl: Variable,
+    public decl: VariableDecl,
     public subject: Expression,
     public body: Statement[],
     start: Position, end: Position
