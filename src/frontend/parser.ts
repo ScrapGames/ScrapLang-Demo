@@ -632,7 +632,7 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   private parseExtern(start: Position): ast.declarations.Extern {
-    this.eat(Tokens.EXTERN) && this.eat(Tokens.FN)
+    this.eat(Tokens.EXTERN)
     const [flag, name, params, hasArrow, isAnon] = this.parseFunctionSign()
 
     switch (true) {
