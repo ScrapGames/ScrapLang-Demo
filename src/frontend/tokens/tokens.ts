@@ -51,6 +51,7 @@ export enum Tokens {
     DISSIPATE,
     INLINE,
     IMPL,
+    EXTERN,
   keywords_close,
 
   // OPERATORS
@@ -176,6 +177,7 @@ export const TOKEN_MAP = new Map([
   [Tokens.DISSIPATE,  "dissipate"],
   [Tokens.INLINE,     "inline"],
   [Tokens.IMPL,       "impl"],
+  [Tokens.EXTERN,     "extern"],
 
   // ========================
   // OPERATORS
@@ -305,6 +307,7 @@ export const KEYWORD_MAP = new Map([
   ["dissipate",  Tokens.DISSIPATE],
   ["inline",     Tokens.INLINE],
   ["impl",       Tokens.IMPL],
+  ["extern",     Tokens.EXTERN],
 
   // operator which are words
   ["in",         Tokens.IN],
