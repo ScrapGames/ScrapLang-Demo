@@ -177,9 +177,9 @@ export default class Parser implements Reader<Token, Tokens> {
 
   /**
    * Parses a function signature.
-   * @returns Tuple [flag, name, params, isAnonymous, hasArrow].
+   * @returns Tuple [flag, name, params, isAnonymous, hasArrow, isAnon].
    */
-  private parseFunctionSign(): [Undefinedable<FunctionFlags>, string, ast.functions.Param[], boolean] {
+  private parseFunctionSign(): [Undefinedable<FunctionFlags>, string, ast.functions.Param[], boolean, boolean] {
     const flag = (this.wheter(Tokens.INLINE) || this.wheter(Tokens.ASYNC))?.type as Undefinedable<FunctionFlags>
     if (!this.wheter(Tokens.FN))
       this.syntaxError("Functions can only has one flag")
@@ -187,7 +187,7 @@ export default class Parser implements Reader<Token, Tokens> {
     const name     = this.wheter(Tokens.IDENTIFIER)?.content
     const params   = this.parseFunctionParams()
     const hasArrow = !!this.wheter(Tokens.ARROW)
-    return [flag, name ?? "anonymous", params, hasArrow]
+    return [flag, name ?? "anonymous", params, hasArrow, !name]
   }
 
   private parseFunction(
