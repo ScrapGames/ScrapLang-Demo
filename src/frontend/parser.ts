@@ -154,8 +154,6 @@ export default class Parser implements Reader<Token, Tokens> {
     return this.eat(type)
   }
 
-  // ===== UNCLASSIFIED PARSING =====
-
   /**
    * Parses the root file/module.
    * @returns The AST node representing a module.
@@ -174,6 +172,8 @@ export default class Parser implements Reader<Token, Tokens> {
       this.Position
     )
   }
+
+  // ===== FUNCTION PARSING =====
 
   /**
    * Parses a function signature.
@@ -692,7 +692,7 @@ export default class Parser implements Reader<Token, Tokens> {
         default: body.push(stmt as ast.statements.Case); break
       }
 
-      this.wheter(Tokens.COMMA) // this allows trailing comma, because only eats them if they exist
+      this.wheter(Tokens.COMMA) // this allows trailing comma, because only eats it if exists
     }
 
     this.eat(Tokens.RBRACE)
