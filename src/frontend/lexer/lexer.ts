@@ -94,7 +94,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     opts: Partial<{ content: string, pos: Position, advance: boolean }> = {}
   ): Token {
     const t = Token.createToken(tok, opts.pos ?? this.Position, opts.content ?? TOKEN_MAP.get(tok)!);
-    opts.advance ??= true
+    opts.advance ??= (true && !t.isCompoundedOp())
     if (!opts.advance)
       return t
 
@@ -332,7 +332,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
   }
 
   /**
-   * Scans `+`, `-`, `++`, or `--`.
+   * Scans `+`, `-`, `++`, `--`, `->`.
    */
   private scanIncrement() {
     const isMinus = this.current === '-'
@@ -343,7 +343,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     }
 
     let type = isMinus ? Tokens.MINUS : Tokens.PLUS
-    if (this.check(this.current) && this.moveN(2)) {
+    if (this.check(this.current) && this.next()) {
       type = this.current === '+' ? Tokens.INCREMENT : Tokens.DECREMENT
       return this.createToken(type)
     }
