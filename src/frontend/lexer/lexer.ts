@@ -301,7 +301,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
    * Scans `:` or `::` (module accessor).
    */
   private scanColon() {
-    if (this.check(":") && this.next())
+    if (this.check(":") && this.moveN(2))
       return this.createToken(Tokens.MOD_ACCESSOR)
 
     return this.createToken(Tokens.COLON)
