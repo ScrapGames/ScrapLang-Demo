@@ -1,8 +1,8 @@
 import { parseArgs } from "@std/cli"
 
 import { CLIError } from "@/errors.ts"
-import Lexer from "@frontend/lexer/lexer.ts"
-import Parser from "@frontend/parser/index.ts"
+import Lexer from "@frontend/lexer.ts"
+import Parser from "@frontend/parser.ts"
 
 export const VERSION = "1.0.0"
 export const SLASH = Deno.build.os === "windows" ? "\\" : "/"
@@ -26,11 +26,9 @@ async function main(args: string[]): Promise<void> {
 
   if (lexer.hasEnd())
     return console.info("Nothing to run!")
-  
-  const start = parser.Position
-  parser.next()
 
-  console.log(parser.parseDecl(start))
+  const ast = parser.parseFile()
+  console.log(ast)
 }
 
 main(Deno.args);

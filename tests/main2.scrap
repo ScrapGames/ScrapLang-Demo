@@ -1,0 +1,329 @@
+import { Fontanero } from "../examples/instanceof"
+
+module ArgsDemostration {
+  fn variableArgs(args: ...string) {
+    std::console.log("BRUH " + args.length)
+  }
+
+  fn bruh(args: ...String) {
+    const date = Date.currentDate() - Date.from("14/03/2024")
+  }
+
+  fn returnMultiple() {
+    return { num: 1, currentDate: Date.currentDate() }
+  }
+
+  fn getFromMultipleReturn() {
+    const { num, currentDate } = returnMultiple()
+
+    console.log(num) // prints 1
+    console.log(currentDate) // prints a date object
+  }
+}
+
+fn main() {
+
+  const lambda = (name: String) -> {
+    console.log(`Hello ${name}`)
+  }
+
+  const aCharacter = 'a'
+
+  const multilineString =
+"Hello, my name is SuspiciousScapper1, official and unique developer of ScrapLang at the moment.
+The history of this project s a little large, you can visit it at: (possible URL to our page)"
+
+  ArgsDemostration::variable_args("bruh", "moment", "this are variable args", "tafaaaaak!")
+  var num = 30
+  "bestial and sexy programming language"
+  'G'
+}
+
+/**
+ * // BRUH
+ * ! danger!
+ * ? a query!!
+ * * Viva la libertad carajooo
+ * TODO: TODO comment in ScrapLang using "BetterComments"
+ */
+
+/* const sexyArray = [1, 2, 3, 4, 5]
+
+const bruhFloat = 10.200
+
+const version: string = "1.0.0"
+
+const aChar = '2'
+
+const STATUS_CODES = { "OK": 200, "I'm a teapot": 306 }
+
+const BRUH = "a"
+
+const aFunctionInConstant = fn constant() {}
+
+const arr1 = [fn bruh(){}, fn test1(){}]
+
+fn test(num: i32, num2: u32) {}
+
+const test = "LOL"
+
+const PRECIO = "BRUTAL price" */
+
+/* fn printNumber(num: i32, num2: i32) {
+  //const lol = "LOL"
+} */
+
+/*
+module Test {
+  module InnerTest {
+    const moreInnerConst = 20
+  }
+
+  const innerConst = 10
+}
+
+const obj = { a: 1 }
+
+fn aNormalFunction() {
+
+  var aVariable = 10
+
+  const aConstant = 10
+
+  fn innerFunction() {
+    const innerestCostant = 20
+  }
+
+  return { a: "b", b: { c: "d" } }
+}
+
+fn rawFn() {}
+
+class Person extends Bruh {
+  public const PRICE = 10.40
+  private var name
+
+  private fn constructor() {}
+
+  public fn destructor() {}
+}
+
+const VERSION = 20
+
+fn lol() {}
+
+const num = 1_000_000
+
+const lambda = fn aLambdaFunction() {
+  return "A string returned from a lambda!"
+}
+
+const bruh = &VERSION
+
+fn bruh() {
+  const aString = "I'm a string!"
+}
+
+const sexyArray = [1, 2, 3, 4, 5]
+
+const bruhFloat = 10.200
+
+const version: string = "1.0.0"
+
+const aChar = '2'
+
+const STATUS_CODES = { "OK": 200, "I'm a teapot": 418 }
+
+const BRUH = "a"
+
+const aFunctionInConstant = fn constant() {}
+
+const arr1 = [fn bruh(){}, fn test1(){}]
+
+fn test(num: i32, num2: u32) {}
+
+const test = "LOL"
+
+const PRECIO = "BRUTAL price"
+
+fn main() {
+
+  const multilineString =
+"Hello, my name is SuspiciousScapper1, official and unique developer of ScrapLang at the moment.
+The history of this project s a little large, you can visit it at: (possible URL to our page)"
+
+  //"Hello World!"
+}
+*/
+
+const name = "Rawabi"
+
+//* Example of multiple nested modules
+module Test {
+  export const name = "InnerRawabi"
+
+  export module InnerModule {
+    export const name = "A little bit inner Rawabi"
+    export module SuperInnerestModule {
+      export const name = "InnerestRawabi"
+    }
+  }
+}
+
+fn returnValue() {
+  std::print(Test::name)
+}
+
+fn handleRequest() {
+  return "<h1>Hello World!</h1>"
+}
+
+fn main() {
+  var num = 10
+  //num = 20
+
+  //std::print("Referenced variable before the change:", num)
+  const obj = {
+    a: num,
+    c: std::print
+  }
+
+  //* example accessing multiple nested modules
+  //std::print(Test::InnerModule::SuperInnerestModule::name)
+
+  var numRef = &num
+  //numRef = 50
+
+  /* std::print("Reference after the change:", numRef)
+  std::print()
+  std::print("Referenced variable after the change:", num) */
+
+  //std::print(std::fs::readDir("./tests"))
+
+  const propRef = &obj.a
+
+  std::print(propRef)
+
+  //std::fs::createFile("./test-create.txt")
+
+  //std::print(std::fs::createFile)
+}
+
+fn test() {
+  std::print("¡Hola, Mundo!")
+}
+
+fn testObjectReference() {
+  const objRef = obj
+
+  std::print("Before the change:")
+  std::print(obj.VERSION)
+  std::print(objRef.VERSION)
+
+  objRef.VERSION = "1.0.1"
+  
+  std::print("After the change:")
+  std::print(obj.VERSION)
+  std::print(objRef.VERSION)
+}
+
+fn testValueCopy() {
+  var num = 10
+  var numCopy = num
+
+  std::print("Before the change:")
+  std::print(num)
+  std::print(numCopy)
+
+  num = 20
+
+  std::print("After the change:")
+  std::print(num)
+  std::print(numCopy)
+}
+
+const obj = {
+  VERSION: "1.0.0",
+  function: fn objFunction() {
+    std::print("BRUH")
+  },
+  deepObj: {
+    deepestObj: {
+      ultraDeepestObj: {
+        innerKey: "BRUH"
+      }
+    },
+    activity: "Bench press",
+    currenTime: "00:11"
+  }
+}
+
+/* std::print("Testing pass object as a reference")
+testObjectReference()
+std::print()
+
+std::print("Testing pass a value as a copy")
+testValueCopy() */
+
+
+// BRUH
+
+module Test {
+  export const moduleObj = { a: 20 }
+
+  export fn parametizedFn(n1: number, n2: number) {
+    std::print(n1)
+  }
+}
+
+//class Server extends Socket implements Closeable;
+
+const name = fn(n1: number) {
+  std::print(n1)
+  return "Waaa the faaaack is a kilooooometer"
+}
+
+fn callbackTest(nombre: string, myFn: Fn) {
+  myFn(nombre)
+}
+
+fn testRest(n1: number, n2: string, ...rest: number) {
+  std::print(n1)
+  std::print(rest)
+
+  std::print(std::args)
+}
+
+fn restParameters(n1: number, n2: number, ...rest: string) {
+  std::print("Número 1 (primer parámetro): ", n1)
+  std::print("Número 2 (segundo parámetro): ", n2)
+  std::print("Resto de parámetros: ", rest)
+}
+
+const obj = { a: 20 }
+
+fn main() {
+
+  std::print(obj.a)
+  
+  /* std::print("Argumentos de entrada (args): ", std::args)
+  restParameters(2, 777, "Test", "de", "parametros", "rest")
+
+  fn printName(name: string) {
+    std::print(name)
+  }
+
+  callbackTest("Fuet y nandou", printName)
+
+  const obj = { 1: "BRUH", fuet2: "sexo loco", sex3: "me cago en todo lo cagable" }
+  const arr = [1, 2, 3, 4, 5] */
+
+  //std::print(name("sexo"))
+
+  //testRest(1, 2, "SEXO BRUTAL")
+
+  /* std::print(obj)
+
+  std::print("BRUH 2") */
+}
+
