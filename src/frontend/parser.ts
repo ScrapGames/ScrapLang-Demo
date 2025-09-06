@@ -322,7 +322,7 @@ export default class Parser implements Reader<Token, Tokens> {
     switch (this.current.type) {
       case Tokens.OF:
       case Tokens.IN: {
-        const forStmt = this.wheter(Tokens.OF) ? ast.statements.ForOf : ast.statements.ForIn
+        const forStmt = this.wheter(Tokens.OF) ? ast.statements.ForOf : this.eat(Tokens.IN) && ast.statements.ForIn
 
         const subject = this.parseExpression()
         const body = this.parseBlock(this.Position)
