@@ -25,6 +25,17 @@ function isAlphaNum(char: string) {
   return /[0-9a-zA-Z_$]/.test(char)
 }
 
+
+/** Detects valid binary numbers */
+function isBin(char: string) {
+  return /[0-1]/.test(char)
+}
+
+/** Detects valid octal numbers */
+function isOctal(char: string) {
+  return /[0-8]/.test(char)
+}
+
 /** Detects valid hexadecimal numbers */
 function isHexadecimal(char: string) {
   return /[0-9a-fA-F]/.test(char)
