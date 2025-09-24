@@ -118,6 +118,10 @@ If you used other languages like Rust, **cargo** would be its counterpart. For N
 
 I consider that an utility that works separately from the _core_ utility gives the user more freedom at the moment of choose what it need, also reducing the size of the _core_ utility
 
+### :question: Why "puzzle"
+
+Since ScrapLang is based on modular programming, the idea is that a dependency can connect to others like puzzle pieces connect to each other.
+
 ### :computer: Basic use
 
 #### Create a new project
