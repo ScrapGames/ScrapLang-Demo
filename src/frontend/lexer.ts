@@ -13,9 +13,37 @@
 import { basename } from "@std/path/basename"
 import { Position } from "@frontend/position.ts"
 import { KEYWORD_MAP, TOKEN_MAP, RTOKEN_MAP, Token, Tokens } from "@frontend/tokens/tokens.ts"
-
-import { isAlpha, isNumeric, isAlphaNum, isSpace, isEOL } from "@/utils.ts"
 import { Collectable, Reader } from "@frontend/typings.ts"
+
+/** Detects alphabetic characters (ignoring Cases) */
+function isAlpha(char: string) {
+  return /[a-zA-Z_]/.test(char)
+}
+
+/** Detects alphanumeric characters */
+function isAlphaNum(char: string) {
+  return /[0-9a-zA-Z_$]/.test(char)
+}
+
+/** Detects valid hexadecimal numbers */
+function isHexadecimal(char: string) {
+  return /[0-9a-fA-F]/.test(char)
+}
+
+/** Detects numeric characters */
+function isNumeric(char: string) {
+  return /[0-9_]/.test(char)
+}
+
+/** Detects whitespaces characters */
+function isSpace(char: string): char is ' ' {
+  return char === ' '
+}
+
+/** Detects End Of Line characters */
+function isEOL(char: string): char is '\r' | '\n' {
+  return char === '\r' || char === '\n'
+}
 
 /**
  * Defines scanning modes:
