@@ -9,10 +9,3 @@ export type Nullable<T> = T | null
 export function inArray<T>(item: T, array: T[]): boolean {
     return array.some(e => e === item)
 }
-
-export function isAndInArray<T>(item: T, maybeArray: T) {
-    return Array.isArray(maybeArray) && inArray(item, maybeArray)
-}
-
-// Crea un fondo para una tarjeta de presentación de una empresa dedicada a los videojuegos. Debe de ser minimalista
-// y con colores no agresivos
