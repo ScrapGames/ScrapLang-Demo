@@ -419,12 +419,12 @@ export default class Parser implements Reader<Token, Tokens> {
 
   private parseVar(
     start: Position,
-    forceDef: true
+    def: true
   ): ast.declarations.VariableDef
 
   private parseVar(
     start: Position,
-    forceDef: false
+    def: false
   ): ast.declarations.VariableDecl
 
   /**
