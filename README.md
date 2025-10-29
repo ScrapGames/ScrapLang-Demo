@@ -122,6 +122,20 @@ I consider that an utility that works separately from the _core_ utility gives t
 
 Since ScrapLang is based on modular programming, the idea is that a dependency can connect to others like puzzle pieces connect to each other.
 
+### :thinking: Basic understanding
+
+Like other package managers / project managers, **Puzzle** _defines_ the project using a configuration file named **puzzle.json**, this file contains a JSON object where values of each key is used by the **Puzzle** binary to define how to treat the project
+
+Among the possible options to be defined are:
+
+- Default run method (interpretation, compilation, etc)
+- Project dependencies
+- License
+- Author(s)
+- Version
+- Default values for the compiler (still needs be defined)
+- ...
+
 ### :computer: Basic use
 
 #### Create a new project
