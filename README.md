@@ -162,6 +162,8 @@ puzzle build
 puzzle run
 ```
 
+> By default, this command will search the definition of a script named `start`
+
 #### Run custom scripts
 
 ```bash
