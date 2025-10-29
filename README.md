@@ -112,7 +112,7 @@ scrap build main.byte
 
 ## :jigsaw: Puzzle (Dependency manager and project organizer)
 
-**Puzzle** is the _dependency manager_ and _project organizer_ and is entirely manager from the console using commands. Although isn't rejected the idea of a frontend, for example: through a VSCode extension
+**Puzzle** is the _dependency manager_ and _project organizer_ and is entirely managed from the console using commands. Although isn't rejected the idea of a frontend, for example: through a VSCode extension
 
 If you used other languages like Rust, **cargo** would be its counterpart. For Nodejs, **npm** will be.
 
