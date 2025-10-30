@@ -417,36 +417,37 @@ export default class Parser implements Reader<Token, Tokens> {
     return new ast.declarations.Class(body, name, start, this.Position)
   }
 
-  private parseVar(
-    start: Position,
-    def: true
-  ): ast.declarations.VariableDef
+  /**
+   * Parses a variable declaration
+   * @param start Starting position
+   * @returns Variable declaration AST node
+   */
+  private parseVarDecl(start: Position): ast.declarations.VariableDecl {
+    this.eat(Tokens.CONST)
+    const name = this.eat(Tokens.IDENTIFIER).content
 
-  private parseVar(
-    start: Position,
-    def: false
-  ): ast.declarations.VariableDecl
+    if (!this.wheter(Tokens.COLON))
+      return new ast.declarations.VariableDecl(true, undefined, name, start, this.Position)
+
+    const type = this.parseTType(this.Position)
+    return new ast.declarations.VariableDecl(true, type, name, start, this.Position)
+  }
 
   /**
-   * Parses a variable declaration.
-   * @param start Starting position.
-   * @returns Variable AST node.
+   * Parses a variable definition
+   * @param start Starting position
+   * @returns Variable definition AST node
    */
-  private parseVar(
-    start: Position,
-    def: boolean
-  ): ast.declarations.VariableDef | ast.declarations.VariableDecl {
+  private parseVarDef(start: Position): ast.declarations.VariableDef {
     const isConst = !!this.wheter(Tokens.CONST)
-
     !isConst && this.eat(Tokens.VAR)
+
     const name = this.eat(Tokens.IDENTIFIER).content
-    
-    if (!def)
-      return new ast.declarations.VariableDecl(isConst, name, start, this.Position)
+    const type = this.wheter(Tokens.COLON) && this.parseTType(this.Position)
 
     this.eat(Tokens.EQUAL)
     const value = this.parseExpression()
-    return new ast.declarations.VariableDef(isConst, value, name, start, this.Position)
+    return new ast.declarations.VariableDef(isConst, type, value, name, start, this.Position)
   }
 
   /**
