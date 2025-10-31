@@ -371,6 +371,58 @@ export default class Parser implements Reader<Token, Tokens> {
     this.syntaxError(`Unknown statement '${this.current.TypeContent}'`)
   }
 
+    // ===== TYPE PARSING =====
+
+  private parseTUnion(start: Position): ast.types.TUnion {
+    const lhs = this.parseTType(start)
+    this.eat(Tokens.PIPE)
+    const rhs = this.parseTType(this.Position)
+
+    return new ast.types.TUnion(lhs, rhs, start, this.Position)
+  }
+
+  private parseTArray(start: Position, type: ast.types.TType): ast.types.TArray {
+    this.eat(Tokens.LSQRBR) && this.eat(Tokens.RSQRBR)
+    return new ast.types.TArray(type, start, this.Position)
+  }
+
+  private parseTIdentifier(start: Position): ast.types.TType {
+    const identifier = this.eat(Tokens.IDENTIFIER)
+
+    switch (this.current.type) {
+      case Tokens.LSQRBR:
+        return this.parseTArray(this.Position, new ast.types.TIdentifier(identifier.content, start, this.Position))
+      
+      case Tokens.PIPE:
+        return this.parseTUnion(start)
+    }
+
+    return new ast.types.TIdentifier(identifier.content, start, this.Position)
+  }
+
+  private parseTFunction(start: Position): ast.types.TFunction {
+    const { flag, params, hasArrow } = this.parseFunctionSign()
+
+    switch (true) {
+      case flag === Tokens.INLINE: this.syntaxError("Function types can not be inline") /* falls through */
+      case !!name:     this.syntaxError("Function types can not have a name") /* falls through */
+      case hasArrow:   this.syntaxError("Function types can not be arrow functions")
+    }
+
+    this.eat(Tokens.COLON)
+    const retType = this.parseTType(this.Position)
+    return new ast.types.TFunction(params, retType, start, this.Position)
+  }
+
+  private parseTType(start: Position): ast.types.TType {
+    switch (this.current.type) {
+      case Tokens.IDENTIFIER: return this.parseTIdentifier(start)
+      case Tokens.FN:         return this.parseTFunction(start)
+    }
+
+    this.syntaxError(`Unknown type '${this.current.TypeContent}'`)
+  }
+
   // ===== DECLARATION PARSING =====
 
   private parseClassDecl(start: Position): ast.declarations.ClassDecl {
