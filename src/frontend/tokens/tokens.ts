@@ -72,6 +72,7 @@ export enum Tokens {
       LESS,         // <
       GREATER,      // >
       DOT,          // .
+      PIPE,         // |
       compounds_open,
         INCREMENT,    // ++
         DECREMENT,    // --
@@ -215,6 +216,7 @@ export const TOKEN_MAP = new Map([
   [Tokens.AMPER,  "&"],
   // BINARY
   [Tokens.DOT,    "."],
+  [Tokens.PIPE,   "|"],
 
   // COMPOUND TOKENS
   [Tokens.INCREMENT,    "++"],
