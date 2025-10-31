@@ -466,6 +466,13 @@ export default class Parser implements Reader<Token, Tokens> {
     this.syntaxError("Unimplemented declaration")
   }
 
+  private parseFunctionParam(start: Position): ast.functions.Param {
+    const name = this.eat(Tokens.IDENTIFIER).content
+    this.eat(Tokens.COLON)
+    const type = this.parseTType(this.Position)
+    return new ast.functions.Param(name, type, start, this.Position)
+  }
+
   /**
    * Parses function parameters.
    * @returns Array of Param AST nodes.
