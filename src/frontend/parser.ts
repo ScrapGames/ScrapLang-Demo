@@ -712,7 +712,7 @@ export default class Parser implements Reader<Token, Tokens> {
   private parseFunctionExpr(
     start: Position,
     flag: Undefinedable<FunctionFlags>,
-    name: string,
+    name: Undefinedable<string>,
     params: ast.functions.Param[],
     hasArrow: boolean
   ): ast.expressions.FunctionExpr {
@@ -720,7 +720,7 @@ export default class Parser implements Reader<Token, Tokens> {
       this.syntaxError("A function expression cannot be inlined")
 
     const body = this.parseFunctionBody(hasArrow)
-    return new ast.expressions.FunctionExpr(name, params, body, flag, start, this.Position)
+    return new ast.expressions.FunctionExpr(name ?? `anonymous_${crypto.randomUUID()}`, params, body, flag, start, this.Position)
   }
 
   /**
