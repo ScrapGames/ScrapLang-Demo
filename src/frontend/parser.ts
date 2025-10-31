@@ -472,6 +472,12 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseFunctionParams(): ast.functions.Param[] {
     this.eat(Tokens.LPAREN)
+    const params: ast.functions.Param[] = []
+    while (!this.current.is(Tokens.RPAREN)) {
+      params.push(this.parseFunctionParam(this.Position))
+      if (!this.wheter(Tokens.COMMA) && !this.current.is(Tokens.RPAREN))
+        this.syntaxError("Missing comma between function parameters")
+    }
 
     this.eat(Tokens.RPAREN)
     return []
