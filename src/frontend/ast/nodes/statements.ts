@@ -83,10 +83,10 @@ export class DoWhile extends Statement {
  */
 export class For extends Statement {
   public constructor(
-    public decl: VariableDef[],         // Initialization variables
-    public expr: Expression,     // Loop condition
-    public inc: Expression,      // Increment expression
-    public body: Statement[],        // Loop body
+    public decl: VariableDef,    // Initialization variables
+    public expr: Expression,       // Loop condition
+    public inc: Expression,        // Increment expression
+    public body: Statement[],      // Loop body
     start: Position, end: Position
   ) {
     super(StatementKind.For, start, end)
