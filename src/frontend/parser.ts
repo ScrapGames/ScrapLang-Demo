@@ -176,10 +176,15 @@ export default class Parser implements Reader<Token, Tokens> {
   // ===== FUNCTION PARSING =====
 
   /**
-   * Parses a function signature.
-   * @returns Tuple [flag, name, params, isAnonymous, hasArrow, isAnon].
+   * Parses a function signature
+   * @returns Object { flag, name, params, hasArrow }
    */
-  private parseFunctionSign(): [Undefinedable<FunctionFlags>, string, ast.functions.Param[], boolean, boolean] {
+  private parseFunctionSign():
+    { flag: Undefinedable<FunctionFlags>,
+      name: Undefinedable<string>,
+      params: ast.functions.Param[],
+      hasArrow: boolean
+    } {
     const flag = (this.wheter(Tokens.INLINE) || this.wheter(Tokens.ASYNC))?.type as Undefinedable<FunctionFlags>
     if (!this.wheter(Tokens.FN))
       this.syntaxError("Functions can only has one flag")
@@ -187,7 +192,7 @@ export default class Parser implements Reader<Token, Tokens> {
     const name     = this.wheter(Tokens.IDENTIFIER)?.content
     const params   = this.parseFunctionParams()
     const hasArrow = !!this.wheter(Tokens.ARROW)
-    return [flag, name ?? "anonymous", params, hasArrow, !name]
+    return { flag, name, params, hasArrow }
   }
 
   private parseFunction(
@@ -206,11 +211,11 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns A Function AST node.
    */
   private parseFunction(start: Position, isExpr: boolean) {
-    const [flag, name, params, hasArrow] = this.parseFunctionSign()
+    const { flag, name, params, hasArrow } = this.parseFunctionSign()
     if (isExpr)
       return this.parseFunctionExpr(start, flag, name, params, hasArrow)
 
-    return this.parseFunctionDef(start, flag, name, params)
+    return this.parseFunctionDef(start, flag, name!, params)
   }
 
   // ----- STATEMENT PARSING ----- //
@@ -629,7 +634,7 @@ export default class Parser implements Reader<Token, Tokens> {
 
   private parseExtern(start: Position): ast.declarations.Extern {
     this.eat(Tokens.EXTERN)
-    const [flag, name, params, hasArrow, isAnon] = this.parseFunctionSign()
+    const { flag, name, params, hasArrow } = this.parseFunctionSign()
 
     switch (true) {
       case hasArrow:
