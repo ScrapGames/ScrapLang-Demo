@@ -317,30 +317,25 @@ export default class Parser implements Reader<Token, Tokens> {
 
   private parseFor(start: Position): ast.statements.For | ast.statements.ForOf | ast.statements.ForIn {
     this.eat(Tokens.FOR)
-    const decl: (ast.declarations.VariableDecl | ast.declarations.VariableDef)[] = [this.parseVar(this.Position, false)]
 
     switch (this.current.type) {
-      case Tokens.OF:
-      case Tokens.IN: {
-        const forStmt = this.wheter(Tokens.OF) ? ast.statements.ForOf : this.eat(Tokens.IN) && ast.statements.ForIn
-
+      case Tokens.CONST: {
+        const decl    = this.parseVarDecl(this.Position)
+        const kind    = this.wheter(Tokens.OF) ? ast.statements.ForOf : this.eat(Tokens.IN) && ast.statements.ForIn
         const subject = this.parseExpression()
-        const body = this.parseBlock(this.Position)
-        return new forStmt(decl[0], subject, body, start, this.Position)
+        const body    = this.parseBlock(this.Position)
+        return new kind(decl, subject, body, start, this.Position)
       }
-      case Tokens.EQUAL: {
-        this.eat(Tokens.EQUAL)
-        const first = decl[0]
-        decl[0] = new ast.declarations.VariableDef(first.isConst, this.parseExpression(), first.name, first.start, first.end)
-
-        while (!this.current.is(Tokens.SEMICOLON))
-          decl.push(this.parseVar(start, true))
-      } break
+      case Tokens.VAR: {
+        const decl = this.parseVarDef(this.Position)
+        const expr = this.eat(Tokens.SEMICOLON) && this.parseExpression()
+        const inc  = this.eat(Tokens.SEMICOLON) && this.parseExpression()
+        const body = this.parseBlock(this.Position)
+        return new ast.statements.For(decl, expr, inc, body, start, this.Position)
+      }
     }
-    const expr = this.eat(Tokens.SEMICOLON) && this.parseExpression()
-    const inc  = this.eat(Tokens.SEMICOLON) && this.parseExpression()
-    const body = this.parseBlock(this.Position)
-    return new ast.statements.For(decl as ast.declarations.VariableDef[], expr, inc, body, start, this.Position)
+
+    this.syntaxError(`Invalid 'for' loop initializer '${this.current.TypeContent}'`)
   }
 
   private parseIf(start: Position): ast.statements.If {
@@ -659,7 +654,7 @@ export default class Parser implements Reader<Token, Tokens> {
       case Tokens.FN:        return this.parseFunction(start, false)
       case Tokens.EXTERN:    return this.parseExtern(start)
       case Tokens.VAR:
-      case Tokens.CONST:     return this.parseVar(start, true)
+      case Tokens.CONST:     return this.parseVarDef(start)
       case Tokens.CLASS:     return this.parseClass(start)
       case Tokens.MODULE:    return this.parseModule(start)
       case Tokens.FROM:      return this.parseFrom(start)
