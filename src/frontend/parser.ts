@@ -638,10 +638,10 @@ export default class Parser implements Reader<Token, Tokens> {
 
     switch (true) {
       case hasArrow:
-      case isAnon:   this.syntaxError("Anonymous function can not be extern"); break
-      case !!flag:   this.syntaxError("Extern functions can not have any flag"); break
+      // `break` is not neccesary since `syntaxError` always throws an exception
+      case !name:   this.syntaxError("Anonymous function can not be extern") /* falls through */
+      case !!flag:   this.syntaxError("Extern functions can not have any flag")
     }
-
 
     const fn = new ast.declarations.FunctionDecl(params, name, start, this.Position)
     return new ast.declarations.Extern(fn, start, this.Position)
