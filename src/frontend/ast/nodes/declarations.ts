@@ -11,6 +11,7 @@ import { Maybe }      from "@/typings.ts"
 import { Tokens }     from "@frontend/tokens/tokens.ts"
 import { Position }   from "@frontend/position.ts"
 import { ASTNode }    from "@frontend/ast/ast.ts"
+import { TType }      from "@frontend/ast/nodes/types.ts"
 import { Expression } from "@frontend/ast/nodes/expressions.ts"
 import { Statement }  from "@frontend/ast/nodes/statements.ts"
 import { Function, FunctionFlags, Param } from "@frontend/ast/nodes/functions.ts"
@@ -73,7 +74,7 @@ export class Import extends Declaration {
 
 export class VariableDecl extends NameableDecl {
   public constructor(
-    public isConst: boolean, name: string,
+    public isConst: boolean, public type: Maybe<TType>, name: string,
     start: Position, end: Position,
   ) {
     super(name, DeclarationKind.VariableDecl, start, end)
@@ -87,7 +88,7 @@ export class VariableDecl extends NameableDecl {
  */
 export class VariableDef extends NameableDecl {
   public constructor(
-    public isConst: boolean, public value: Expression, name: string,
+    public isConst: boolean, public type: Maybe<TType>, public value: Expression, name: string,
     start: Position, end: Position
   ) {
     super(name, DeclarationKind.VariableDef, start, end)
@@ -179,7 +180,7 @@ export class Interface extends NameableDecl {
  * Currently only stores the alias name.
  */
 export class Type extends NameableDecl {
-  public constructor(name: string, start: Position, end: Position) {
+  public constructor(public type: TType, name: string, start: Position, end: Position) {
     super(name, DeclarationKind.Type, start, end)
   }
 }
