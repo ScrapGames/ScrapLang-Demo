@@ -371,14 +371,19 @@ export default class Parser implements Reader<Token, Tokens> {
     this.syntaxError(`Unknown statement '${this.current.TypeContent}'`)
   }
 
-    // ===== TYPE PARSING =====
+  // ===== TYPE PARSING =====
 
-  private parseTUnion(start: Position): ast.types.TUnion {
+  /**
+   * Parses a union type
+   * @param start 
+   * @returns Union type AST node
+   */
+  private parseTUnion(start: Position): ast.types.Union {
     const lhs = this.parseTType(start)
     this.eat(Tokens.PIPE)
     const rhs = this.parseTType(this.Position)
 
-    return new ast.types.TUnion(lhs, rhs, start, this.Position)
+    return new ast.types.Union(lhs, rhs, start, this.Position)
   }
 
   /**
@@ -392,8 +397,16 @@ export default class Parser implements Reader<Token, Tokens> {
     const rhs = this.parseTType(this.Position)
     return new ast.types.Intersection(lhs, rhs, start, this.Position)
   }
+
+  /**
+   * Parses an array type
+   * @param start 
+   * @param type Base type of the array
+   * @returns Array type AST node
+   */
+  private parseTArray(start: Position, type: ast.types.TType): ast.types.Array {
     this.eat(Tokens.LSQRBR) && this.eat(Tokens.RSQRBR)
-    return new ast.types.TArray(type, start, this.Position)
+    return new ast.types.Array(type, start, this.Position)
   }
 
   private parseTIdentifier(start: Position): ast.types.TType {
@@ -410,9 +423,14 @@ export default class Parser implements Reader<Token, Tokens> {
         return this.parseTIntersection(start)
     }
 
-    return new ast.types.TIdentifier(identifier.content, start, this.Position)
+    return new ast.types.Identifier(identifier.content, start, this.Position)
   }
 
+  /**
+   * Parses a function type
+   * @param start 
+   * @returns Function type AST node
+   */
   private parseTFunction(start: Position): ast.types.Function {
     const { flag, params, hasArrow } = this.parseFunctionSign()
 
