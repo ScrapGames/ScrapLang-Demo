@@ -381,7 +381,17 @@ export default class Parser implements Reader<Token, Tokens> {
     return new ast.types.TUnion(lhs, rhs, start, this.Position)
   }
 
-  private parseTArray(start: Position, type: ast.types.TType): ast.types.TArray {
+  /**
+   * Parses an intersection type
+   * @param start 
+   * @returns Intersection type AST node
+   */
+  private parseTIntersection(start: Position): ast.types.Intersection {
+    const lhs = this.parseTType(start)
+    this.eat(Tokens.AMPER)
+    const rhs = this.parseTType(this.Position)
+    return new ast.types.Intersection(lhs, rhs, start, this.Position)
+  }
     this.eat(Tokens.LSQRBR) && this.eat(Tokens.RSQRBR)
     return new ast.types.TArray(type, start, this.Position)
   }
@@ -391,16 +401,19 @@ export default class Parser implements Reader<Token, Tokens> {
 
     switch (this.current.type) {
       case Tokens.LSQRBR:
-        return this.parseTArray(this.Position, new ast.types.TIdentifier(identifier.content, start, this.Position))
+        return this.parseTArray(this.Position, new ast.types.Identifier(identifier.content, start, this.Position))
       
       case Tokens.PIPE:
         return this.parseTUnion(start)
+      
+      case Tokens.AMPER:
+        return this.parseTIntersection(start)
     }
 
     return new ast.types.TIdentifier(identifier.content, start, this.Position)
   }
 
-  private parseTFunction(start: Position): ast.types.TFunction {
+  private parseTFunction(start: Position): ast.types.Function {
     const { flag, params, hasArrow } = this.parseFunctionSign()
 
     switch (true) {
@@ -411,7 +424,7 @@ export default class Parser implements Reader<Token, Tokens> {
 
     this.eat(Tokens.COLON)
     const retType = this.parseTType(this.Position)
-    return new ast.types.TFunction(params, retType, start, this.Position)
+    return new ast.types.Function(params, retType, start, this.Position)
   }
 
   private parseTType(start: Position): ast.types.TType {
