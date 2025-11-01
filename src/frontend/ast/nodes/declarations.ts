@@ -165,6 +165,15 @@ export class Class extends NameableDecl {
   }
 }
 
+export class InterfaceField extends NameableDecl {
+  public constructor(
+    public type: TType, name: string,
+    start: Position, end: Position
+  ) {
+    super(name, DeclarationKind.VariableDecl, start, end)
+  }
+}
+
 /**
  * Represents an interface declaration in the AST.
  * - `body`: list of member declarations defining the contract of the interface.

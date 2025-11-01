@@ -516,19 +516,46 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   /**
-   * Parses an interface declaration.
-   * @throws Always throws "Unimplemented declaration".
+   * Parses an interface field declaration
+   * @param start 
+   * @returns InterfaceField AST node
    */
-  private parseInterface(_start: Position): ast.declarations.Interface {
-    this.syntaxError("Unimplemented declaration")
+  private parseInterfaceField(start: Position): ast.declarations.InterfaceField {
+    const name = this.eat(Tokens.IDENTIFIER).content
+    this.eat(Tokens.COLON)
+    const type = this.parseTType(this.Position)
+    return new ast.declarations.InterfaceField(type, name, start, this.Position)
   }
 
   /**
-   * Parses a type declaration.
-   * @throws Always throws "Unimplemented declaration".
+   * Parses an interface declaration
+   * @param start 
+   * @returns Interface AST node
    */
-  private parseType(_start: Position): ast.declarations.Type {
-    this.syntaxError("Unimplemented declaration")
+  private parseInterface(start: Position): ast.declarations.Interface {
+    this.eat(Tokens.INTERFACE)
+    const name = this.eat(Tokens.IDENTIFIER).content
+    this.eat(Tokens.LBRACE)
+    const body: ast.declarations.Declaration[] = []
+    while (!this.current.is(Tokens.RBRACE)) {
+      body.push(this.parseInterfaceField(this.Position))
+      this.wheter(Tokens.COMMA) // allows trailing comma
+    }
+
+    this.eat(Tokens.RBRACE)
+    return new ast.declarations.Interface(body, name, start, this.Position)
+  }
+
+  /**
+   * Parses a type declaration
+   * @param start 
+   * @returns Type AST node
+   */
+  private parseType(start: Position): ast.declarations.Type {
+    const name = this.eat(Tokens.IDENTIFIER).content
+    this.eat(Tokens.EQUAL)
+    const type = this.parseTType(this.Position)
+    return new ast.declarations.Type(type, name, start, this.Position)
   }
 
   private parseFunctionParam(start: Position): ast.functions.Param {
