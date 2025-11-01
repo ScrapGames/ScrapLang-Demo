@@ -483,9 +483,9 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   /**
-   * Parses a class declaration.
-   * @param start Starting position.
-   * @returns Class AST node.
+   * Parses a class declaration
+   * @param start Starting position
+   * @returns Class AST node
    */
   private parseClass(start: Position): ast.declarations.Class {
     this.eat(Tokens.CLASS)
@@ -570,6 +570,7 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns Type AST node
    */
   private parseType(start: Position): ast.declarations.Type {
+    this.eat(Tokens.TYPE)
     const name = this.eat(Tokens.IDENTIFIER).content
     this.eat(Tokens.EQUAL)
     const type = this.parseTType(this.Position)
