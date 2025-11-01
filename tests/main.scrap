@@ -1,43 +1,6 @@
-from std                  import date, regex, net::socket, http::server
-from gtk::gui             import Window
-from android::gui         import View, Toast
-from minecraft::gui       import Client, Text
-from fabric               import Api
-from internal::"code-gen" import ir::Functions
-
-class Test {
-  /*interface Closeable {
-    close: fn(): bool
-  }*/
-
-  //type Greetable = fn(name: string): void
-
-  pub fn constructor() {
-    std::print("Memory has been allocated correctly!")
-  }
+interface Closeable {
+  close: fn(): void
+  cleanup: fn(): void
 }
 
-extern fn sum()
-
-async fn main() {
-  dissipate fn() -> (
-    std::print("Running a graceful shutdown in background")
-  )
-
-  if true {}
-
-  for var i = 0; i < 30; ++i {}
-
-  for const name of names {}
-
-  for const i in names {}
-
-  while true {}
-
-  const file   = await io::open("./main.scrap")
-  const opened = match file {
-    null    -> false,
-    false   -> file,
-    default -> true
-  }
-}
+type func = fn(f: fn(): i32, buffer: string[]): string[]
