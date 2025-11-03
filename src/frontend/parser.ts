@@ -142,10 +142,6 @@ export default class Parser implements Reader<Token, Tokens> {
     return current
   }
 
-  private exists(type: Tokens): Undefinedable<true> {
-    return this.current.is(type) || undefined
-  }
-
   /**
    * Conditionally consumes the current token if it matches the expected type.
    * @param type Token type to check.

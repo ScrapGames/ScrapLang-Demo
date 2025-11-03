@@ -1,3 +1,4 @@
+import { Undefinedable } from "@/typings.ts"
 import { Position } from "@frontend/position.ts"
 
 /**
@@ -345,8 +346,8 @@ export class Token {
     return new this(type, content, pos.copy())
   }
 
-  public is(maybe: Tokens): boolean {
-    return this.type === maybe
+  public is(maybe: Tokens): Undefinedable<true> {
+    return this.type === maybe || undefined
   }
 
   public cmp(maybe: string): boolean {
@@ -380,7 +381,7 @@ export class Token {
   }
 
   public isEOF(): this is Tokens.EOF {
-    return this.is(Tokens.EOF)
+    return !!this.is(Tokens.EOF)
   }
 
   public get opRules(): { prec: number, assoc: "left" | "right" } | undefined {
