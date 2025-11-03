@@ -487,7 +487,7 @@ export default class Parser implements Reader<Token, Tokens> {
     }
 
     this.eat(Tokens.RPAREN)
-    return []
+    return params
   }
 
   /**
