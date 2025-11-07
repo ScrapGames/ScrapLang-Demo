@@ -1,4 +1,4 @@
-import { Undefinedable } from "@/typings.ts"
+import { Maybe }    from "@/typings.ts"
 import { Position } from "@frontend/position.ts"
 
 /**
@@ -346,7 +346,7 @@ export class Token {
     return new this(type, content, pos.copy())
   }
 
-  public is(maybe: Tokens): Undefinedable<true> {
+  public is(maybe: Tokens): Maybe<true> {
     return this.type === maybe || undefined
   }
 

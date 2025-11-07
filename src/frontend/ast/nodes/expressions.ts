@@ -10,10 +10,10 @@
  * interpretation or code generation.
  */
 
-import { Undefinedable }      from "@/typings.ts"
-import { Position }           from "@frontend/position.ts"
-import { Token }              from "@frontend/tokens/tokens.ts"
-import { ASTNode }            from "@frontend/ast/ast.ts"
+import { Maybe }    from "@/typings.ts"
+import { Position } from "@frontend/position.ts"
+import { Token }    from "@frontend/tokens/tokens.ts"
+import { ASTNode }  from "@frontend/ast/ast.ts"
 import { Case, Default, Statement }       from "@frontend/ast/nodes/statements.ts"
 import { Function, FunctionFlags, Param } from "@frontend/ast/nodes/functions.ts"
 
@@ -107,7 +107,7 @@ export class Binary extends Expression {
 export class FunctionExpr extends Expression implements Function {
   public constructor(
     public name: string, public params: Param[],
-    public body: Statement[], public flag: Undefinedable<FunctionFlags>,
+    public body: Statement[], public flag: Maybe<FunctionFlags>,
     start: Position, end: Position,
   ) {
     super(ExpressionKind.Function, start, end)
@@ -124,7 +124,7 @@ export class Match extends Expression {
   public constructor(
     public subjet: Expression,
     public body: Case[],
-    public fallThrough: Undefinedable<Default>,
+    public fallThrough: Maybe<Default>,
     start: Position, end: Position
   ) {
     super(ExpressionKind.Match, start, end)

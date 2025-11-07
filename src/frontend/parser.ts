@@ -1,7 +1,7 @@
-import { SyntaxError }    from "@/errors.ts"
-import { Undefinedable }  from "@/typings.ts"
-import { Position }       from "@frontend/position.ts"
-import type { Reader }    from "@frontend/typings.ts"
+import { SyntaxError }  from "@/errors.ts"
+import { Maybe }        from "@/typings.ts"
+import { Position }     from "@frontend/position.ts"
+import type { Reader }  from "@frontend/typings.ts"
 import { Token, Tokens, TOKEN_MAP, stringify } from "@frontend/tokens/tokens.ts"
 import Lexer             from "./lexer.ts"
 import * as ast          from "@frontend/ast/nodes/index.ts"
@@ -180,12 +180,12 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns Object { flag, name, params, hasArrow }
    */
   private parseFunctionSign():
-    { flag: Undefinedable<FunctionFlags>,
-      name: Undefinedable<string>,
+    { flag: Maybe<FunctionFlags>,
+      name: Maybe<string>,
       params: ast.functions.Param[],
       hasArrow: boolean
     } {
-    const flag = (this.wheter(Tokens.INLINE) || this.wheter(Tokens.ASYNC))?.type as Undefinedable<FunctionFlags>
+    const flag = (this.wheter(Tokens.INLINE) || this.wheter(Tokens.ASYNC))?.type as Maybe<FunctionFlags>
     if (!this.wheter(Tokens.FN))
       this.syntaxError("Functions can only has one flag")
 
@@ -514,7 +514,7 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseFunctionDef(
     start: Position,
-    flag: Undefinedable<FunctionFlags>,
+    flag: Maybe<FunctionFlags>,
     name: string,
     params: ast.functions.Param[]
   ): ast.declarations.FunctionDef {
@@ -697,7 +697,7 @@ export default class Parser implements Reader<Token, Tokens> {
     this.eat(Tokens.LBRACE)
 
     const body: ast.statements.Case[] = []
-    let fallThrough: Undefinedable<ast.statements.Default> = undefined
+    let fallThrough: Maybe<ast.statements.Default> = undefined
     while (!this.current.is(Tokens.RBRACE)) {
       const stmt = this.parseCaseStmt(this.Position)
       switch (true) {
@@ -724,8 +724,8 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseFunctionExpr(
     start: Position,
-    flag: Undefinedable<FunctionFlags>,
-    name: Undefinedable<string>,
+    flag: Maybe<FunctionFlags>,
+    name: Maybe<string>,
     params: ast.functions.Param[],
     hasArrow: boolean
   ): ast.expressions.FunctionExpr {

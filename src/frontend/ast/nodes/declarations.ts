@@ -7,12 +7,12 @@
  * `DeclarationNode`, which provides the common structure for all declarations.
  */
 
-import { Undefinedable } from "@/typings.ts"
-import { Tokens }        from "@frontend/tokens/tokens.ts"
-import { Position }      from "@frontend/position.ts"
-import { ASTNode }       from "@frontend/ast/ast.ts"
-import { Expression }    from "@frontend/ast/nodes/expressions.ts"
-import { Statement }     from "@frontend/ast/nodes/statements.ts"
+import { Maybe }      from "@/typings.ts"
+import { Tokens }     from "@frontend/tokens/tokens.ts"
+import { Position }   from "@frontend/position.ts"
+import { ASTNode }    from "@frontend/ast/ast.ts"
+import { Expression } from "@frontend/ast/nodes/expressions.ts"
+import { Statement }  from "@frontend/ast/nodes/statements.ts"
 import { Function, FunctionFlags, Param } from "@frontend/ast/nodes/functions.ts"
 
 /**
@@ -111,7 +111,7 @@ export class FunctionDecl extends NameableDecl {
 export class FunctionDef extends NameableDecl implements Function {
   public constructor(
     public params: Param[], public body: Statement[],
-    public flag: Undefinedable<FunctionFlags>, name: string,
+    public flag: Maybe<FunctionFlags>, name: string,
     start: Position, end: Position,
   ) {
     super(name, DeclarationKind.FunctionDef, start, end)
