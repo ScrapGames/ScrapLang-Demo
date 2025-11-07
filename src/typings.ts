@@ -1,4 +1,4 @@
-export type Undefinedable<T> = T | undefined
+export type Maybe<T> = T | undefined
 
 /**
  * Represents a chainable environment for symbol resolution.

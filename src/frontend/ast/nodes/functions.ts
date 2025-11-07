@@ -1,16 +1,16 @@
-import { Undefinedable } from "@/typings.ts"
-import { Position }      from "@frontend/position.ts"
-import { Tokens }        from "@frontend/tokens/tokens.ts"
-import { ASTNode }       from "@frontend/ast/ast.ts"
-import { TType }         from "@frontend/ast/nodes/types.ts"
-import { Statement }     from "@frontend/ast/nodes/statements.ts"
+import { Maybe }     from "@/typings.ts"
+import { Position }  from "@frontend/position.ts"
+import { Tokens }    from "@frontend/tokens/tokens.ts"
+import { ASTNode }   from "@frontend/ast/ast.ts"
+import { TType }     from "@frontend/ast/nodes/types.ts"
+import { Statement } from "@frontend/ast/nodes/statements.ts"
 
 /**
  * Interface representing common fields to both declarations and expressions.
  */
 export interface Function {
   name: string, params: Param[],
-  body: Statement[], flag: Undefinedable<FunctionFlags>
+  body: Statement[], flag: Maybe<FunctionFlags>
 }
 
 /**
