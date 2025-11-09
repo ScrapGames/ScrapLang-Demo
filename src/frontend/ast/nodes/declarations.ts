@@ -7,14 +7,14 @@
  * `DeclarationNode`, which provides the common structure for all declarations.
  */
 
-import { Maybe }      from "@/typings.ts"
-import { Tokens }     from "@frontend/tokens/tokens.ts"
-import { Position }   from "@frontend/position.ts"
-import { ASTNode }    from "@frontend/ast/ast.ts"
-import { TType }      from "@frontend/ast/nodes/types.ts"
-import { Expression } from "@frontend/ast/nodes/expressions.ts"
-import { Statement }  from "@frontend/ast/nodes/statements.ts"
-import { Function, FunctionFlags, Param } from "@frontend/ast/nodes/functions.ts"
+import { Maybe }             from "@/typings.ts"
+import { Tokens }            from "@frontend/tokens/tokens.ts"
+import { Position }          from "@frontend/position.ts"
+import { ASTNode }           from "@frontend/ast/ast.ts"
+import { TType }             from "@frontend/ast/nodes/types.ts"
+import { Statement }         from "@frontend/ast/nodes/statements.ts"
+import { Expression }        from "@frontend/ast/nodes/expressions.ts"
+import { FunctionSignature } from "@frontend/ast/nodes/functions.ts"
 
 /**
  * Enumeration representing different kinds of declarations.
@@ -95,33 +95,19 @@ export class VariableDef extends NameableDecl {
   }
 }
 
-export class FunctionDecl extends NameableDecl {
+export class FunctionDecl extends Declaration {
   public constructor(
-    public params: Param[], name: string,
+    public signature: FunctionSignature,
+    public body: Statement[],
     start: Position, end: Position
   ) {
-    super(name, DeclarationKind.FunctionDecl, start, end)
-  }
-}
-
-/**
- * Represents a function declaration in the AST.
- * - `params`: function parameters.
- * - `body`: list of statements forming the function body.
- */
-export class FunctionDef extends NameableDecl implements Function {
-  public constructor(
-    public params: Param[], public body: Statement[],
-    public flag: Maybe<FunctionFlags>, name: string,
-    start: Position, end: Position,
-  ) {
-    super(name, DeclarationKind.FunctionDef, start, end)
+    super(DeclarationKind.FunctionDecl, start, end)
   }
 }
 
 export class Extern extends Declaration {
   public constructor(
-    public decl: FunctionDecl,
+    public signature: FunctionSignature,
     start: Position, end: Position
   ) {
     super(DeclarationKind.Extern, start, end)
@@ -178,8 +164,11 @@ export class InterfaceField extends NameableDecl {
  * Represents an interface declaration in the AST.
  * - `body`: list of member declarations defining the contract of the interface.
  */
-export class Interface extends NameableDecl {
-  public constructor(public body: Declaration[], name: string, start: Position, end: Position) {
+export class InterfaceDecl extends NameableDecl {
+  public constructor(
+    public body:     FunctionSignature[],
+    name: string, start: Position, end: Position
+  ) {
     super(name, DeclarationKind.Interface, start, end)
   }
 }

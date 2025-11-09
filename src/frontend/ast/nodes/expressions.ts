@@ -14,8 +14,8 @@ import { Maybe }    from "@/typings.ts"
 import { Position } from "@frontend/position.ts"
 import { Token }    from "@frontend/tokens/tokens.ts"
 import { ASTNode }  from "@frontend/ast/ast.ts"
-import { Case, Default, Statement }       from "@frontend/ast/nodes/statements.ts"
-import { Function, FunctionFlags, Param } from "@frontend/ast/nodes/functions.ts"
+import { Case, Default, Statement } from "@frontend/ast/nodes/statements.ts"
+import { FunctionSignature }        from "@frontend/ast/nodes/functions.ts"
 
 /**
  * Enum that classifies the kind of expression represented by an `ExpressionNode`.
@@ -104,10 +104,10 @@ export class Binary extends Expression {
  * - `body`: statements or a single expression (in case of concise bodies).
  * - `flag`: optional function flag (e.g., async, inline).
  */
-export class FunctionExpr extends Expression implements Function {
+export class Lambda extends Expression {
   public constructor(
-    public name: string, public params: Param[],
-    public body: Statement[], public flag: Maybe<FunctionFlags>,
+    public signature: FunctionSignature,
+    public body: Statement[],
     start: Position, end: Position,
   ) {
     super(ExpressionKind.Function, start, end)
