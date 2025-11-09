@@ -326,6 +326,12 @@ export default class Parser implements Reader<Token, Tokens> {
     return new ast.statements.If(expr, body, start, this.Position)
   }
 
+  private parseReturn(start: Position): ast.statements.Return {
+    this.eat(Tokens.RETURN)
+    const expr = !this.current.is(Tokens.SEMICOLON) ? undefined : this.parseExpression()
+    return new ast.statements.Return(expr, start, this.Position)
+  }
+
   /**
    * Parses a generic statement.
    * @param start Start position.
@@ -341,6 +347,7 @@ export default class Parser implements Reader<Token, Tokens> {
       case Tokens.IF:         return this.parseIf(start)
       case Tokens.WHILE:      return this.parseWhile(start)
       case Tokens.FOR:        return this.parseFor(start)
+      case Tokens.RETURN:     return this.parseReturn(start)
     }
 
     this.syntaxError(`Unknown statement '${this.current.TypeContent}'`)
@@ -561,7 +568,8 @@ export default class Parser implements Reader<Token, Tokens> {
 
   /**
    * Parses a type declaration
-   * @param start 
+   * @param start
+   * @example type MyType<T> = string | u32
    * @returns Type AST node
    */
   private parseType(start: Position): ast.declarations.TypeDecl {
@@ -721,6 +729,12 @@ export default class Parser implements Reader<Token, Tokens> {
     return this.parseImport(start, module)
   }
 
+  /**
+   * Parses 
+   * @param start 
+   * @example 
+   * @returns 
+   */
   private parseExtern(start: Position): ast.declarations.Extern {
     this.eat(Tokens.EXTERN)
     const sign = this.parseFunctionSign()
