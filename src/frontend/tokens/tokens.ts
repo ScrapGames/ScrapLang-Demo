@@ -395,6 +395,15 @@ export class Token {
     return { prec, assoc }
   }
 
+  public get OpTypeRules(): Maybe<{ prec: number, assoc: "left" | "right" }> {
+    const prec = this.is(Tokens.PIPE) ? 0 : this.is(Tokens.AMPER) ? 1 : undefined
+    if (prec === undefined)
+      return prec
+
+    const assoc = "left"
+    return { prec, assoc }
+  }
+
   private get Precedence(): number | undefined {
     // unary and grouping operators are not included here since them are
     // instantly parsed before any binary operator

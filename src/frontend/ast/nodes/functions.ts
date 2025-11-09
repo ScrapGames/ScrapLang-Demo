@@ -19,4 +19,5 @@ export interface FunctionSignature {
   name?:     string
   generics?: string[]
   params:    Param[]
+  ret?:      TType
 }

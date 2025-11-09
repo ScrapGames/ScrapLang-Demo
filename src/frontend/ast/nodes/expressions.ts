@@ -14,6 +14,7 @@ import { Maybe }    from "@/typings.ts"
 import { Position } from "@frontend/position.ts"
 import { Token }    from "@frontend/tokens/tokens.ts"
 import { ASTNode }  from "@frontend/ast/ast.ts"
+import { TType }    from "@frontend/ast/nodes/types.ts"
 import { Case, Default, Statement } from "@frontend/ast/nodes/statements.ts"
 import { FunctionSignature }        from "@frontend/ast/nodes/functions.ts"
 
@@ -138,6 +139,7 @@ export class Match extends Expression {
  */
 export class Call extends Expression {
   public constructor(
+    public generics: Maybe<TType[]>,
     public callee: Expression,
     public args: Expression[],
     start: Position, end: Position

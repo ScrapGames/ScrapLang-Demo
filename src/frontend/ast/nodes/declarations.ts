@@ -146,17 +146,13 @@ export class ClassDecl extends Declaration {
  * - `body`: list of member declarations (methods, properties, etc.).
  */
 export class Class extends NameableDecl {
-  public constructor(public body: Declaration[], name: string, start: Position, end: Position) {
-    super(name, DeclarationKind.Class, start, end)
-  }
-}
-
-export class InterfaceField extends NameableDecl {
   public constructor(
-    public type: TType, name: string,
-    start: Position, end: Position
+    public generics: Maybe<string[]>,
+    public body:     ClassDecl[],
+    public inherits: Maybe<TType>,
+    name: string, start: Position, end: Position
   ) {
-    super(name, DeclarationKind.VariableDecl, start, end)
+    super(name, DeclarationKind.Class, start, end)
   }
 }
 
@@ -166,6 +162,8 @@ export class InterfaceField extends NameableDecl {
  */
 export class InterfaceDecl extends NameableDecl {
   public constructor(
+    public generics: Maybe<string[]>,
+    public inherits: Maybe<TType>,
     public body:     FunctionSignature[],
     name: string, start: Position, end: Position
   ) {
@@ -177,8 +175,12 @@ export class InterfaceDecl extends NameableDecl {
  * Represents a type alias declaration in the AST.
  * Currently only stores the alias name.
  */
-export class Type extends NameableDecl {
-  public constructor(public type: TType, name: string, start: Position, end: Position) {
+export class TypeDecl extends NameableDecl {
+  public constructor(
+    public generics: Maybe<string[]>,
+    public type:     TType,
+    name: string, start: Position, end: Position
+  ) {
     super(name, DeclarationKind.Type, start, end)
   }
 }
