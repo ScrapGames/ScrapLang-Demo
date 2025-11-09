@@ -1,6 +1,23 @@
-interface Closeable {
-  close: fn(): void
-  cleanup: fn(): void
+interface Stack<T> {
+  fn push(): bool
+  fn pop():  T
+  fn peek(): T
+  fn rev():  Stack<T>
 }
 
-type func = fn(f: fn(): i32, buffer: string[]): string[]
+type Options = string[25]
+
+class Server<T> extends Input<u8[]> {
+  pub fn constructor() {
+    super(this)
+  }
+
+  private fn listen(opts: Optional<Options>): Server<T> {
+    super.listen(3000)
+  }
+}
+
+fn createServer<T>(): Server<T> {
+  const s = new Server()
+  return s
+}
