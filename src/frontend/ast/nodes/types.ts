@@ -43,8 +43,7 @@ export class Array extends TType {
 
 export class Function extends TType {
   public constructor(
-    public params: TType[],
-    public ret: TType,
+    public signature: FunctionSignature,
     start: Position, end: Position
   ) {
     super(start, end)

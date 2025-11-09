@@ -5,7 +5,7 @@ import type { Reader }  from "@frontend/typings.ts"
 import { Token, Tokens, TOKEN_MAP, stringify } from "@frontend/tokens/tokens.ts"
 import Lexer             from "./lexer.ts"
 import * as ast          from "@frontend/ast/nodes/index.ts"
-import { FunctionFlags } from "@frontend/ast/nodes/functions.ts"
+import { FunctionFlags, FunctionSignature } from "@frontend/ast/nodes/functions.ts"
 
 /**
  * Parser class responsible for converting a stream of tokens
@@ -177,45 +177,16 @@ export default class Parser implements Reader<Token, Tokens> {
 
   /**
    * Parses a function signature
-   * @returns Object { flag, name, params, hasArrow }
+   * @returns Object FunctionSignature
    */
-  private parseFunctionSign():
-    { flag: Maybe<FunctionFlags>,
-      name: Maybe<string>,
-      params: ast.functions.Param[],
-      hasArrow: boolean
-    } {
+  private parseFunctionSign(): FunctionSignature {
     const flag = (this.wheter(Tokens.INLINE) || this.wheter(Tokens.ASYNC))?.type as Maybe<FunctionFlags>
     if (!this.wheter(Tokens.FN))
       this.syntaxError("Functions can only has one flag")
 
     const name     = this.wheter(Tokens.IDENTIFIER)?.content
     const params   = this.parseFunctionParams()
-    const hasArrow = !!this.wheter(Tokens.ARROW)
-    return { flag, name, params, hasArrow }
-  }
-
-  private parseFunction(
-    start: Position,
-    isExpr: true
-  ): ReturnType<typeof this.parseFunctionExpr>
-
-  private parseFunction(
-    start: Position,
-    isExpr: false
-  ): ReturnType<typeof this.parseFunctionDef>
-
-  /**
-   * Parses a function (declaration or expression).
-   * @param start Starting position.
-   * @returns A Function AST node.
-   */
-  private parseFunction(start: Position, isExpr: boolean) {
-    const { flag, name, params, hasArrow } = this.parseFunctionSign()
-    if (isExpr)
-      return this.parseFunctionExpr(start, flag, name, params, hasArrow)
-
-    return this.parseFunctionDef(start, flag, name!, params)
+    return { flag, name, generics, params, ret }
   }
 
   // ----- STATEMENT PARSING ----- //
@@ -243,8 +214,10 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseDissipate(start: Position): ast.statements.Dissipate {
     this.eat(Tokens.DISSIPATE)
-    if (this.current.is(Tokens.FN))
-      return new ast.statements.Dissipate(this.parseFunction(start, true), start, this.Position)
+    if (this.current.is(Tokens.FN)) {
+      const fn = this.parseLambda(this.Position)
+      return new ast.statements.Dissipate(fn, start, this.Position)
+    }
 
     // tries to parse an expression which could be a function contained in a array access, a mod access or similar expressions
     return new ast.statements.Dissipate(this.parseExpression(), start, this.Position)
@@ -758,17 +731,24 @@ export default class Parser implements Reader<Token, Tokens> {
 
   private parseExtern(start: Position): ast.declarations.Extern {
     this.eat(Tokens.EXTERN)
-    const { flag, name, params, hasArrow } = this.parseFunctionSign()
+    const sign = this.parseFunctionSign()
 
     switch (true) {
-      case hasArrow:
-      // `break` is not neccesary since `syntaxError` always throws an exception
-      case !name:   this.syntaxError("Anonymous function can not be extern") /* falls through */
-      case !!flag:   this.syntaxError("Extern functions can not have any flag")
+      case !!sign.flag: this.syntaxError("Extern functions can not have any flag") /* falls through */
+      case !sign.name:  this.syntaxError("Extern functions must have a name")
     }
 
-    const fn = new ast.declarations.FunctionDecl(params, name, start, this.Position)
-    return new ast.declarations.Extern(fn, start, this.Position)
+    return new ast.declarations.Extern(sign, start, this.Position)
+  }
+
+  private parseFunction(start: Position): ast.declarations.FunctionDecl {
+    const sign = this.parseFunctionSign()
+
+    if (!sign.name)
+      this.syntaxError("Functions declarations must have a name")
+
+    const body = this.parseBlock(start)
+    return new ast.declarations.FunctionDecl(sign, body, start, this.Position)
   }
 
   /**
@@ -780,7 +760,7 @@ export default class Parser implements Reader<Token, Tokens> {
     switch(this.current.type) {
       case Tokens.INLINE:
       case Tokens.ASYNC:
-      case Tokens.FN:        return this.parseFunction(start, false)
+      case Tokens.FN:        return this.parseFunction(start)
       case Tokens.EXTERN:    return this.parseExtern(start)
       case Tokens.VAR:
       case Tokens.CONST:     return this.parseVarDef(start)
@@ -825,26 +805,19 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   /**
-   * Parses a function expression (arrow function, anonymous).
-   * @param start Start position.
-   * @param flag Function flag.
-   * @param name Function name.
-   * @param params Function parameters.
-   * @param hasArrow True if arrow function syntax is used.
-   * @returns Function expression AST node.
+   * Parses a function expression
+   * @param start Start position
+   * @returns Lambda expression AST node
    */
-  private parseFunctionExpr(
-    start: Position,
-    flag: Maybe<FunctionFlags>,
-    name: Maybe<string>,
-    params: ast.functions.Param[],
-    hasArrow: boolean
-  ): ast.expressions.FunctionExpr {
-    if (flag && flag === Tokens.INLINE)
+  private parseLambda(start: Position): ast.expressions.Lambda {
+    const sign = this.parseFunctionSign()
+    if (sign.flag && sign.flag === Tokens.INLINE)
       this.syntaxError("A function expression cannot be inlined")
 
-    const body = this.parseFunctionBody(hasArrow)
-    return new ast.expressions.FunctionExpr(name ?? `anonymous_${crypto.randomUUID()}`, params, body, flag, start, this.Position)
+    this.eat(Tokens.ARROW)
+    const body = this.parseBlock(this.Position)
+    sign.name  ??= `anonymous_${crypto.randomUUID()}`
+    return new ast.expressions.Lambda(sign, body, start, this.Position)
   }
 
   /**
@@ -936,7 +909,7 @@ export default class Parser implements Reader<Token, Tokens> {
     switch (this.current.type) {
       case Tokens.FN:
       case Tokens.ASYNC:
-      case Tokens.INLINE: return this.parseFunction(start, true)
+      case Tokens.INLINE: return this.parseLambda(start)
       case Tokens.MATCH:  return this.parseMatch(start)
       case Tokens.NUMBER:
       case Tokens.CHAR: {

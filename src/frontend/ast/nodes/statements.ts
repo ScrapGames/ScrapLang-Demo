@@ -14,10 +14,10 @@
  * normally or due to an error.
  */
 
-import { Position }       from "@frontend/position.ts"
-import { ASTNode }        from "@frontend/ast/ast.ts"
-import { Expression }     from "@frontend/ast/nodes/expressions.ts"
-import { Function }       from "@frontend/ast/nodes/functions.ts"
+import { Maybe }    from "@/typings.ts"
+import { Position } from "@frontend/position.ts"
+import { ASTNode }  from "@frontend/ast/ast.ts"
+import { Expression } from "@frontend/ast/nodes/expressions.ts"
 import { Declaration, VariableDecl, VariableDef } from "@frontend/ast/nodes/declarations.ts"
 
 /**
@@ -168,7 +168,7 @@ export class ExpressionStmt extends Statement {
  * current function returns or crashes, ensuring cleanup or deferred behavior.
  */
 export class Dissipate extends Statement {
-  public constructor(public fn: Function | Expression, start: Position, end: Position) {
+  public constructor(public fn: Expression, start: Position, end: Position) {
     super(StatementKind.Dissipate, start, end)
   }
 }
