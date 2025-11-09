@@ -178,7 +178,7 @@ export class Dissipate extends Statement {
  * Returns a value from the current function.
  */
 export class Return extends Statement {
-  public constructor(public value: Expression, start: Position, end: Position) {
+  public constructor(public value: Maybe<Expression>, start: Position, end: Position) {
     super(StatementKind.Return, start, end)
     this.value = value
   }

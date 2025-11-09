@@ -412,7 +412,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
       case ',': case ';':
       case '*': case '?':
       case '>': case '<':
-      case '&': return this.createTokenFromStr(this.current)
+      case '&': case '|': return this.createTokenFromStr(this.current)
       case '\'': case '`': case '"':
         return this.scanText(this.current as ("\"" | "'" | "`"))
       case '+': case '-':
