@@ -328,7 +328,10 @@ export default class Parser implements Reader<Token, Tokens> {
 
   private parseReturn(start: Position): ast.statements.Return {
     this.eat(Tokens.RETURN)
-    const expr = !this.current.is(Tokens.SEMICOLON) ? undefined : this.parseExpression()
+    if (this.wheter(Tokens.SEMICOLON))
+      return new ast.statements.Return(undefined, start, this.Position)
+
+    const expr = this.parseExpression()
     return new ast.statements.Return(expr, start, this.Position)
   }
 
