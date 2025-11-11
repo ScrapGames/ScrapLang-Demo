@@ -324,7 +324,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     if (ahead === '/' && this.moveN(2)) {
       do
         content += this.current
-      while (!isEOL(this.next()))
+      while (!isEOL(this.next()) && !this.hasEnd())
     } else if (ahead === '*' && this.moveN(2)) {
       do
         content += this.current
