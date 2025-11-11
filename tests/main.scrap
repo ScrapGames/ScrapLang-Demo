@@ -1,23 +1,2 @@
-interface Stack<T> {
-  fn push(item: T): bool
-  fn pick(item: T): T
-  fn peek(): T
-  fn pop():  T
-  fn rev():  Stack<T>
-}
-
-type Options = string[25]
-
-class Server<T> extends Input<u8[]> {
-  pub fn constructor() {
-    super(this)
-  }
-
-  private fn listen(opts: Optional<Options>): Server<T> {
-    super.listen(3000)
-  }
-}
-
-fn createServer<T>(): Server<T> {
-  return new Server<T>()
-}
+/* Im a block comment */
+// Im an innocent line comment
