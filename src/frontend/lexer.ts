@@ -326,9 +326,13 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
         content += this.current
       while (!isEOL(this.next()) && !this.hasEnd())
     } else if (ahead === '*' && this.moveN(2)) {
-      do
+      do {
+        if (this.current === '*' && this.check('/'))
+          break
+
         content += this.current
-      while (this.next() !== '*' && !this.check('/'))
+        this.next()
+      } while (true)
 
       this.moveN(2) // eats the closing pairs for block comments
     }
