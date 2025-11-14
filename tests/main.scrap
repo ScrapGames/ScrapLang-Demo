@@ -1,2 +1,5 @@
-/* Im a block comment */
-// Im an innocent line comment
+import Galua::Physics
+
+async fn main(args: string[], argsc: u8) {
+  const rb = new Physics::RigidBody2D
+}
