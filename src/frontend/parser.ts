@@ -154,22 +154,57 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   /**
-   * Parses the root file/module.
-   * @returns The AST node representing a module.
+   * Parses all elements beign enclosed between `open` and `close` according to every `consumer` call
+   * @param open 
+   * @param close 
+   * @param consumer
+   * @returns An array of elements of type `T`
    */
-  public parseFile(): ast.declarations.Module {
-    const start = this.Position
-    const body: ast.declarations.Declaration[] = this.next() && []
-    while (!this.lexer.hasEnd())
-      body.push(this.parseDecl(start))
+  private parseDelimited<T>(
+    open: Tokens,
+    close: Tokens,
+    consumer: (start: Position) => T
+  ): T[] {
+    this.eat(open)
 
-    const name = this.lexer.name.split(/(\/|\\)/).pop()!.split(".")[0]
-    return new ast.declarations.Module(
-      body,
-      name,
-      start,
-      this.Position
-    )
+    const list: T[] = []
+    while (!this.current.is(close))
+      list.push(consumer.call(this, this.Position))
+
+    this.eat(close)
+    return list
+  }
+
+  /**
+   * Parse AST nodes as according to `consumer` by {@link parseDelimited} with `Tokens.LBRACE` and `Tokens.RBRACE` as open and close tokens
+   * @param consumer Lambda expression which indicates how contents inside `{` and `}` are parsed
+   * @returns An array of elements of type `T`
+   */
+  private parseBlock<T extends ast.ASTNode>(consumer: (start: Position) => T): T[] {
+    return this.parseDelimited(Tokens.LBRACE, Tokens.RBRACE, consumer)
+  }
+
+  /**
+   * Calls {@link parseDelimited} and ensures that every element is separated by one `separator` token
+   * @param open 
+   * @param close 
+   * @param separator 
+   * @param consumer 
+   * @returns 
+   */
+  private parseList<T>(
+    open: Tokens,
+    close: Tokens,
+    separator: Tokens,
+    consumer: (start: Position) => T
+  ): T[] {
+    return this.parseDelimited(open, close, () => {
+      const item = consumer.call(this, this.Position)
+      if (!this.match(separator) && !this.current.is(close))
+        this.syntaxError(`Missing '${stringify(separator)}' separating elements`)
+
+      return item
+    })
   }
 
   // ===== FUNCTION PARSING =====
