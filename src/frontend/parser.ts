@@ -147,7 +147,7 @@ export default class Parser implements Reader<Token, Tokens> {
    * @param type Token type to check.
    * @returns The consumed token or undefined.
    */
-  private wheter(type: Tokens): Token | undefined {
+  private match(type: Tokens): Token | undefined {
     if (!this.current.is(type))
       return undefined
 
@@ -180,15 +180,12 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns Object FunctionSignature
    */
   private parseFunctionSign(): FunctionSignature {
-    const flag = (this.wheter(Tokens.INLINE) || this.wheter(Tokens.ASYNC))?.type as Maybe<FunctionFlags>
-    if (!this.wheter(Tokens.FN))
+    const flag = (this.match(Tokens.INLINE) || this.match(Tokens.ASYNC))?.type as Maybe<ast.FunctionFlags>
+    if (!this.match(Tokens.FN))
       this.syntaxError("Functions can only has one flag")
 
-    const name     = this.wheter(Tokens.IDENTIFIER)?.content
-    const generics = this.current.is(Tokens.LESS) && this.parseTGenericsDecl()
-    const params   = this.parseFunctionParams()
-    const ret      = this.wheter(Tokens.COLON) && this.parseTType()
-    return { flag, name, generics, params, ret }
+    const name     = this.match(Tokens.IDENTIFIER)?.content
+    const ret      = this.match(Tokens.COLON) && this.parseType()
   }
 
   // ----- STATEMENT PARSING ----- //
@@ -253,7 +250,7 @@ export default class Parser implements Reader<Token, Tokens> {
   private parseDefaultStmt(start: Position): ast.statements.Default {
     this.eat(Tokens.ARROW)
     const stmt: ast.statements.Statement[] = []
-    if (!this.wheter(Tokens.LBRACE))
+    if (!this.match(Tokens.LBRACE))
       stmt.push(this.parseStatement(this.Position))
     else
       stmt.concat(this.parseBlock(start))
@@ -267,7 +264,7 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns Case or Default AST node.
    */
   private parseCaseStmt(start: Position): ast.statements.Case | ast.statements.Default {
-    const isDefault = !!(this.wheter(Tokens.DEFAULT))
+    const isDefault = !!this.match(Tokens.DEFAULT))
     if (isDefault)
       return this.parseDefaultStmt(start)
 
@@ -275,11 +272,11 @@ export default class Parser implements Reader<Token, Tokens> {
     const subject: ast.expressions.Expression[] = []
     while (!this.current.is(Tokens.ARROW)) {
       subject.push(this.parseExpression())
-      this.wheter(Tokens.COMMA)
+      this.match(Tokens.COMMA)
     }
 
     this.eat(Tokens.ARROW)
-    if (!this.wheter(Tokens.LBRACE))
+    if (!this.match(Tokens.LBRACE))
       stmt.push(this.parseStatement(this.Position))
     else
       stmt.concat(this.parseBlock(start))
@@ -328,7 +325,7 @@ export default class Parser implements Reader<Token, Tokens> {
 
   private parseReturn(start: Position): ast.statements.Return {
     this.eat(Tokens.RETURN)
-    if (this.wheter(Tokens.SEMICOLON))
+    if (this.match(Tokens.SEMICOLON))
       return new ast.statements.Return(undefined, start, this.Position)
 
     const expr = this.parseExpression()
@@ -366,7 +363,7 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseTArray(start: Position, type: ast.types.TType): ast.types.TArray {
     this.eat(Tokens.LSQRBR)
-    const size = this.wheter(Tokens.NUMBER)?.content
+    const size = this.match(Tokens.NUMBER)?.content
     this.eat(Tokens.RSQRBR)
     return new ast.types.TArray(type, size ? parseInt(size) : undefined, start, this.Position)
   }
@@ -495,16 +492,7 @@ export default class Parser implements Reader<Token, Tokens> {
   private parseClass(start: Position): ast.declarations.Class {
     this.eat(Tokens.CLASS)
     const name     = this.eat(Tokens.IDENTIFIER).content
-    const generics = this.current.is(Tokens.LESS) && this.parseTGenericsDecl()
-    const inhertis = this.wheter(Tokens.EXTENDS) && this.parseTType()
-    const body     = []
-
-    this.eat(Tokens.LBRACE)
-    while (!this.current.is(Tokens.RBRACE))
-      body.push(this.parseClassDecl(this.Position))
-
-    this.eat(Tokens.RBRACE)
-    return new ast.declarations.Class(generics, body, inhertis, name, start, this.Position)
+    const inhertis = this.match(Tokens.EXTENDS) && this.parseType()
   }
 
   /**
@@ -555,18 +543,7 @@ export default class Parser implements Reader<Token, Tokens> {
   private parseInterface(start: Position): ast.declarations.InterfaceDecl {
     this.eat(Tokens.INTERFACE)
     const name     = this.eat(Tokens.IDENTIFIER).content
-    const generics = this.current.is(Tokens.LESS) && this.parseTGenericsDecl()
-    const inherits = this.wheter(Tokens.EXTENDS) && this.parseTType()
-
-    this.eat(Tokens.LBRACE)
-    const body: ast.functions.FunctionSignature[] = []
-    while (!this.current.is(Tokens.RBRACE)) {
-      body.push(this.parseFunctionSign())
-      this.wheter(Tokens.COMMA) // allows trailing comma
-    }
-
-    this.eat(Tokens.RBRACE)
-    return new ast.declarations.InterfaceDecl(generics, inherits, body, name, start, this.Position)
+    const inherits = this.match(Tokens.EXTENDS) && this.parseType()
   }
 
   /**
@@ -659,13 +636,13 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns The full import symbol as a string.
    */
   private parseDeepImport(): string {
-    let symbol = (this.wheter(Tokens.IDENTIFIER) || this.wheter(Tokens.STRING))?.content
+    let symbol = (this.match(Tokens.IDENTIFIER) || this.match(Tokens.STRING))?.content
     if (!symbol)
       this.syntaxError("Expected identifier or string as import symbol")
 
-    while (this.wheter(Tokens.MOD_ACCESSOR)) {
+    while (this.match(Tokens.MOD_ACCESSOR)) {
       const prevS: string = symbol
-      symbol = (this.wheter(Tokens.IDENTIFIER) || this.eat(Tokens.STRING)).content
+      symbol = (this.match(Tokens.IDENTIFIER) || this.eat(Tokens.STRING)).content
       symbol = `${prevS}::${symbol}`
     }
 
@@ -702,7 +679,7 @@ export default class Parser implements Reader<Token, Tokens> {
      * from std::io import *
      * ```
      */
-    if (this.wheter(Tokens.STAR))
+    if (this.match(Tokens.STAR))
       return new ast.declarations.Import("*", from, start, this.Position)
 
     /**
@@ -716,7 +693,7 @@ export default class Parser implements Reader<Token, Tokens> {
     const symbols: string[] = []
     do {
       symbols.push(this.parseDeepImport())
-    } while (this.wheter(Tokens.COMMA))
+    } while (this.match(Tokens.COMMA))
 
     return new ast.declarations.Import(symbols, from, start, this.Position)
   }
@@ -806,7 +783,7 @@ export default class Parser implements Reader<Token, Tokens> {
         default: body.push(stmt as ast.statements.Case); break
       }
 
-      this.wheter(Tokens.COMMA) // this allows trailing comma, because only eats it if exists
+      this.match(Tokens.COMMA) // this allows trailing comma, because only eats it if exists
     }
 
     this.eat(Tokens.RBRACE)
