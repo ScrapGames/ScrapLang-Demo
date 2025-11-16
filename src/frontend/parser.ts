@@ -219,7 +219,11 @@ export default class Parser implements Reader<Token, Tokens> {
       this.syntaxError("Functions can only has one flag")
 
     const name     = this.match(Tokens.IDENTIFIER)?.content
+    const generics = this.current.is(Tokens.LESS) && this.parseGenericsType()
+    const params   = this.parseList(Tokens.LPAREN, Tokens.RPAREN, Tokens.COMMA, this.parseParamFunction)
     const ret      = this.match(Tokens.COLON) && this.parseType()
+    const end      = this.Position
+    return { flag, name, generics, params, ret, start, end }
   }
 
   // ----- STATEMENT PARSING ----- //
