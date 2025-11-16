@@ -8,9 +8,8 @@
  */
 
 import { Maybe }             from "@/typings.ts"
-import { Tokens }            from "@frontend/tokens/tokens.ts"
 import { Position }          from "@frontend/position.ts"
-import { ASTNode }           from "@frontend/ast/ast.ts"
+import { ASTNode }           from "@frontend/ast/index.ts"
 import { TType }             from "@frontend/ast/nodes/types.ts"
 import { Statement }         from "@frontend/ast/nodes/statements.ts"
 import { Expression }        from "@frontend/ast/nodes/expressions.ts"
@@ -22,10 +21,8 @@ import { FunctionSignature } from "@frontend/ast/nodes/functions.ts"
 export enum DeclarationKind {
   Module,
   Class,
-  FunctionDecl,
-  FunctionDef,
-  VariableDecl,
-  VariableDef,
+  Function,
+  Variable,
   Interface,
   Type,
   Enum,
@@ -48,13 +45,14 @@ export class Declaration extends ASTNode {
   }
 }
 
-export class NameableDecl extends Declaration {
+export abstract class NamedDeclaration extends Declaration {
   public constructor(
-    public name: string, kind: DeclarationKind,
-    start: Position, end: Position
+    kind: DeclarationKind, start: Position, end: Position
   ) {
     super(kind, start, end)
   }
+
+  abstract get name(): string
 }
 
 /**
@@ -72,58 +70,65 @@ export class Import extends Declaration {
   }
 }
 
-export class VariableDecl extends NameableDecl {
+export class Variable extends NamedDeclaration {
   public constructor(
-    public isConst: boolean, public type: Maybe<TType>, name: string,
-    start: Position, end: Position,
-  ) {
-    super(name, DeclarationKind.VariableDecl, start, end)
-  }
-}
-
-/**
- * Represents a variable declaration in the AST.
- * - `isConst`: whether the variable is declared as a constant.
- * - `value`: the assigned expression value.
- */
-export class VariableDef extends NameableDecl {
-  public constructor(
-    public isConst: boolean, public type: Maybe<TType>, public value: Expression, name: string,
+    public isConst: boolean,
+    public name: string,
+    public type: Maybe<TType>,
+    public value: Expression,
     start: Position, end: Position
   ) {
-    super(name, DeclarationKind.VariableDef, start, end)
+    super(DeclarationKind.Variable, start, end)
   }
 }
 
-export class FunctionDecl extends Declaration {
+export class Function extends NamedDeclaration {
   public constructor(
     public signature: FunctionSignature,
     public body: Statement[],
     start: Position, end: Position
   ) {
-    super(DeclarationKind.FunctionDecl, start, end)
+    super(DeclarationKind.Function, start, end)
   }
+
+  public get name(): string { return this.signature.name! }
 }
 
-export class Extern extends Declaration {
+export class Extern extends NamedDeclaration {
   public constructor(
     public signature: FunctionSignature,
     start: Position, end: Position
   ) {
     super(DeclarationKind.Extern, start, end)
   }
+
+  public get name(): string { return this.signature.name! }
+}
+
+export class ModuleMember extends NamedDeclaration {
+  public constructor(
+    kind: DeclarationKind,
+    public isExported: boolean,
+    public member: NamedDeclaration,
+    start: Position, end: Position
+  ) {
+    super(kind, start, end)
+  }
+
+  public override get name(): string { return this.member.name }
 }
 
 /**
  * Represents a module declaration in the AST.
  * A module groups together other declarations such as classes, functions, or variables.
  */
-export class Module extends NameableDecl {
+export class Module extends NamedDeclaration {
   public constructor(
-    public body: Declaration[], name: string,
+    public name: string,
+    public body: ModuleMember[],
     start: Position, end: Position
   ) {
-    super(name, DeclarationKind.Module, start, end)
+    super(DeclarationKind.Module, start, end)
   }
 }
 
@@ -131,43 +136,60 @@ export class Module extends NameableDecl {
  * Represents a generic class-like declaration.
  * Used as a base for more specific class-related declarations.
  */
-export class ClassDecl extends Declaration {
+export class ClassMember extends NamedDeclaration {
   public constructor(
-    public specifier: Tokens.PUB | Tokens.PRIVATE | Tokens.PROTECTED,
-    public decl: NameableDecl,
+    kind: DeclarationKind,
+    public isPub: boolean,
+    public member: NamedDeclaration,
     start: Position, end: Position
   ) {
-    super(decl.kind, start, end)
+    super(kind, start, end)
   }
+
+  public override get name(): string { return this.member.name }
 }
 
 /**
  * Represents a class declaration in the AST.
  * - `body`: list of member declarations (methods, properties, etc.).
  */
-export class Class extends NameableDecl {
+export class Class extends NamedDeclaration {
   public constructor(
+    public name: string,
     public generics: Maybe<string[]>,
-    public body:     ClassDecl[],
     public inherits: Maybe<TType>,
-    name: string, start: Position, end: Position
+    public body:     ClassMember[],
+    start: Position, end: Position
   ) {
-    super(name, DeclarationKind.Class, start, end)
+    super(DeclarationKind.Class, start, end)
   }
+}
+
+export class InterfaceMember extends NamedDeclaration {
+  public constructor(
+    kind: DeclarationKind.Variable | DeclarationKind.Function,
+    public member: Variable | Function,
+    start: Position, end: Position
+  ) {
+    super(kind, start, end)
+  }
+
+  public override get name(): string { return this.member.name }
 }
 
 /**
  * Represents an interface declaration in the AST.
  * - `body`: list of member declarations defining the contract of the interface.
  */
-export class InterfaceDecl extends NameableDecl {
+export class Interface extends NamedDeclaration {
   public constructor(
+    public name:     string,
     public generics: Maybe<string[]>,
     public inherits: Maybe<TType>,
     public body:     FunctionSignature[],
-    name: string, start: Position, end: Position
+    start: Position, end: Position
   ) {
-    super(name, DeclarationKind.Interface, start, end)
+    super(DeclarationKind.Interface, start, end)
   }
 }
 
@@ -175,12 +197,13 @@ export class InterfaceDecl extends NameableDecl {
  * Represents a type alias declaration in the AST.
  * Currently only stores the alias name.
  */
-export class TypeDecl extends NameableDecl {
+export class Type extends NamedDeclaration {
   public constructor(
+    public name:     string,
     public generics: Maybe<string[]>,
     public type:     TType,
-    name: string, start: Position, end: Position
+    start: Position, end: Position
   ) {
-    super(name, DeclarationKind.Type, start, end)
+    super(DeclarationKind.Type, start, end)
   }
 }
