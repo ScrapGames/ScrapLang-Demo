@@ -22,7 +22,8 @@ import { FunctionSignature }        from "@frontend/ast/nodes/functions.ts"
  * Enum that classifies the kind of expression represented by an `ExpressionNode`.
  */
 export enum ExpressionKind {
-  Atomic,
+  Number,
+  Char,
   Identifier,
   String,
   Function,
@@ -46,9 +47,15 @@ export class Expression extends ASTNode {
  * Represents an atomic value (literal).
  * Examples: numbers, booleans, null.
  */
-export class Atomic extends Expression {
-  public constructor(public value: unknown, start: Position, end: Position) {
-    super(ExpressionKind.Atomic, start, end)
+export class Char extends Expression {
+  public constructor(public value: string, start: Position, end: Position) {
+    super(ExpressionKind.Char, start, end)
+  }
+}
+
+export class Number extends Expression {
+  public constructor(public value: string, start: Position, end: Position) {
+    super(ExpressionKind.Integer, start, end)
   }
 }
 
