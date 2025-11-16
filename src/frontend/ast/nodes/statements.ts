@@ -114,7 +114,7 @@ export class ForIn extends Statement {
  */
 export class ForOf extends Statement {
   public constructor(
-    public decl: VariableDecl,
+    public name: string,
     public subject: Expression,
     public body: Statement[],
     start: Position, end: Position
