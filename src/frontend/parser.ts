@@ -3,8 +3,7 @@ import { Maybe }        from "@/typings.ts"
 import { Position }     from "@frontend/position.ts"
 import type { Reader }  from "@frontend/typings.ts"
 import { Token, Tokens, TOKEN_MAP, stringify } from "@frontend/tokens/tokens.ts"
-import Lexer             from "./lexer.ts"
-import * as ast          from "@frontend/ast/nodes/index.ts"
+import Lexer    from "@frontend/lexer.ts"
 import { FunctionFlags, FunctionSignature } from "@frontend/ast/nodes/functions.ts"
 
 /**
