@@ -1,0 +1,6 @@
+export { AST, ASTNode } from "@frontend/ast/ast.ts"
+export * from "@frontend/ast/nodes/declarations.ts"
+export * from "@frontend/ast/nodes/statements.ts"
+export * from "@frontend/ast/nodes/expressions.ts"
+export * from "@frontend/ast/nodes/functions.ts"
+export * from "@frontend/ast/nodes/types.ts"
