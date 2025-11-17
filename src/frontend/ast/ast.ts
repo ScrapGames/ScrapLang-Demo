@@ -10,7 +10,7 @@ export class ASTNode {
   }
 }
 
-export class AST {
+export default class AST {
   public body: ASTNode[]
 
   public constructor(body: Iterable<ASTNode>) {
