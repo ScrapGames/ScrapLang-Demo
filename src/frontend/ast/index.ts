@@ -1,4 +1,4 @@
-export { AST, ASTNode } from "@frontend/ast/ast.ts"
+export { default, ASTNode } from "@frontend/ast/ast.ts"
 export * from "@frontend/ast/nodes/declarations.ts"
 export * from "@frontend/ast/nodes/statements.ts"
 export * from "@frontend/ast/nodes/expressions.ts"
