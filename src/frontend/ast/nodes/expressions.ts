@@ -55,7 +55,7 @@ export class Char extends Expression {
 
 export class Number extends Expression {
   public constructor(public value: string, start: Position, end: Position) {
-    super(ExpressionKind.Integer, start, end)
+    super(ExpressionKind.Number, start, end)
   }
 }
 
