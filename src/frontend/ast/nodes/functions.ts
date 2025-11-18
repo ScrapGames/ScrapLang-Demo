@@ -14,12 +14,15 @@ export class Param extends ASTNode {
   }
 }
 
-export interface FunctionSignature {
-  flag?:     FunctionFlags,
-  name?:     string
-  generics?: string[]
-  params:    Param[]
-  ret?:      TType,
-  start:     Position,
-  end:       Position
+export class FunctionSignature extends ASTNode {
+  public constructor(
+    public flag:      Maybe<FunctionFlags>,
+    public name:      Maybe<string>,
+    public generics:  Maybe<string[]>,
+    public params:    Param[],
+    public ret:       Maybe<TType>,
+    start: Position, end: Position
+  ) {
+    super(start, end)
+  }
 }

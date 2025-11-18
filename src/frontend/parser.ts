@@ -223,7 +223,7 @@ export default class Parser implements Reader<Token, Tokens> {
     const params   = this.parseList(Tokens.LPAREN, Tokens.RPAREN, Tokens.COMMA, this.parseParamFunction)
     const ret      = this.match(Tokens.COLON) && this.parseType()
     const end      = this.Position
-    return { flag, name, generics, params, ret, start, end }
+    return new ast.FunctionSignature(flag, name, generics, params, ret, start, end)
   }
 
   // ----- STATEMENT PARSING ----- //
