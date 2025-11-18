@@ -804,8 +804,11 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns 
    */
   private parseAtomicExpr(start: Position): ast.Char | ast.Number {
-    const kind = this.current.is(Tokens.CHAR) ? ast.Char : ast.Number
-    return new kind(this.current.content, start, this.Position)
+    const atomic = this.current.is(Tokens.CHAR) ? ast.Char : ast.Number
+    const value = this.current.content
+
+    this.next()
+    return new atomic(value, start, this.Position)
   }
 
   /**
