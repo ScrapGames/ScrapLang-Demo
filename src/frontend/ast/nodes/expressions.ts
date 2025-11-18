@@ -13,7 +13,7 @@
 import { Maybe }    from "@/typings.ts"
 import { Position } from "@frontend/position.ts"
 import { Token }    from "@frontend/tokens/tokens.ts"
-import { ASTNode }  from "@frontend/ast/ast.ts"
+import { ASTNode }  from "@frontend/ast/index.ts"
 import { TType }    from "@frontend/ast/nodes/types.ts"
 import { Case, Default, Statement } from "@frontend/ast/nodes/statements.ts"
 import { FunctionSignature }        from "@frontend/ast/nodes/functions.ts"

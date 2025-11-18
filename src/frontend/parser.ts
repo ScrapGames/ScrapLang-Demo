@@ -1,8 +1,8 @@
-import { SyntaxError }  from "@/errors.ts"
-import { Maybe }        from "@/typings.ts"
-import { Position }     from "@frontend/position.ts"
-import type { Reader }  from "@frontend/typings.ts"
-import { Token, Tokens, TOKEN_MAP, stringify } from "@frontend/tokens/tokens.ts"
+import { SyntaxError } from "@/errors.ts"
+import type { Maybe }  from "@/typings.ts"
+import type { Reader } from "@frontend/typings.ts"
+import { Position }    from "@frontend/position.ts"
+import { Token, Tokens, stringify } from "@frontend/tokens/tokens.ts"
 import Lexer    from "@frontend/lexer.ts"
 import * as ast from "@frontend/ast/index.ts"
 
