@@ -14,11 +14,11 @@
  * normally or due to an error.
  */
 
-import { Maybe }    from "@/typings.ts"
-import { Position } from "@frontend/position.ts"
-import { ASTNode }  from "@frontend/ast/ast.ts"
-import { Expression } from "@frontend/ast/nodes/expressions.ts"
-import { Declaration, VariableDecl, VariableDef } from "@frontend/ast/nodes/declarations.ts"
+import { Maybe }       from "@/typings.ts"
+import { Position }    from "@frontend/position.ts"
+import { ASTNode }     from "@frontend/ast/ast.ts"
+import { Expression }  from "@frontend/ast/nodes/expressions.ts"
+import { Declaration } from "@frontend/ast/nodes/declarations.ts"
 
 /**
  * Enumeration of all statement kinds supported by the language.
@@ -81,10 +81,10 @@ export class DoWhile extends Statement {
  */
 export class For extends Statement {
   public constructor(
-    public decl: VariableDef,    // Initialization variables
-    public expr: Expression,       // Loop condition
-    public inc: Expression,        // Increment expression
-    public body: Statement[],      // Loop body
+    public name: string,      // Initialization variables
+    public expr: Expression,  // Loop condition
+    public inc: Expression,   // Increment expression
+    public body: Statement[], // Loop body
     start: Position, end: Position
   ) {
     super(StatementKind.For, start, end)
@@ -97,7 +97,7 @@ export class For extends Statement {
  */
 export class ForIn extends Statement {
   public constructor(
-    public decl: VariableDecl,
+    public name: string,
     public subject: Expression,
     public body: Statement[],
     start: Position, end: Position
