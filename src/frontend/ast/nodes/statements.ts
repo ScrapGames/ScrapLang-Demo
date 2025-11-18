@@ -25,8 +25,6 @@ import { Declaration, VariableDecl, VariableDef } from "@frontend/ast/nodes/decl
  */
 export enum StatementKind {
   Return,
-  Export,
-  Import,
   If,
   For,
   ForIn,
