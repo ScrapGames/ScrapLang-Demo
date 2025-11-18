@@ -21,14 +21,14 @@ async function main(args: string[]): Promise<void> {
   if (!fileInfo.isFile)
     throw new CLIError("The specified entrypoint isn't a valid file")
 
-  using lexer = Lexer.init(filePath)
+  using lexer  = Lexer.init(filePath)
   const parser = Parser.init(lexer)
-
-  if (lexer.hasEnd())
-    return console.info("Nothing to run!")
-
-  const ast = parser.parseFile()
-  console.log(ast)
+  console.log(Deno.inspect(new AST(parser), {
+    colors: false,
+    depth: Infinity, // probably change this
+    iterableLimit: 10000, // probably change this
+    strAbbreviateSize: 10000000, // probably change this
+  }))
 }
 
 main(Deno.args);
