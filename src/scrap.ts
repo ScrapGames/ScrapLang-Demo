@@ -1,8 +1,8 @@
 import { parseArgs } from "@std/cli"
-
-import { CLIError } from "@/errors.ts"
-import Lexer from "@frontend/lexer.ts"
-import Parser from "@frontend/parser.ts"
+import { CLIError }  from "@/errors.ts"
+import Lexer         from "@frontend/lexer.ts"
+import Parser        from "@frontend/parser.ts"
+import AST           from "@frontend/ast/index.ts"
 
 export const VERSION = "1.0.0"
 export const SLASH = Deno.build.os === "windows" ? "\\" : "/"
