@@ -39,6 +39,7 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   public static init(lexer: Lexer) {
     const p = new this(lexer)
+    p.next()
     return p
   }
 
@@ -100,12 +101,12 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   /**
-   * Checks if the current token matches the given type.
+   * Checks if the current token matches the given type
    * @param maybe Token type to compare.
    * @returns True if it matches, otherwise false.
    */
   check(maybe: Tokens): boolean {
-    return this.lexer.check(TOKEN_MAP.get(maybe)!)
+    return !!this.current.is(maybe)
   }
 
   // ===== HELPER FUNCTIONS =====
