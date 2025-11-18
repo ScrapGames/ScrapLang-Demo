@@ -324,26 +324,32 @@ export default class Parser implements Reader<Token, Tokens> {
 
   private parseForStmt(start: Position): ast.For | ast.ForOf | ast.ForIn {
     this.eat(Tokens.FOR)
+    this.eat(Tokens.LPAREN) // for (...
+
+    if (this.current.is(Tokens.VAR)) {
+      const decl = this.parseVariableDecl(this.Position)
+      const loop = this.eat(Tokens.SEMICOLON) && this.parseExpr()
+      const incr = this.eat(Tokens.SEMICOLON) && this.parseExpr()
+      this.eat(Tokens.RPAREN) // ...)
+
+      const body = this.parseBlock(this.parseStmt)
+      return new ast.For(decl, loop, incr, body, start, this.Position)
+    }
 
     const name = this.eat(Tokens.IDENTIFIER).content
-    const kind = this.next()
-
-    switch (kind.type) {
-      case Tokens.OF: 
+    switch (this.current.type) {
+      case Tokens.OF:
       case Tokens.IN: {
-        this.eat(kind.type)
-        const stmt = kind.is(Tokens.OF) ? ast.ForOf : ast.ForIn
-        const expr = this.parseExpr()
+        const kind = this.current.is(Tokens.OF) ? ast.ForOf : ast.ForIn
+        const subject = this.eat(this.current.type) && this.parseExpr()
+        this.eat(Tokens.RPAREN) // ...)
+
         const body = this.parseBlock(this.parseStmt)
-        return new stmt(name, expr, body, start, this.Position)
+        return new kind(name, subject, body, start, this.Position)
       }
     }
 
-    // TODO: complete variable parsing in legacy for loops
-    const loop = this.eat(Tokens.SEMICOLON) && this.parseExpr()
-    const incr = this.eat(Tokens.SEMICOLON) && this.parseExpr()
-    const body = this.parseBlock(this.parseStmt)
-    return new ast.For(name, loop, incr, body, start, this.Position)
+    this.syntaxError(`Unknown for loop kind '${this.current.TypeContent}'`)
   }
 
   private parseIfStmt(start: Position): ast.If {

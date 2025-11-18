@@ -81,7 +81,7 @@ export class DoWhile extends Statement {
  */
 export class For extends Statement {
   public constructor(
-    public name: string,      // Initialization variables
+    public name: Variable,  // Initialization variables
     public expr: Expression,  // Loop condition
     public inc: Expression,   // Increment expression
     public body: Statement[], // Loop body
