@@ -210,6 +210,13 @@ export default class Parser implements Reader<Token, Tokens> {
 
   // ===== FUNCTION PARSING =====
 
+  private parseParamFunction(start: Position): ast.Param {
+    const name = this.eat(Tokens.IDENTIFIER).content
+    this.eat(Tokens.COLON)
+    const type = this.parseType()
+    return new ast.Param(name, type, start, this.Position)
+  }
+
   /**
    * Parses a function signature
    * @returns Object FunctionSignature
@@ -228,22 +235,6 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   // ----- STATEMENT PARSING ----- //
-
-  /**
-   * Parses a block of statements enclosed in braces.
-   * @param start Starting position.
-   * @returns Array of statement AST nodes.
-   */
-  private parseBlock(start: Position): ast.statements.Statement[] {
-    this.eat(Tokens.LBRACE)
-    const body: ast.statements.Statement[] = []
-    
-    while (!this.current.is(Tokens.RBRACE))
-      body.push(this.parseStatement(start))
-
-    this.eat(Tokens.RBRACE)
-    return body
-  }
 
   /**
    * Parses a 'dissipate' statement.
