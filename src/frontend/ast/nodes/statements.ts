@@ -18,7 +18,7 @@ import { Maybe }       from "@/typings.ts"
 import { Position }    from "@frontend/position.ts"
 import { ASTNode }     from "@frontend/ast/ast.ts"
 import { Expression }  from "@frontend/ast/nodes/expressions.ts"
-import { Declaration } from "@frontend/ast/nodes/declarations.ts"
+import { Declaration, Variable } from "@frontend/ast/nodes/declarations.ts"
 
 /**
  * Enumeration of all statement kinds supported by the language.
@@ -81,9 +81,9 @@ export class DoWhile extends Statement {
  */
 export class For extends Statement {
   public constructor(
-    public name: Variable,  // Initialization variables
+    public name: Variable,    // Initialization variables
     public expr: Expression,  // Loop condition
-    public inc: Expression,   // Increment expression
+    public inc:  Expression,  // Increment expression
     public body: Statement[], // Loop body
     start: Position, end: Position
   ) {
