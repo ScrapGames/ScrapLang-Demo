@@ -354,8 +354,8 @@ export default class Parser implements Reader<Token, Tokens> {
 
   private parseIfStmt(start: Position): ast.If {
     this.eat(Tokens.IF)
-    const expr = this.parseExpr()
 
+    const expr = this.parseExpr()
     const body = this.parseBlock(this.parseStmt)
     return new ast.If(expr, body, start, this.Position)
   }
@@ -799,6 +799,16 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   /**
+   * Parses a literal string
+   * @param start 
+   * @returns 
+   */
+  private parseStringExpr(start: Position): ast.String {
+    const content = this.eat(Tokens.STRING).content
+    return new ast.String(content, start, this.Position)
+  }
+
+  /**
    * Parses an _indivisible_ value like a number or a character
    * @param start 
    * @returns 
@@ -876,6 +886,7 @@ export default class Parser implements Reader<Token, Tokens> {
       case Tokens.CHAR:
       case Tokens.NUMBER:     return this.parseAtomicExpr(start)
       case Tokens.IDENTIFIER: return this.parseIdentifierExpr(start)
+      case Tokens.STRING:     return this.parseStringExpr(start)
     }
 
     return this.parseUnaryExpr()
