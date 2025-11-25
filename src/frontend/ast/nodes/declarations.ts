@@ -75,7 +75,7 @@ export class Variable extends NamedDeclaration {
     public isConst: boolean,
     public name: string,
     public type: Maybe<TType>,
-    public value: Expression,
+    public value: Maybe<Expression>,
     start: Position, end: Position
   ) {
     super(DeclarationKind.Variable, start, end)

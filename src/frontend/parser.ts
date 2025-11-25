@@ -518,10 +518,10 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns Variable declaration AST node
    */
   private parseVariableDecl(start: Position): ast.Variable {
-    const isConst = !!this.match(Tokens.CONST)
-    const name  = this.eat(Tokens.IDENTIFIER).content
-    const type  = this.match(Tokens.COLON) && this.parseType()
-    const value = this.eat(Tokens.EQUAL) && this.parseExpr()
+    const isConst = !!(this.match(Tokens.CONST) || !this.eat(Tokens.VAR))
+    const name    = this.eat(Tokens.IDENTIFIER).content
+    const type    = this.match(Tokens.COLON) && this.parseType()
+    const value   = this.match(Tokens.EQUAL) && this.parseExpr()
     return new ast.Variable(isConst, name, type, value, start, this.Position)
   }
 
