@@ -1,6 +1,7 @@
 # Your PR title here :)
 
 ## PR Type
+
 What kind of change does this PR introduce?
 
 <!-- Please check the one that applies to this PR removing whitespaces from brackets and place a "x". -->
