@@ -396,7 +396,7 @@ export class Token {
   }
 
   public get OpTypeRules(): Maybe<{ prec: number, assoc: "left" | "right" }> {
-    const prec = this.is(Tokens.PIPE) ? 0 : this.is(Tokens.AMPER) ? 1 : undefined
+    const prec = (this.is(Tokens.PIPE) || this.is(Tokens.MOD_ACCESSOR)) ? 0 : this.is(Tokens.AMPER) ? 1 : undefined
     if (prec === undefined)
       return prec
 
