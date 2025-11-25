@@ -1,5 +1,10 @@
-import Galua::Physics
+import Galua::Vis
+import Galua::Vector
+import Galua::SceneObject
 
-async fn main(args: string[], argsc: u8) {
-  const rb = new Physics::RigidBody2D
+class Player extends SceneObject {
+  var health: u8 = 10
+  const position: Vector
+
+  pub fn onCollisionEnter(collision: Vis::Collision) {}
 }
