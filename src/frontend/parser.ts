@@ -631,14 +631,15 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   /**
-   * Parses a 'from' import statement.
-   * @param start Start position.
-   * @returns Import AST node.
+   * Parses a from declaration
+   * @param start
+   * @returns From AST node
    */
-  private parseFrom(start: Position): ast.Import {
+  private parseFromDecl(start: Position): ast.From {
     this.eat(Tokens.FROM)
-    const module = this.parseDeepImport()
-    return this.parseImportDecl(start, module)
+    const module  = this.parseImportMember(this.Position)
+    const imports = this.parseImportDecl(this.Position)
+    return new ast.From(module, imports, start, this.Position)
   }
 
   /**
@@ -710,6 +711,8 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseDecl(start: Position): ast.Declaration {
     switch(this.current.type) {
+      case Tokens.FROM:      return this.parseFromDecl(start)
+      case Tokens.IMPORT:    return this.parseImportDecl(start)
       case Tokens.INLINE:
       case Tokens.ASYNC:
       case Tokens.FN:        return this.parseFunctionDecl(start)
@@ -718,8 +721,6 @@ export default class Parser implements Reader<Token, Tokens> {
       case Tokens.CONST:     return this.parseVariableDecl(start)
       case Tokens.CLASS:     return this.parseClassDecl(start)
       case Tokens.MODULE:    return this.parseModuleDecl(start)
-      case Tokens.FROM:      return this.parseFrom(start)
-      case Tokens.IMPORT:    return this.parseImportDecl(start)
       case Tokens.INTERFACE: return this.parseInterface(start)
       case Tokens.TYPE:      return this.parseTypeDecl(start)
     }
