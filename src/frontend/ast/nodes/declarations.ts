@@ -26,7 +26,6 @@ export enum DeclarationKind {
   Interface,
   Type,
   Enum,
-  From,
   Import,
   Export,
   Extern
@@ -68,16 +67,6 @@ export class Import extends Declaration {
     start: Position, end: Position
   ) {
     super(DeclarationKind.Import, start, end)
-  }
-}
-
-export class From extends Declaration {
-  public constructor(
-    public module: ImportMember,
-    public imports: Import,
-    start: Position, end: Position
-  ) {
-    super(DeclarationKind.From, start, end)
   }
 }
 
