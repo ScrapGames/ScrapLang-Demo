@@ -155,7 +155,8 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   /**
-   * Parses all elements beign enclosed between `open` and `close` according to every `consumer` call
+   * Parses all elements beign enclosed between `open` and `close` according to every `consumer` call.
+   * The consume must ensure that the closing delimiter is not consumed. Otherwise, an error will thrown
    * @param open 
    * @param close 
    * @param consumer
@@ -185,27 +186,24 @@ export default class Parser implements Reader<Token, Tokens> {
     return this.parseDelimited(Tokens.LBRACE, Tokens.RBRACE, consumer)
   }
 
-  /**
-   * Calls {@link parseDelimited} and ensures that every element is separated by one `separator` token
-   * @param open 
-   * @param close 
-   * @param separator 
-   * @param consumer 
-   * @returns 
-   */
-  private parseList<T>(
+  private parseDelimitedList<T>(
     open: Tokens,
     close: Tokens,
     separator: Tokens,
     consumer: (start: Position) => T
   ): T[] {
-    return this.parseDelimited(open, close, () => {
-      const item = consumer.call(this, this.Position)
-      if (!this.match(separator) && !this.current.is(close))
-        this.syntaxError(`Missing '${stringify(separator)}' separating elements`)
+    this.eat(open)
 
-      return item
-    })
+    const items = []
+    while (!this.current.is(close)) {
+      items.push(consumer.call(this, this.Position))
+
+      if (!this.match(separator) && !this.current.is(close))
+        this.syntaxError(`Missing separator '${stringify(separator)}' between elements`)
+    }
+
+    this.eat(close)
+    return items
   }
 
   // ===== FUNCTION PARSING =====
@@ -228,7 +226,7 @@ export default class Parser implements Reader<Token, Tokens> {
 
     const name     = this.match(Tokens.IDENTIFIER)?.content
     const generics = this.current.is(Tokens.LESS) && this.parseGenericsType()
-    const params   = this.parseList(Tokens.LPAREN, Tokens.RPAREN, Tokens.COMMA, this.parseParamFunction)
+    const params   = this.parseDelimitedList(Tokens.LPAREN, Tokens.RPAREN, Tokens.COMMA, this.parseParamFunction)
     const ret      = this.match(Tokens.COLON) && this.parseType()
     const end      = this.Position
     return new ast.FunctionSignature(flag, name, generics, params, ret, start, end)
@@ -408,7 +406,7 @@ export default class Parser implements Reader<Token, Tokens> {
 
   private parseIdentifierType(start: Position): ast.TType {
     const identifier = this.eat(Tokens.IDENTIFIER)
-    const generics   = this.current.is(Tokens.LESS) && this.parseList(
+    const generics   = this.current.is(Tokens.LESS) && this.parseDelimitedList(
       Tokens.LESS,
       Tokens.GREATER,
       Tokens.COMMA,
@@ -436,12 +434,12 @@ export default class Parser implements Reader<Token, Tokens> {
 
   private parseGenericsType(): string[] {
     this.eat(Tokens.LESS)
-    const generics = this.parseList(
+    const generics = this.parseDelimitedList(
       Tokens.LESS,
       Tokens.GREATER,
       Tokens.COMMA,
-      () => this.eat(Tokens.IDENTIFIER).content
-    )
+      this.next
+    ).map(x => x.content)
 
     return generics
   }
@@ -788,7 +786,7 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns Call AST node.
    */
   private parseCallExpr(start: Position, callee: ast.Expression, generics?: ast.TType[]): ast.Call {
-    const list = this.parseList(
+    const list = this.parseDelimitedList(
       Tokens.LPAREN,
       Tokens.RPAREN,
       Tokens.COMMA,
