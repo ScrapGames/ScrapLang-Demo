@@ -2,6 +2,8 @@ import Galua::Vis
 import Galua::Vector
 import Galua::SceneObject
 
+fn test(arg0: string, ) {}
+
 class Player extends SceneObject {
   var health: u8 = 10
   const position: Vector
