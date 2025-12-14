@@ -1,6 +1,6 @@
-import Galua::Vis
-import Galua::Vector
-import Galua::SceneObject
+from Galua import Vis, Vector, SceneObject
+from std::net import http::fetch
+from std import io::InputStream, io::OutputStream
 
 fn test(arg0: string, ) {}
 
@@ -9,4 +9,8 @@ class Player extends SceneObject {
   const position: Vector
 
   pub fn onCollisionEnter(collision: Vis::Collision) {}
+}
+
+fn main() {
+  fetch("https://test.n8n.com/api/init")
 }
