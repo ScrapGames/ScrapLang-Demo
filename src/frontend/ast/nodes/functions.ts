@@ -1,7 +1,7 @@
 import { Maybe }    from "@/typings.ts"
 import { Position } from "@frontend/position.ts"
 import { Tokens }   from "@frontend/tokens/tokens.ts"
-import { ASTNode }  from "@frontend/ast/index.ts"
+import { ASTNode }  from "@frontend/ast/ast.ts"
 import { TType }    from "@frontend/ast/nodes/types.ts"
 
 /**
