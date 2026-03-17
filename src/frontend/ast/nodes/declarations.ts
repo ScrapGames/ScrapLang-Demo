@@ -27,7 +27,6 @@ export enum DeclarationKind {
   Type,
   Enum,
   Import,
-  Export,
   Extern
 }
 
