@@ -129,11 +129,11 @@ export default class Parser implements Reader<Token, Tokens> {
    * @param type Token type to expect.
    * @returns The consumed token.
    */
-  private eat(type: Tokens): Token {
+  private eat(type: Tokens, message?: string): Token {
     if (!this.current.is(type)) {
       const expected = stringify(type)
       const found    = this.current.TypeContent
-      this.syntaxError(`Missing '${expected}', found '${found}'`)
+      this.syntaxError(message ?? `Missing '${expected}', found '${found}'`)
     }
 
     const current = this.current
@@ -514,11 +514,8 @@ export default class Parser implements Reader<Token, Tokens> {
     this.eat(Tokens.STATIC)
 
     const name = this.eat(Tokens.IDENTIFIER).content
-    const type = this.match(Tokens.COLON) && this.parseType()
-
-    this.eat(Tokens.EQUAL)
-    const value = this.parseExpr()
-    return new ast.Static(name, type, value, start, this.Position)
+    const value = this.eat(Tokens.EQUAL, "static declarations does not need type annotations") && this.parseExpr()
+    return new ast.Static(name, value, start, this.Position)
   }
 
   private parseConstantDecl(start: Position): ast.Constant {

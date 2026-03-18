@@ -151,7 +151,6 @@ export class Constant extends NamedDeclaration {
 export class Static extends NamedDeclaration {
   public constructor(
     public name: string,
-    public type: Maybe<TType>,
     public value: Expression,
     start: Position, end: Position
   ) {
