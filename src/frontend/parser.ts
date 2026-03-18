@@ -562,81 +562,76 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   /**
-   * Parses a deep import symbol (e.g., `std::io::File`).
-   * @returns The full import symbol as a string.
+   * Parses an import access, where one or none symbols access to a {@link ast.ImportSymbol} or {@link ast.ImportList}
+   * @param start 
+   * @param mod 
+   * @returns 
    */
-  private parseDeepImport(): string {
-    let symbol = (this.match(Tokens.IDENTIFIER) || this.match(Tokens.STRING))?.content
-    if (!symbol)
-      this.syntaxError("Expected identifier or string as import symbol")
+  private parseImportAccess(start: Position, mod: Maybe<ast.ImportMember>): ast.ImportMember {
+    this.eat(Tokens.MOD_ACCESSOR)
+    return this.parseImportMember(start, mod)
+  }
 
-    while (this.match(Tokens.MOD_ACCESSOR)) {
-      const prevS: string = symbol
-      symbol = (this.match(Tokens.IDENTIFIER) || this.eat(Tokens.STRING)).content
-      symbol = `${prevS}::${symbol}`
+  /**
+   * Parses an import symbol (Galua, fs, std, net, etc)
+   * @param start 
+   * @param mod 
+   * @returns An {@link ast.ImportMember} which can be a single symbol or a recursive list of symbols and other lists
+   */
+  private parseImportSymbol(start: Position, mod: Maybe<ast.ImportMember>): ast.ImportMember {
+    const symbol = this.eat(Tokens.IDENTIFIER).content
+    const alias  = this.expects(Tokens.IDENTIFIER, Tokens.AS)?.content
+    const single = new ast.ImportSymbol(mod, symbol, alias, start, this.Position)
+
+    // 1. Once a Import symbol has been parsed, it is passed again to `parseImportMember`
+    // in search of any other symbol that can give the symbol other mean
+    // other than a single symbol, like a list
+    return this.parseImportMember(start, single)
+  }
+
+  private parseImportList(start: Position, mod: Maybe<ast.ImportMember>): ast.ImportList {
+    const list = this.parseDelimitedList(
+      Tokens.LBRACE,
+      Tokens.RBRACE,
+      Tokens.COMMA,
+      () => this.parseImportMember(this.Position, mod)
+    )
+
+    return new ast.ImportList(mod, list, start, this.Position)
+  }
+
+  /**
+   * TODO: This function is provisional and needs to be reviewed and refactorized
+   * @param start 
+   * @returns 
+   */
+  private parseImportMember(start: Position, parent: Maybe<ast.ImportMember>): ast.ImportMember {
+    switch (this.current.type) {
+      case Tokens.LBRACE:       return this.parseImportList(start, parent)
+      case Tokens.IDENTIFIER:   return this.parseImportSymbol(start, parent)
+      case Tokens.MOD_ACCESSOR: return this.parseImportAccess(start, parent)
     }
 
-    return symbol
+    // 2. Reaching this point at runtime means that
+    // all the syntax is correct, but a single symbol has been found
+    // like: `import Galua` or `import ::{ Galua }`
+    if (parent)
+      return parent
+
+    // If the syntax is incorrect, then this line is reached, stopping the parsing
+    this.syntaxError(`Unkown import syntax '${this.current.content}'. Expected a symbol or a list`)
   }
 
   /**
    * Parses an import declaration.
    * @param start Start position.
-   * @param from Optional module name.
    * @returns Import AST node.
    */
-  private parseImportDecl(start: Position, from?: string): ast.Import {
+  private parseImportDecl(start: Position): ast.Import {
     this.eat(Tokens.IMPORT)
+    const member = this.parseImportMember(this.Position, undefined)
 
-    /**
-     * If `from` is not provided, it means the syntax is something like:
-     * 
-     * ```
-     * import express
-     * or
-     * import "code_gen"
-     * ```
-     */
-    if (!from) {
-      const module = this.parseDeepImport()
-      return new ast.Import([], module, start, this.Position)
-    }
-
-    /**
-     * If `from` is provided and the next token is a star (`*`), it means all symbols are being imported:
-     * 
-     * ```
-     * from std::io import *
-     * ```
-     */
-    if (this.match(Tokens.STAR))
-      return new ast.Import("*", from, start, this.Position)
-
-    /**
-     * Otherwise, it means specific symbols are being imported:
-     * 
-     * ```
-     * from std::io import File
-     * from internal::"code-gen" import ir::Functions, ir::Types
-     * ```
-     */
-    const symbols: string[] = []
-    do {
-      symbols.push(this.parseDeepImport())
-    } while (this.match(Tokens.COMMA))
-
-    return new ast.Import(symbols, from, start, this.Position)
-  }
-
-  /**
-   * Parses a 'from' import statement.
-   * @param start Start position.
-   * @returns Import AST node.
-   */
-  private parseFrom(start: Position): ast.Import {
-    this.eat(Tokens.FROM)
-    const module = this.parseDeepImport()
-    return this.parseImportDecl(start, module)
+    return new ast.Import(member, start, this.Position)
   }
 
   /**
