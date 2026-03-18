@@ -112,19 +112,6 @@ export default class Parser implements Reader<Token, Tokens> {
   // ===== HELPER FUNCTIONS =====
 
   /**
-   * Ensures the next token matches the expected type, otherwise throws a syntax error.
-   * @param expected Expected token type.
-   * @returns The next token.
-   */
-  private expects(expected: Tokens) {
-    const nextToken = this.next()
-    if (nextToken.type === expected)
-      return nextToken
-
-    this.syntaxError(`Found ${stringify(nextToken.type)}, expected ${stringify(expected)}`)
-  }
-
-  /**
    * Consumes the current token if it matches the expected type, otherwise throws.
    * @param type Token type to expect.
    * @returns The consumed token.
@@ -152,6 +139,19 @@ export default class Parser implements Reader<Token, Tokens> {
       return undefined
 
     return this.eat(type)
+  }
+
+  /**
+   * if `after` is found, then `expected` must exists after it
+   * @param expected Expected token type.
+   * @returns The next token.
+   */
+  private aheadMatch(expected: Tokens, after: Tokens): Token | undefined {
+    if (!this.match(after))
+      return undefined
+
+    const nextToken = this.eat(expected)
+    return nextToken
   }
 
   /**
@@ -594,7 +594,7 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseImportSymbol(start: Position, mod: Maybe<ast.ImportMember>): ast.ImportMember {
     const symbol = this.eat(Tokens.IDENTIFIER).content
-    const alias  = this.expects(Tokens.IDENTIFIER, Tokens.AS)?.content
+    const alias  = this.aheadMatch(Tokens.IDENTIFIER, Tokens.AS)?.content
     const single = new ast.ImportSymbol(mod, symbol, alias, start, this.Position)
 
     // 1. Once a Import symbol has been parsed, it is passed again to `parseImportMember`
