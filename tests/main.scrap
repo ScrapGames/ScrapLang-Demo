@@ -15,7 +15,7 @@ import ::{
   Engine::{ Vis::Collision, Vector3 }
 }
 
-static name: String = "Raxabi"
+static name = "Raxabi"
 
 fn modify(name: String) {}
 
