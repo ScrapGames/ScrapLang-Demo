@@ -1,12 +1,24 @@
-import Galua::Vis
-import Galua::Vector
-import Galua::SceneObject
+import std::{
+  sys::{ sleep, process },
+  net::{ http, socket }
+}
 
-fn test(arg0: string, ) {}
+import ::{
+  Galua as Engine,
+  Engine::{
+    StateMachine,
+    SceneObjectBehaviour,
+    Animations::{ Clip, Animation },
+    Scenes::{ Manager as SceneManager, Scene }
+  },
 
-class Player extends SceneObject {
-  var health: u8 = 10
-  const position: Vector
+  Engine::{ Vis::Collision, Vector3 }
+}
 
-  pub fn onCollisionEnter(collision: Vis::Collision) {}
+static name: String = "Raxabi"
+
+fn modify(name: String) {}
+
+fn main() {
+
 }
