@@ -14,6 +14,7 @@ import { TType }             from "@frontend/ast/nodes/types.ts"
 import { Statement }         from "@frontend/ast/nodes/statements.ts"
 import { Expression }        from "@frontend/ast/nodes/expressions.ts"
 import { FunctionSignature } from "@frontend/ast/nodes/functions.ts"
+import { ImportMember }      from "@frontend/ast/nodes/imports.ts"
 
 /**
  * Enumeration representing different kinds of declarations.
@@ -55,15 +56,37 @@ export abstract class NamedDeclaration extends Declaration {
 }
 
 /**
- * Represents an import declaration in the AST.
- * - `symbols`: list of symbols being imported or `*` for all.
- * - `name`: module name from which symbols are imported.
+ * Represents an import declaration in the ast
+ * 
+ * An import declaration is used to make symbols from other module available in the module
+ * which the import declaration was performed
+ * 
+ * An import declaration can be formed by a single symbol or by a list of them
+ * @example
+ * ```rust
+ * // using single symbols
+ * import Galua
+ * import OtherModule
+ * import std::fs
+ * import std::fs::File
+ * import std::fs::Directory
+ * 
+ * // using list of symbols
+ * import ::{ Galua, OtherModule }
+ * import { Galua, OtherModule, std::fs }
+ * import {
+ *  Galua,
+ *  OtherModule
+ *  std::fs::{ File, Directory }
+ * }
+ * 
+ * ```
  */
 export class Import extends Declaration {
   public constructor(
-    public symbols: string[] | "*",
-    public module: string,
-    start: Position, end: Position
+    public member: ImportMember,
+    start: Position,
+    end: Position
   ) {
     super(DeclarationKind.Import, start, end)
   }
