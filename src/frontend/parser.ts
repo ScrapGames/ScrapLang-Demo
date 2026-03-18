@@ -208,7 +208,7 @@ export default class Parser implements Reader<Token, Tokens> {
 
   // ===== FUNCTION PARSING =====
 
-  private parseParamFunction(start: Position): ast.Param {
+  private parseFunctionParam(start: Position): ast.Param {
     const name = this.eat(Tokens.IDENTIFIER).content
     this.eat(Tokens.COLON)
     const type = this.parseType()
@@ -219,14 +219,14 @@ export default class Parser implements Reader<Token, Tokens> {
    * Parses a function signature
    * @returns Object FunctionSignature
    */
-  private parseSignFunction(start: Position): ast.FunctionSignature {
+  private parseFunctionSign(start: Position): ast.FunctionSignature {
     const flag = (this.match(Tokens.INLINE) || this.match(Tokens.ASYNC))?.type as Maybe<ast.FunctionFlags>
     if (!this.match(Tokens.FN))
       this.syntaxError("Functions can only has one flag")
 
     const name     = this.match(Tokens.IDENTIFIER)?.content
     const generics = this.current.is(Tokens.LESS) && this.parseGenericsType()
-    const params   = this.parseDelimitedList(Tokens.LPAREN, Tokens.RPAREN, Tokens.COMMA, this.parseParamFunction)
+    const params   = this.parseDelimitedList(Tokens.LPAREN, Tokens.RPAREN, Tokens.COMMA, this.parseFunctionParam)
     const ret      = this.match(Tokens.COLON) && this.parseType()
     const end      = this.Position
     return new ast.FunctionSignature(flag, name, generics, params, ret, start, end)
@@ -421,7 +421,7 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   private parseFunctionType(start: Position): ast.TFunction {
-    const sign = this.parseSignFunction(this.Position)
+    const sign = this.parseFunctionSign(this.Position)
 
     switch (true) {
       case sign.flag === Tokens.INLINE: this.syntaxError("Function types can not be inline") /* falls through */
@@ -557,7 +557,7 @@ export default class Parser implements Reader<Token, Tokens> {
     const name     = this.eat(Tokens.IDENTIFIER).content
     const generics = this.current.is(Tokens.LESS) && this.parseGenericsType()
     const inherits = this.match(Tokens.EXTENDS) && this.parseType()
-    const body     = this.parseBlock(this.parseSignFunction)
+    const body     = this.parseBlock(this.parseFunctionSign)
 
     return new ast.Interface(name, generics, inherits, body, start, this.Position)
   }
@@ -659,7 +659,7 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseExternDecl(start: Position): ast.Extern {
     this.eat(Tokens.EXTERN)
-    const sign = this.parseSignFunction(this.Position)
+    const sign = this.parseFunctionSign(this.Position)
 
     switch (true) {
       case !!sign.flag: this.syntaxError("Extern functions can not have any flag") /* falls through */
@@ -670,7 +670,7 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   private parseFunctionDecl(start: Position): ast.Function {
-    const sign = this.parseSignFunction(this.Position)
+    const sign = this.parseFunctionSign(this.Position)
 
     if (!sign.name)
       this.syntaxError("Functions declarations must have a name")
@@ -774,7 +774,7 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns Lambda expression AST node
    */
   private parseLambdaExpr(start: Position): ast.Lambda {
-    const sign = this.parseSignFunction(this.Position)
+    const sign = this.parseFunctionSign(this.Position)
     const body = this.parseBlock(this.parseStmt)
     sign.name ??= `anonymous_${crypto.randomUUID()}`
     return new ast.Lambda(sign, body, start, this.Position)
