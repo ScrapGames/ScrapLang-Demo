@@ -3,15 +3,15 @@
  * This is an experimental development component only to test how to the final code would be executed
  */
 
-import Lexer       from "@frontend/lexer.ts"
-import Parser      from "@frontend/parser.ts"
-import { ASTNode } from "@frontend/ast/ast.ts"
+import Lexer    from "@frontend/lexer.ts"
+import Parser   from "@frontend/parser.ts"
+import * as ast from "@frontend/ast/index.ts"
 import type { CallFrame } from "@engine/typings.ts"
 
 export class Interpreter {
   private frame: CallFrame[]
 
-  private constructor(ast: ASTNode) {
+  private constructor(ast: ast.ASTNode) {
     this.frame = []
     console.log(ast)
   }
