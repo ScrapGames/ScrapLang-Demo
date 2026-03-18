@@ -24,7 +24,7 @@ async function main(args: string[]): Promise<void> {
   using lexer  = Lexer.init(filePath)
   const parser = Parser.init(lexer)
   console.log(Deno.inspect(new AST(parser), {
-    colors: false,
+    colors: true,
     depth: Infinity, // probably change this
     iterableLimit: 10000, // probably change this
     strAbbreviateSize: 10000000, // probably change this
