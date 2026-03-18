@@ -1,4 +1,4 @@
-import { Position } from "@frontend/position.ts"
+import { Position } from "@/position.ts"
 
 export interface CallFrame {
   callee: string

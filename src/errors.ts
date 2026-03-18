@@ -1,4 +1,4 @@
-import { Position } from "@frontend/position.ts"
+import { Position } from "@/position.ts"
 
 export class SyntaxError extends Error {
   public constructor(message: string, file: string, position: Position) {

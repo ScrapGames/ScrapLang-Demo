@@ -8,8 +8,8 @@
  */
 
 import type { Maybe }         from "@/typings.ts"
+import { Position }           from "@/position.ts"
 import { Tokens as _ }        from "@frontend/tokens/tokens.ts"
-import { Position }           from "@frontend/position.ts"
 import { Statement }          from "@frontend/ast/statements.ts"
 import { Expression }         from "@frontend/ast/expressions.ts"
 import { TType, GenericList } from "@frontend/ast/types.ts"

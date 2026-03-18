@@ -1,7 +1,7 @@
 import { SyntaxError } from "@/errors.ts"
 import type { Maybe }  from "@/typings.ts"
 import type { Reader } from "@frontend/typings.ts"
-import { Position }    from "@frontend/position.ts"
+import { Position }    from "@/position.ts"
 import { Token, Tokens, stringify } from "@frontend/tokens/tokens.ts"
 import Lexer    from "@frontend/lexer.ts"
 import * as ast from "@frontend/ast.ts"

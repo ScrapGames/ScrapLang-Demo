@@ -15,7 +15,7 @@
  */
 
 import { Maybe }       from "@/typings.ts"
-import { Position }    from "@frontend/position.ts"
+import { Position }    from "@/position.ts"
 import { ASTNode }     from "@frontend/ast/commons.ts"
 import { Expression }  from "@frontend/ast/expressions.ts"
 import { Declaration, Variable } from "@frontend/ast/declarations.ts"
