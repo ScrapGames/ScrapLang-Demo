@@ -510,17 +510,34 @@ export default class Parser implements Reader<Token, Tokens> {
     return new ast.Class(name, generics, inhertis, body, start, this.Position)
   }
 
-  /**
-   * Parses a variable declaration
-   * @param start Starting position
-   * @returns Variable declaration AST node
-   */
+  private parseStaticDecl(start: Position): ast.Static {
+    this.eat(Tokens.STATIC)
+
+    const name = this.eat(Tokens.IDENTIFIER).content
+    const type = this.match(Tokens.COLON) && this.parseType()
+
+    this.eat(Tokens.EQUAL)
+    const value = this.parseExpr()
+    return new ast.Static(name, type, value, start, this.Position)
+  }
+
+  private parseConstantDecl(start: Position): ast.Constant {
+    this.eat(Tokens.CONST)
+
+    const name = this.eat(Tokens.IDENTIFIER).content
+    const type = this.match(Tokens.COLON) && this.parseType()
+
+    this.eat(Tokens.EQUAL)
+    const value = this.parseExpr()
+    return new ast.Static(name, type, value, start, this.Position)
+  }
+
   private parseVariableDecl(start: Position): ast.Variable {
-    const isConst = !!(this.match(Tokens.CONST) || !this.eat(Tokens.VAR))
-    const name    = this.eat(Tokens.IDENTIFIER).content
-    const type    = this.match(Tokens.COLON) && this.parseType()
-    const value   = this.match(Tokens.EQUAL) && this.parseExpr()
-    return new ast.Variable(isConst, name, type, value, start, this.Position)
+    this.eat(Tokens.VAR)
+    const name     = this.eat(Tokens.IDENTIFIER).content
+    const type     = this.match(Tokens.COLON) && this.parseType()
+    const value    = this.match(Tokens.EQUAL) && this.parseExpr()
+    return new ast.Variable(name, type, value, start, this.Position)
   }
 
   /**
@@ -707,8 +724,9 @@ export default class Parser implements Reader<Token, Tokens> {
       case Tokens.ASYNC:
       case Tokens.FN:        return this.parseFunctionDecl(start)
       case Tokens.EXTERN:    return this.parseExternDecl(start)
-      case Tokens.VAR:
-      case Tokens.CONST:     return this.parseVariableDecl(start)
+      case Tokens.VAR:       return this.parseVariableDecl(start)
+      case Tokens.CONST:     return this.parseConstantDecl(start)
+      case Tokens.STATIC:    return this.parseStaticDecl(start)
       case Tokens.CLASS:     return this.parseClassDecl(start)
       case Tokens.MODULE:    return this.parseModuleDecl(start)
       case Tokens.FROM:      return this.parseFrom(start)

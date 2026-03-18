@@ -24,6 +24,8 @@ export enum DeclarationKind {
   Class,
   Function,
   Variable,
+  Constant,
+  Static,
   Interface,
   Type,
   Enum,
@@ -92,15 +94,68 @@ export class Import extends Declaration {
   }
 }
 
+/**
+ * # Represents a variable (or a constant) in the ast
+ * 
+ * A variable is a name which points to a value in memory
+ * The pointed value can be _variable_ or constant
+ * 
+ * If is constant, the pointed value can not change.
+ * However that does not mean that the pointed value is immutable.
+ * If you search this behaviour use the `static` keyword
+ * instead to declated a compile-time, immutable and unchangeable value; like this:
+ * @example
+ * ```rust
+ * // ** compile-time, immutable and unchangeable value **
+ * static name = "Raxabi"
+ * name = "SuspiciousScrapper1" //! this will cause a compile-time error
+ * 
+ * name.concat(", is a spaniard developer") //! this will cause a compile-time error, because the pointed value is immutable
+ * 
+ * // ** unchangeable pointed value **
+ * const name = "Raxabi"
+ * name = "SuspiciousScrapper1" //! this will cause a compile-time exception
+ * 
+ * name.concat(", is a spaniard developer") // this is allowed, because the pointed value is mutable
+ * 
+ * // ** variable and mutable value **
+ * var name = "Raxabi"
+ * name = "SuspiciousScrapper1" // this is allowed, because the pointed value is changeable
+ * 
+ * name.concat(", is a unknown developer") // this is allowed, because the pointed value is mutable
+ * 
+ * ```
+ */
 export class Variable extends NamedDeclaration {
   public constructor(
-    public isConst: boolean,
     public name: string,
     public type: Maybe<TType>,
     public value: Maybe<Expression>,
     start: Position, end: Position
   ) {
     super(DeclarationKind.Variable, start, end)
+  }
+}
+
+export class Constant extends NamedDeclaration {
+  public constructor(
+    public name: string,
+    public type: Maybe<TType>,
+    public value: Expression,
+    start: Position, end: Position
+  ) {
+    super(DeclarationKind.Constant, start, end)
+  }
+}
+
+export class Static extends NamedDeclaration {
+  public constructor(
+    public name: string,
+    public type: Maybe<TType>,
+    public value: Expression,
+    start: Position, end: Position
+  ) {
+    super(DeclarationKind.Static, start, end)
   }
 }
 
