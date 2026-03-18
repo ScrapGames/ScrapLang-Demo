@@ -729,7 +729,6 @@ export default class Parser implements Reader<Token, Tokens> {
       case Tokens.STATIC:    return this.parseStaticDecl(start)
       case Tokens.CLASS:     return this.parseClassDecl(start)
       case Tokens.MODULE:    return this.parseModuleDecl(start)
-      case Tokens.FROM:      return this.parseFrom(start)
       case Tokens.IMPORT:    return this.parseImportDecl(start)
       case Tokens.INTERFACE: return this.parseInterface(start)
       case Tokens.TYPE:      return this.parseTypeDecl(start)
