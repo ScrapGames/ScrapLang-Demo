@@ -2,7 +2,7 @@ import { Maybe }    from "@/typings.ts"
 import { Position } from "@frontend/position.ts"
 import { Tokens }   from "@frontend/tokens/tokens.ts"
 import { ASTNode }  from "@frontend/ast/ast.ts"
-import { TType }    from "@frontend/ast/nodes/types.ts"
+import { TType, Generic } from "@frontend/ast/nodes/types.ts"
 
 /**
  * Flags that can be applied to function declarations.
@@ -19,7 +19,7 @@ export class FunctionSignature extends ASTNode {
   public constructor(
     public flag:      Maybe<FunctionFlags>,
     public name:      Maybe<string>,
-    public generics:  Maybe<string[]>,
+    public generics:  Maybe<Generic[]>,
     public params:    Param[],
     public ret:       Maybe<TType>,
     start: Position, end: Position
