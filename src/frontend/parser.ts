@@ -757,7 +757,7 @@ export default class Parser implements Reader<Token, Tokens> {
       return parent
 
     // If the syntax is incorrect, then this line is reached, stopping the parsing
-    this.syntaxError(`Unkown import syntax '${this.current.content}'. Expected a symbol or a list`)
+    this.syntaxError(`Unknown import syntax '${this.current.content}'; expected a symbol or a list`)
   }
 
   /**
