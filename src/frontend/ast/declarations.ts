@@ -252,8 +252,10 @@ export class Module extends NamedDeclaration {
 /*** ======= CLASS NODES ======= ***/
 
 /**
- * Represents a generic class-like declaration.
- * Used as a base for more specific class-related declarations.
+ * Represents a declaration inside a {@link Class|class} body
+ * 
+ * Despite a class member can only be a {@link Function|function}, a {@link Variable|variable} or a {@link Constant|constant}.
+ * It inherints from {@link ASTNode} to preserve a inherarchy and a structure along the entire AST
  */
 export class ClassMember extends ASTNode {
   public constructor(
