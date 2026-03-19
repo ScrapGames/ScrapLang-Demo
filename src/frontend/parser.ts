@@ -1055,7 +1055,7 @@ export default class Parser implements Reader<Token, Tokens> {
 
   public *[Symbol.iterator]() {
     while (!this.hasEnd())
-      yield this.parseDecl(this.Position)
+      yield this.parseModuleMember(this.Position)
   }
 
   /**
