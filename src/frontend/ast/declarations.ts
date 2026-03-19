@@ -308,6 +308,8 @@ export class Class extends NamedDeclaration {
   }
 }
 
+/*** ======= ENUM NODES ======= ***/
+
 export class EnumMember extends ASTNode {
   public constructor(
     start: Position, end: Position
