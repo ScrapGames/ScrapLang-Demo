@@ -4,7 +4,7 @@ import type { Reader } from "@frontend/typings.ts"
 import { Position }    from "@frontend/position.ts"
 import { Token, Tokens, stringify } from "@frontend/tokens/tokens.ts"
 import Lexer    from "@frontend/lexer.ts"
-import * as ast from "@frontend/ast/index.ts"
+import * as ast from "@frontend/ast.ts"
 
 /**
  * Parser class responsible for converting a stream of tokens

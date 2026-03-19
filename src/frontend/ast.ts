@@ -1,5 +1,5 @@
 export * from "@frontend/ast/commons.ts"
 export * from "@frontend/ast/declarations.ts"
-export * from "@frontend/ast/types.ts"
 export * from "@frontend/ast/statements.ts"
 export * from "@frontend/ast/expressions.ts"
+export * from "@frontend/ast/types.ts"
