@@ -1,24 +1,34 @@
-import std::{
-  sys::{ sleep, process },
-  net::{ http, socket }
+import std::sys::{ sleep, process }
+export import my_module // re-export the module
+
+export module net {
+  export static version = "1.0.0"
+
+  enum Domain {
+    AF_INET,
+    AF_INET6
+  }
+
+  enum SocketKind {
+    SOCK_STREAM,
+    SOCK_DGRAM
+  }
+
+  extern fn socket(dom: Domain, kind: SocketKind, protocol: i32): i32
+
+  export interface Readable<S extends Sized, T extends Sized> {
+    const source: S
+    fn read(): T
+  }
+
+  export class IncomingMessage<T> extends ReadableStream<T> {
+    const req: T
+  }
+
+  export class Server extends Socket {
+    pub fn listen(this, port: u16): this {}
+  }
 }
-
-import ::{
-  Galua as Engine,
-  Engine::{
-    StateMachine,
-    SceneObjectBehaviour,
-    Animations::{ Clip, Animation },
-    Scenes::{ Manager as SceneManager, Scene }
-  },
-
-  Engine::{ Vis::Collision, Vector3 }
-}
-
-static name = "Raxabi"
-
-fn modify(name: String) {}
 
 fn main() {
-
 }
