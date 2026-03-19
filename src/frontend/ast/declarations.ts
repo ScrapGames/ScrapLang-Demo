@@ -7,14 +7,13 @@
  * `DeclarationNode`, which provides the common structure for all declarations.
  */
 
-import { Maybe }             from "@/typings.ts"
-import { Position }          from "@frontend/position.ts"
-import { ASTNode }           from "@frontend/ast/ast.ts"
-import { TType }             from "@frontend/ast/nodes/types.ts"
-import { Statement }         from "@frontend/ast/nodes/statements.ts"
-import { Expression }        from "@frontend/ast/nodes/expressions.ts"
-import { FunctionSignature } from "@frontend/ast/nodes/functions.ts"
-import { ImportMember }      from "@frontend/ast/nodes/imports.ts"
+import type { Maybe }         from "@/typings.ts"
+import { Tokens as _ }        from "@frontend/tokens/tokens.ts"
+import { Position }           from "@frontend/position.ts"
+import { Statement }          from "@frontend/ast/statements.ts"
+import { Expression }         from "@frontend/ast/expressions.ts"
+import { TType, GenericList } from "@frontend/ast/types.ts"
+import { ASTNode, FunctionParamList } from "@frontend/ast/commons.ts"
 
 /**
  * Enumeration representing different kinds of declarations.
@@ -55,43 +54,6 @@ export abstract class NamedDeclaration extends Declaration {
   }
 
   abstract get name(): string
-}
-
-/**
- * Represents an import declaration in the ast
- * 
- * An import declaration is used to make symbols from other module available in the module
- * which the import declaration was performed
- * 
- * An import declaration can be formed by a single symbol or by a list of them
- * @example
- * ```rust
- * // using single symbols
- * import Galua
- * import OtherModule
- * import std::fs
- * import std::fs::File
- * import std::fs::Directory
- * 
- * // using list of symbols
- * import ::{ Galua, OtherModule }
- * import { Galua, OtherModule, std::fs }
- * import {
- *  Galua,
- *  OtherModule
- *  std::fs::{ File, Directory }
- * }
- * 
- * ```
- */
-export class Import extends Declaration {
-  public constructor(
-    public member: ImportMember,
-    start: Position,
-    end: Position
-  ) {
-    super(DeclarationKind.Import, start, end)
-  }
 }
 
 /**
@@ -141,7 +103,7 @@ export class Constant extends NamedDeclaration {
   public constructor(
     public name: string,
     public type: Maybe<TType>,
-    public value: Expression,
+    public value: Maybe<Expression>,
     start: Position, end: Position
   ) {
     super(DeclarationKind.Constant, start, end)
@@ -150,7 +112,9 @@ export class Constant extends NamedDeclaration {
 
 export class Static extends NamedDeclaration {
   public constructor(
+    
     public name: string,
+    public type: Maybe<TType>,
     public value: Expression,
     start: Position, end: Position
   ) {
@@ -160,38 +124,115 @@ export class Static extends NamedDeclaration {
 
 export class Function extends NamedDeclaration {
   public constructor(
-    public signature: FunctionSignature,
+    public name: string,
+    public generics: Maybe<GenericList>,
+    public param: FunctionParamList,
+    public ret: Maybe<TType>,
     public body: Statement[],
     start: Position, end: Position
   ) {
     super(DeclarationKind.Function, start, end)
   }
 
-  public get name(): string { return this.signature.name! }
 }
 
 export class Extern extends NamedDeclaration {
   public constructor(
-    public signature: FunctionSignature,
+    public name:  string,
+    public param: FunctionParamList,
+    public ret:   TType,
     start: Position, end: Position
   ) {
     super(DeclarationKind.Extern, start, end)
   }
-
-  public get name(): string { return this.signature.name! }
 }
 
-export class ModuleMember extends NamedDeclaration {
+/**
+ * * IMPORTANT ADVICE FOR CODE READERS :>
+ * 
+ * From now on, the file is "splited" and the next AST nodes
+ * represents declarations and other nodes, which are
+ * parts of these declarations, each 'section' of those nodes and its parts
+ * are splited by a comment like this: /--- ======= FOO NODES ======= ---/
+ */
+
+/*** ======= IMPORT NODES ======= ***/
+
+export class ImportMember extends ASTNode {
   public constructor(
-    kind: DeclarationKind,
-    public isExported: boolean,
+    start: Position, end: Position
+  ) {
+    super(start, end)
+  }
+}
+
+export class ImportSymbol extends ImportMember {
+  public constructor(
+    public mod: Maybe<ImportMember>,
+    public symbol: string,
+    public alias: Maybe<string>,
+    start: Position, end: Position
+  ) {
+    super(start, end)
+  }
+}
+
+export class ImportList extends ImportMember {
+  public constructor(
+    public mod: Maybe<ImportMember>,
+    public list: ImportMember[],
+    start: Position, end: Position
+  ) {
+    super(start, end)
+  }
+}
+
+/**
+ * Represents an import declaration in the ast
+ * 
+ * An import declaration is used to make symbols from other module available in the module
+ * which the import declaration was performed
+ * 
+ * An import declaration can be formed by a single symbol or by a list of them
+ * @example
+ * ```rust
+ * // using single symbols
+ * import Galua
+ * import OtherModule
+ * import std::fs
+ * import std::fs::File
+ * import std::fs::Directory
+ * 
+ * // using list of symbols
+ * import ::{ Galua, OtherModule }
+ * import { Galua, OtherModule, std::fs }
+ * import {
+ *  Galua,
+ *  OtherModule
+ *  std::fs::{ File, Directory }
+ * }
+ * 
+ * ```
+ */
+export class Import extends Declaration {
+  public constructor(
+    public member: ImportMember,
+    start: Position, end: Position
+  ) {
+    super(DeclarationKind.Import, start, end)
+  }
+}
+
+/*** ======= MODULE NODES ======= ***/
+
+export class ModuleMember extends ASTNode {
+  public constructor(
+    public exported: boolean,
     public member: NamedDeclaration,
     start: Position, end: Position
   ) {
-    super(kind, start, end)
+    super(start, end)
   }
-
-  public override get name(): string { return this.member.name }
 }
 
 /**
@@ -208,21 +249,45 @@ export class Module extends NamedDeclaration {
   }
 }
 
+/*** ======= CLASS NODES ======= ***/
+
 /**
  * Represents a generic class-like declaration.
  * Used as a base for more specific class-related declarations.
  */
-export class ClassMember extends NamedDeclaration {
+export class ClassMember extends ASTNode {
   public constructor(
-    kind: DeclarationKind,
-    public isPub: boolean,
-    public member: NamedDeclaration,
+    public exposed: Maybe<boolean>, // stands for "pub" indicating the member is public or not
     start: Position, end: Position
   ) {
-    super(kind, start, end)
+    super(start, end)
   }
+}
 
-  public override get name(): string { return this.member.name }
+export class ClassMethod extends ClassMember {
+  public constructor(
+    exposed: Maybe<boolean>,
+    public name: string,
+    public generics: Maybe<GenericList>,
+    public params: FunctionParamList,
+    public ret: Maybe<TType>,
+    public body: Statement[],
+    start: Position, end: Position
+  ) {
+    super(exposed, start, end)
+  }
+}
+
+export class ClassProperty extends ClassMember {
+  public constructor(
+    exposed: Maybe<boolean>,
+    public name: string,
+    public type: Maybe<TType>,
+    public value: Maybe<Expression>, // The value of a property may be declared after in the constructor
+    start: Position, end: Position
+  ) {
+    super(exposed, start, end)
+  }
 }
 
 /**
@@ -232,7 +297,7 @@ export class ClassMember extends NamedDeclaration {
 export class Class extends NamedDeclaration {
   public constructor(
     public name: string,
-    public generics: Maybe<string[]>,
+    public generics: Maybe<GenericList>,
     public inherits: Maybe<TType>,
     public body:     ClassMember[],
     start: Position, end: Position
@@ -241,16 +306,67 @@ export class Class extends NamedDeclaration {
   }
 }
 
-export class InterfaceMember extends NamedDeclaration {
+export class EnumMember extends ASTNode {
   public constructor(
-    kind: DeclarationKind.Variable | DeclarationKind.Function,
-    public member: Variable | Function,
     start: Position, end: Position
   ) {
-    super(kind, start, end)
+    super(start, end)
   }
+}
 
-  public override get name(): string { return this.member.name }
+export class EnumSymbol extends EnumMember {
+  public constructor(
+    public symbol: string,
+    start: Position, end: Position
+  ) {
+    super(start, end)
+  }
+}
+
+/**
+ * A `enum` is a declaration with a body delimited by {@link _.LBRACE|open curly brace} and {@link _.RBRACE|close curly brace}
+ * which can contains none or many {@link EnumMember|members} each of them separated by {@link _.COMMA|commas}
+ */
+export class Enum extends NamedDeclaration {
+  public constructor(
+    public name: string,
+    public body: EnumMember[],
+    start: Position, end: Position
+  ) {
+    super(DeclarationKind.Enum, start, end)
+  }
+}
+
+/*** ======= INTERFACE NODES ======= ***/
+
+export class InterfaceMember extends ASTNode {
+  public constructor(
+    start: Position, end: Position
+  ) {
+    super(start, end)
+  }
+}
+
+export class InterfaceMethod extends InterfaceMember {
+  public constructor(
+    public name: string,
+    public generics: Maybe<GenericList>,
+    public params: FunctionParamList,
+    public ret: TType,
+    start: Position, end: Position
+  ) {
+    super(start, end)
+  }
+}
+
+export class InterfaceProperty extends InterfaceMember {
+  public constructor(
+    public name: string,
+    public ret: TType,
+    start: Position, end: Position
+  ) {
+    super(start, end)
+  }
 }
 
 /**
@@ -260,9 +376,9 @@ export class InterfaceMember extends NamedDeclaration {
 export class Interface extends NamedDeclaration {
   public constructor(
     public name:     string,
-    public generics: Maybe<string[]>,
+    public generics: Maybe<GenericList>,
     public inherits: Maybe<TType>,
-    public body:     FunctionSignature[],
+    public body:     InterfaceMember[],
     start: Position, end: Position
   ) {
     super(DeclarationKind.Interface, start, end)
@@ -276,7 +392,7 @@ export class Interface extends NamedDeclaration {
 export class Type extends NamedDeclaration {
   public constructor(
     public name:     string,
-    public generics: Maybe<string[]>,
+    public generics: Maybe<GenericList>,
     public type:     TType,
     start: Position, end: Position
   ) {

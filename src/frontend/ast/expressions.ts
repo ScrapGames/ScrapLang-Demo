@@ -13,10 +13,9 @@
 import { Maybe }    from "@/typings.ts"
 import { Position } from "@frontend/position.ts"
 import { Token }    from "@frontend/tokens/tokens.ts"
-import { ASTNode }  from "@frontend/ast/ast.ts"
-import { TType }    from "@frontend/ast/nodes/types.ts"
-import { Case, Default, Statement } from "@frontend/ast/nodes/statements.ts"
-import { FunctionSignature }        from "@frontend/ast/nodes/functions.ts"
+import { ASTNode }  from "@frontend/ast/commons.ts"
+import { TType, GenericList }       from "@frontend/ast/types.ts"
+import { Case, Default, Statement } from "@frontend/ast/statements.ts"
 
 /**
  * Enum that classifies the kind of expression represented by an `ExpressionNode`.
@@ -114,7 +113,8 @@ export class Binary extends Expression {
  */
 export class Lambda extends Expression {
   public constructor(
-    public signature: FunctionSignature,
+    public name: Maybe<string>,
+    public generics: Maybe<GenericList>,
     public body: Statement[],
     start: Position, end: Position,
   ) {

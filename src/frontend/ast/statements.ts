@@ -16,9 +16,9 @@
 
 import { Maybe }       from "@/typings.ts"
 import { Position }    from "@frontend/position.ts"
-import { ASTNode }     from "@frontend/ast/ast.ts"
-import { Expression }  from "@frontend/ast/nodes/expressions.ts"
-import { Declaration, Variable } from "@frontend/ast/nodes/declarations.ts"
+import { ASTNode }     from "@frontend/ast/commons.ts"
+import { Expression }  from "@frontend/ast/expressions.ts"
+import { Declaration, Variable } from "@frontend/ast/declarations.ts"
 
 /**
  * Enumeration of all statement kinds supported by the language.
