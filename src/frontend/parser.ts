@@ -840,19 +840,17 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseDecl(start: Position): ast.Declaration {
     switch(this.current.type) {
-      case Tokens.INLINE:
-      case Tokens.ASYNC:
-      case Tokens.ENUM:      return this.parseEnumDecl(start)
       case Tokens.FN:        return this.parseFunctionDecl(start)
-      case Tokens.EXTERN:    return this.parseExternDecl(start)
       case Tokens.VAR:       return this.parseVariableDecl(start)
+      case Tokens.ENUM:      return this.parseEnumDecl(start)
+      case Tokens.TYPE:      return this.parseTypeDecl(start)
       case Tokens.CONST:     return this.parseConstantDecl(start)
-      case Tokens.STATIC:    return this.parseStaticDecl(start)
       case Tokens.CLASS:     return this.parseClassDecl(start)
+      case Tokens.EXTERN:    return this.parseExternDecl(start)
+      case Tokens.STATIC:    return this.parseStaticDecl(start)
       case Tokens.MODULE:    return this.parseModuleDecl(start)
       case Tokens.IMPORT:    return this.parseImportDecl(start)
       case Tokens.INTERFACE: return this.parseInterface(start)
-      case Tokens.TYPE:      return this.parseTypeDecl(start)
     }
 
     this.syntaxError(`Unknown declaration '${this.current.TypeContent}'`)
