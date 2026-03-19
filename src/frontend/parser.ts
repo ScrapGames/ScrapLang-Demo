@@ -129,6 +129,10 @@ export default class Parser implements Reader<Token, Tokens> {
     return current
   }
 
+  private eats(...kind: Tokens[]) {
+    kind.forEach(k => this.eat(k))
+  }
+
   /**
    * Conditionally consumes the current token if it matches the expected type.
    * @param type Token type to check.
@@ -139,6 +143,18 @@ export default class Parser implements Reader<Token, Tokens> {
       return undefined
 
     return this.eat(type)
+  }
+
+  private matches(...kind: Tokens[]): Token {
+    const founded = kind.find(k => this.current.is(k))
+    if (!founded)
+      this.syntaxError(`Missing '${kind.join(" or ")}', found '${stringify(this.current.type)}'`)
+
+    return this.eat(founded)
+  }
+  
+  private exists(type: Tokens): true | undefined {
+    return this.current.is(type)
   }
 
   /**
@@ -186,7 +202,7 @@ export default class Parser implements Reader<Token, Tokens> {
     return this.parseDelimited(Tokens.LBRACE, Tokens.RBRACE, consumer)
   }
 
-  private parseDelimitedList<T>(
+  private parseDelimitedList<T extends ast.ASTNode>(
     open: Tokens,
     close: Tokens,
     separator: Tokens,
@@ -206,33 +222,77 @@ export default class Parser implements Reader<Token, Tokens> {
     return items
   }
 
-  // ===== FUNCTION PARSING =====
+  private parseDelimitedListIf<T extends ast.ASTNode>(
+    open: Tokens,
+    close: Tokens,
+    separator: Tokens,
+    consumer: (start: Position) => T
+  ): Maybe<T[]> {
+    if (!this.match(open))
+      return undefined
 
-  private parseFunctionParam(start: Position): ast.Param {
-    const name = this.eat(Tokens.IDENTIFIER).content
+    const items = []
+    while (!this.current.is(close)) {
+      items.push(consumer.call(this, this.Position))
+
+      if (!this.match(separator) && !this.current.is(close))
+        this.syntaxError(`Missing separator '${stringify(separator)}' between elements`)
+    }
+
+    this.eat(close)
+    return items
+  }
+
+  /*** ======= COMMON PARSING PROCEDURES ======= ***/
+
+  private parseTypeAnnotation(): ast.TType {
     this.eat(Tokens.COLON)
-    const type = this.parseType()
-    return new ast.Param(name, type, start, this.Position)
+    return this.parseType()
   }
 
   /**
-   * Parses a function signature
-   * @returns Object FunctionSignature
+   * Parses a list of generic types if the open token {@link Tokens.LESS|<} if found
+   * @returns A list of {@link ast.Generic} if open token {@link Tokens.LESS|<} was found, undefined otherwise
    */
-  private parseFunctionSign(start: Position): ast.FunctionSignature {
-    const flag = (this.match(Tokens.INLINE) || this.match(Tokens.ASYNC))?.type as Maybe<ast.FunctionFlags>
-    if (!this.match(Tokens.FN))
-      this.syntaxError("Functions can only has one flag")
-
-    const name     = this.match(Tokens.IDENTIFIER)?.content
-    const generics = this.current.is(Tokens.LESS) && this.parseGenericsType()
-    const params   = this.parseDelimitedList(Tokens.LPAREN, Tokens.RPAREN, Tokens.COMMA, this.parseFunctionParam)
-    const ret      = this.match(Tokens.COLON) && this.parseType()
-    const end      = this.Position
-    return new ast.FunctionSignature(flag, name, generics, params, ret, start, end)
+  private parseGenericList(): Maybe<ast.GenericList> {
+    // use of `parseDelimitedListIf` is useful
+    // because not always a declaration will has generics
+    return this.parseDelimitedListIf(
+      Tokens.LESS,
+      Tokens.GREATER,
+      Tokens.COMMA,
+      this.parseGeneric
+    )
   }
 
-  // ----- STATEMENT PARSING ----- //
+  /**
+   * Parses a list of function parameters if exists
+   * @returns A list of {@link ast.FunctionParam}
+   */
+  private parseParamList(): ast.FunctionParamList {
+    // use of `parseDelimitedListIf` is unnecessary
+    // because a function signature always will has parameters
+    return this.parseDelimitedList(
+      Tokens.LPAREN,
+      Tokens.RPAREN,
+      Tokens.COMMA,
+      (start) => {
+        const name = this.eat(Tokens.IDENTIFIER).content
+        const type = this.match(Tokens.COLON) && this.parseType()
+        return new ast.FunctionParam(name, type, start, this.Position)
+      }
+    )
+  }
+
+  /**
+   * Parses an entire block of {@link ast.Statement|statements}, enclosed by tokens: {@link Tokens.LBRACE|\{} and {@link Tokens.RBRACE|\}}
+   * @returns A list of {@link ast.Statement}
+   */
+  private parseStmtBlock(): ast.Statement[] {
+    return this.parseBlock(this.parseStmt)
+  }
+
+  /*** ======= STATEMENT PARSING ======= ***/
 
   /**
    * Parses a 'dissipate' statement.
@@ -374,16 +434,16 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseStmt(start: Position): ast.Statement {
     switch (this.current.type) {
+      case Tokens.FN:
+      case Tokens.VAR:
+      case Tokens.CONST:      return this.parseDeclStmt(start)
+      case Tokens.MATCH:
+      case Tokens.IDENTIFIER: return this.parseExprStmt(start)
       case Tokens.IF:         return this.parseIfStmt(start)
       case Tokens.FOR:        return this.parseForStmt(start)
       case Tokens.WHILE:      return this.parseWhileStmt(start)
       case Tokens.RETURN:     return this.parseReturnStmt(start)
       case Tokens.DISSIPATE:  return this.parseDissipateStmt(start)
-      case Tokens.MATCH:
-      case Tokens.IDENTIFIER: return this.parseExprStmt(start)
-      case Tokens.FN:
-      case Tokens.VAR:
-      case Tokens.CONST:      return this.parseDeclStmt(start)
     }
 
     this.syntaxError(`Unknown statement '${this.current.TypeContent}'`)
@@ -421,27 +481,20 @@ export default class Parser implements Reader<Token, Tokens> {
   }
 
   private parseFunctionType(start: Position): ast.TFunction {
-    const sign = this.parseFunctionSign(this.Position)
-
-    switch (true) {
-      case sign.flag === Tokens.INLINE: this.syntaxError("Function types can not be inline") /* falls through */
-      case !!sign.name: this.syntaxError("Function types must not have a name") /* falls through */
-      case !sign.ret:   this.syntaxError("Function types must have a return type")
-    }
-
-    return new ast.TFunction(sign, start, this.Position)
-  }
-
-  private parseGenericsType(): string[] {
-    this.eat(Tokens.LESS)
-    const generics = this.parseDelimitedList(
-      Tokens.LESS,
-      Tokens.GREATER,
+    this.eat(Tokens.FN)
+    const params = this.parseDelimitedList(
+      Tokens.LPAREN,
+      Tokens.RPAREN,
       Tokens.COMMA,
-      this.next
-    ).map(x => x.content)
+      (start) => {
+        const name = this.eat(Tokens.IDENTIFIER).content
+        const type = this.match(Tokens.COLON) && this.parseType()
+        return new ast.FunctionParam(name, type, start, this.Position)
+      }
+    )
 
-    return generics
+    const ret = this.parseType()
+    return new ast.TFunction(params, ret, start, this.Position)
   }
 
   private parsePrimaryType(): ast.TType {
@@ -478,19 +531,42 @@ export default class Parser implements Reader<Token, Tokens> {
     }
   }
 
+  private parseGeneric(start: Position): ast.Generic {
+    const name       = this.eat(Tokens.IDENTIFIER).content
+    const constraint = this.match(Tokens.EXTENDS) && this.parseType()
+    const value      = this.match(Tokens.EQUAL) && this.parseType()
+
+    return new ast.Generic(name, constraint, value, start, this.Position)
+  }
+
   // ===== DECLARATION PARSING =====
 
+  private parseClassMethod(start: Position, pub: Maybe<boolean>): ast.ClassMethod {
+    this.eat(Tokens.FN)
+    const name     = this.eat(Tokens.IDENTIFIER).content
+    const generics = this.parseGenericList()
+    const params   = this.parseParamList()
+    const ret      = this.match(Tokens.COLON) && this.parseType()
+    const body     = this.parseStmtBlock()
+
+    return new ast.ClassMethod(pub, name, generics, params, ret, body, start, this.Position)
+  }
+
+  private parseClassProperty(start: Position, pub: Maybe<boolean>): ast.ClassProperty {
+    this.matches(Tokens.CONST, Tokens.VAR)
+    const name  = this.eat(Tokens.IDENTIFIER).content
+    const type  = this.match(Tokens.COLON) && this.parseType()
+    const value = this.match(Tokens.EQUAL) && this.parseExpr()
+
+    return new ast.ClassProperty(pub, name, type, value, start, this.Position)
+  }
+
   private parseClassMember(start: Position): ast.ClassMember {
-    const isPub = !!this.match(Tokens.PUB)
+    const isPub = (!!this.match(Tokens.PUB)) || undefined
     switch (this.current.type) {
-      case Tokens.FN:
       case Tokens.VAR:
-      case Tokens.TYPE:
-      case Tokens.CONST:
-      case Tokens.INTERFACE: {
-        const decl = this.parseDecl(this.Position) as ast.NamedDeclaration
-        return new ast.ClassMember(decl.kind, isPub, decl, start, this.Position)
-      }
+      case Tokens.CONST: return this.parseClassProperty(start, isPub)
+      case Tokens.FN:    return this.parseClassMethod(start, isPub)
     }
 
     this.syntaxError(`Invalid class member '${this.current.TypeContent}'`)
@@ -504,18 +580,42 @@ export default class Parser implements Reader<Token, Tokens> {
   private parseClassDecl(start: Position): ast.Class {
     this.eat(Tokens.CLASS)
     const name     = this.eat(Tokens.IDENTIFIER).content
-    const generics = this.current.is(Tokens.LESS) && this.parseGenericsType()
+    const generics = this.parseGenericList()
     const inhertis = this.match(Tokens.EXTENDS) && this.parseType()
     const body     = this.parseBlock(this.parseClassMember)
     return new ast.Class(name, generics, inhertis, body, start, this.Position)
   }
 
+  /**
+   * Parses a enum member
+   * TODO: Complete this function and the AST node `EnumSymbol` to represents symbols with parameters
+   * @param start 
+   * @returns A new {@link ast.EnumMember} (only a {@link ast.EnumSymbol} at the moment)
+   */
+  private parseEnumMember(start: Position): ast.EnumMember {
+    const symbol = this.eat(Tokens.IDENTIFIER).content
+    return new ast.EnumSymbol(symbol, start, this.Position)
+  }
+
+  private parseEnumDecl(start: Position): ast.Enum {
+    this.eat(Tokens.ENUM)
+    const name = this.eat(Tokens.IDENTIFIER).content
+    const body = this.parseDelimitedList(
+      Tokens.LBRACE,
+      Tokens.RBRACE,
+      Tokens.COMMA,
+      this.parseEnumMember
+    )
+    return new ast.Enum(name, body, start, this.Position)
+  }
+
   private parseStaticDecl(start: Position): ast.Static {
     this.eat(Tokens.STATIC)
 
-    const name = this.eat(Tokens.IDENTIFIER).content
-    const value = this.eat(Tokens.EQUAL, "static declarations does not need type annotations") && this.parseExpr()
-    return new ast.Static(name, value, start, this.Position)
+    const name  = this.eat(Tokens.IDENTIFIER).content
+    const type  = this.match(Tokens.COLON) && this.parseType()
+    const value = this.eat(Tokens.EQUAL) && this.parseExpr()
+    return new ast.Static(name, type, value, start, this.Position)
   }
 
   private parseConstantDecl(start: Position): ast.Constant {
@@ -523,16 +623,44 @@ export default class Parser implements Reader<Token, Tokens> {
 
     const name  = this.eat(Tokens.IDENTIFIER).content
     const type  = this.match(Tokens.COLON) && this.parseType()
-    const value = this.eat(Tokens.EQUAL) && this.parseExpr()
+    const value = this.match(Tokens.EQUAL) && this.parseExpr()
     return new ast.Constant(name, type, value, start, this.Position)
   }
 
   private parseVariableDecl(start: Position): ast.Variable {
     this.eat(Tokens.VAR)
-    const name     = this.eat(Tokens.IDENTIFIER).content
-    const type     = this.match(Tokens.COLON) && this.parseType()
-    const value    = this.match(Tokens.EQUAL) && this.parseExpr()
+    const name  = this.eat(Tokens.IDENTIFIER).content
+    const type  = this.match(Tokens.COLON) && this.parseType()
+    const value = this.match(Tokens.EQUAL) && this.parseExpr()
     return new ast.Variable(name, type, value, start, this.Position)
+  }
+
+  private parseInterfaceProperty(start: Position): ast.InterfaceProperty {
+    this.matches(Tokens.VAR, Tokens.CONST)
+    const name = this.eat(Tokens.IDENTIFIER).content
+    const type = this.parseTypeAnnotation()
+
+    return new ast.InterfaceProperty(name, type, start, this.Position)
+  }
+
+  private parseInterfaceMethod(start: Position): ast.InterfaceMethod {
+    this.eat(Tokens.FN)
+    const name     = this.eat(Tokens.IDENTIFIER).content
+    const generics = this.parseGenericList()
+    const params   = this.parseParamList()
+    const ret      = this.parseTypeAnnotation()
+
+    return new ast.InterfaceMethod(name, generics, params, ret, start, this.Position)
+  }
+
+  private parseInterfaceMember(start: Position): ast.InterfaceMember {
+    switch (this.current.type) {
+      case Tokens.VAR:
+      case Tokens.CONST: return this.parseInterfaceProperty(start)
+      case Tokens.FN:    return this.parseInterfaceMethod(start)
+    }
+
+    this.syntaxError("Unknown interface member")
   }
 
   /**
@@ -550,9 +678,9 @@ export default class Parser implements Reader<Token, Tokens> {
   private parseInterface(start: Position): ast.Interface {
     this.eat(Tokens.INTERFACE)
     const name     = this.eat(Tokens.IDENTIFIER).content
-    const generics = this.current.is(Tokens.LESS) && this.parseGenericsType()
+    const generics = this.parseGenericList()
     const inherits = this.match(Tokens.EXTENDS) && this.parseType()
-    const body     = this.parseBlock(this.parseFunctionSign)
+    const body     = this.parseBlock(this.parseInterfaceMember)
 
     return new ast.Interface(name, generics, inherits, body, start, this.Position)
   }
@@ -565,11 +693,9 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseTypeDecl(start: Position): ast.Type {
     this.eat(Tokens.TYPE)
-    const name = this.eat(Tokens.IDENTIFIER).content
-    const generics = this.current.is(Tokens.LESS) && this.parseGenericsType()
-
-    this.eat(Tokens.EQUAL)
-    const type = this.parseType()
+    const name     = this.eat(Tokens.IDENTIFIER).content
+    const generics = this.parseGenericList()
+    const type     = this.eat(Tokens.EQUAL) && this.parseType()
     return new ast.Type(name, generics, type, start, this.Position)
   }
 
@@ -653,25 +779,23 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns 
    */
   private parseExternDecl(start: Position): ast.Extern {
-    this.eat(Tokens.EXTERN)
-    const sign = this.parseFunctionSign(this.Position)
+    this.eats(Tokens.EXTERN, Tokens.FN)
+    const name     = this.eat(Tokens.IDENTIFIER).content
+    const params   = this.parseParamList()
+    const ret      = this.parseTypeAnnotation()
 
-    switch (true) {
-      case !!sign.flag: this.syntaxError("Extern functions can not have any flag") /* falls through */
-      case !sign.name:  this.syntaxError("Extern functions must have a name")
-    }
-
-    return new ast.Extern(sign, start, this.Position)
+    return new ast.Extern(name, params, ret, start, this.Position)
   }
 
   private parseFunctionDecl(start: Position): ast.Function {
-    const sign = this.parseFunctionSign(this.Position)
+    this.eat(Tokens.FN)
+    const name     = this.eat(Tokens.IDENTIFIER).content
+    const generics = this.parseGenericList()
+    const params   = this.parseParamList()
+    const ret      = this.match(Tokens.COLON) && this.parseType()
+    const body     = this.parseStmtBlock()
 
-    if (!sign.name)
-      this.syntaxError("Functions declarations must have a name")
-
-    const body = this.parseBlock(this.parseStmt)
-    return new ast.Function(sign, body, start, this.Position)
+    return new ast.Function(name, generics, params, ret, body, start, this.Position)
   }
 
   private parseModuleMember(start: Position): ast.ModuleMember {
@@ -679,17 +803,18 @@ export default class Parser implements Reader<Token, Tokens> {
     switch (this.current.type) {
       case Tokens.FN:
       case Tokens.TYPE:
-      case Tokens.FROM:
+      case Tokens.ENUM:
       case Tokens.ASYNC:
       case Tokens.CONST:
       case Tokens.CLASS:
+      case Tokens.STATIC:
       case Tokens.INLINE:
       case Tokens.EXTERN:
       case Tokens.MODULE:
       case Tokens.IMPORT:
       case Tokens.INTERFACE: {
         const decl = this.parseDecl(start) as ast.NamedDeclaration
-        return new ast.ModuleMember(decl.kind, isExported, decl, start, this.Position)
+        return new ast.ModuleMember(isExported, decl, start, this.Position)
       }
     }
 
@@ -717,6 +842,7 @@ export default class Parser implements Reader<Token, Tokens> {
     switch(this.current.type) {
       case Tokens.INLINE:
       case Tokens.ASYNC:
+      case Tokens.ENUM:      return this.parseEnumDecl(start)
       case Tokens.FN:        return this.parseFunctionDecl(start)
       case Tokens.EXTERN:    return this.parseExternDecl(start)
       case Tokens.VAR:       return this.parseVariableDecl(start)
@@ -768,10 +894,11 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns Lambda expression AST node
    */
   private parseLambdaExpr(start: Position): ast.Lambda {
-    const sign = this.parseFunctionSign(this.Position)
-    const body = this.parseBlock(this.parseStmt)
-    sign.name ??= `anonymous_${crypto.randomUUID()}`
-    return new ast.Lambda(sign, body, start, this.Position)
+    this.eat(Tokens.FN)
+    const name     = this.match(Tokens.IDENTIFIER)?.content
+    const generics = this.parseGenericList()
+    const body     = this.parseBlock(this.parseStmt)
+    return new ast.Lambda(name, generics, body, start, this.Position)
   }
 
   /**
