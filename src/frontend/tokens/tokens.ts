@@ -1,5 +1,5 @@
 import { Maybe }    from "@/typings.ts"
-import { Position } from "@frontend/position.ts"
+import { Position } from "@/position.ts"
 
 /**
  * From golang source code:

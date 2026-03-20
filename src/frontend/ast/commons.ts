@@ -1,5 +1,5 @@
 import type { Maybe } from "@/typings.ts"
-import { Position }   from "@frontend/position.ts"
+import { Position }   from "@/position.ts"
 import { TType }      from "@frontend/ast/types.ts"
 
 export class ASTNode {

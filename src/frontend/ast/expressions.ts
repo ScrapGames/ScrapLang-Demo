@@ -11,7 +11,7 @@
  */
 
 import { Maybe }    from "@/typings.ts"
-import { Position } from "@frontend/position.ts"
+import { Position } from "@/position.ts"
 import { Token }    from "@frontend/tokens/tokens.ts"
 import { ASTNode }  from "@frontend/ast/commons.ts"
 import { TType, GenericList }       from "@frontend/ast/types.ts"
