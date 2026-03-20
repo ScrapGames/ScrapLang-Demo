@@ -5,7 +5,7 @@
 
 import Lexer    from "@frontend/lexer.ts"
 import Parser   from "@frontend/parser.ts"
-import * as ast from "@frontend/ast/index.ts"
+import * as ast from "@frontend/ast.ts"
 import type { CallFrame } from "@engine/typings.ts"
 
 export class Interpreter {
