@@ -12,7 +12,7 @@
 
 import { basename } from "@std/path/basename"
 import { Position } from "@frontend/position.ts"
-import { KEYWORD_MAP, TOKEN_MAP, RTOKEN_MAP, Token, Tokens } from "@frontend/tokens/tokens.ts"
+import { KEYWORD_MAP, TOKEN_MAP, RTOKEN_MAP, Token, Tokens } from "@frontend/tokens.ts"
 import { Collectable, Reader } from "@frontend/typings.ts"
 
 /** Detects alphabetic characters (ignoring Cases) */

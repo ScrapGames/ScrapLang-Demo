@@ -8,7 +8,7 @@
  */
 
 import type { Maybe }         from "@/typings.ts"
-import { Tokens as _ }        from "@frontend/tokens/tokens.ts"
+import { Tokens as _ }        from "@frontend/tokens.ts"
 import { Position }           from "@frontend/position.ts"
 import { Statement }          from "@frontend/ast/statements.ts"
 import { Expression }         from "@frontend/ast/expressions.ts"

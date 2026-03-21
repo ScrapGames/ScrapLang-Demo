@@ -1,6 +1,6 @@
 import { Maybe }     from "@/typings.ts"
 import { Position }  from "@frontend/position.ts"
-import { Token }     from "@frontend/tokens/tokens.ts"
+import { Token }     from "@frontend/tokens.ts"
 import { ASTNode }   from "@frontend/ast/commons.ts"
 import { FunctionParamList } from "@frontend/ast/commons.ts"
 
