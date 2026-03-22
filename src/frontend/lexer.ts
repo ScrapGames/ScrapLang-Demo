@@ -132,7 +132,7 @@ export default class Lexer implements Collectable<Token>, Reader<string> {
     tok: Tokens,
     opts: Partial<{ content: string, pos: Position, advance: boolean }> = {}
   ): Token {
-    const t = Token.createToken(tok, opts.pos ?? this.Position, opts.content ?? TOKEN_MAP.get(tok)!);
+    const t = Token.create(tok, opts.pos ?? this.Position, opts.content ?? TOKEN_MAP.get(tok)!);
     opts.advance ??= (true && !t.isCompoundedOp())
     if (!opts.advance)
       return t

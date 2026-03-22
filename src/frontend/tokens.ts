@@ -344,7 +344,7 @@ export class Token {
     this.position = position
   }
   
-  public static createToken(type: Tokens, pos: Position, content: string): Token {
+  public static create(type: Tokens, pos: Position, content: string): Token {
     return new this(type, content, pos.copy())
   }
 
