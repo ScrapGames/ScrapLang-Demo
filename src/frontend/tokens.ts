@@ -372,16 +372,6 @@ export class Token {
     return this.type > Tokens.operators_open && this.type < Tokens.operators_close
   }
 
-  public isClosingExpr(): boolean {
-    switch (this.type) {
-      case Tokens.RPAREN:
-      case Tokens.RSQRBR:
-      case Tokens.SEMICOLON: return true
-    }
-
-    return false
-  }
-
   public isEOF(): this is Tokens.EOF {
     return !!this.is(Tokens.EOF)
   }
