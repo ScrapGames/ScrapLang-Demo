@@ -6,6 +6,13 @@ import { Token, Tokens, stringify } from "@frontend/tokens.ts"
 import Lexer    from "@frontend/lexer.ts"
 import * as ast from "@frontend/ast.ts"
 
+interface FunctionSignature {
+  name?: string
+  generics?: ast.GenericList,
+  params: ast.FunctionParamList,
+  ret?: ast.TType
+}
+
 /**
  * Parser class responsible for converting a stream of tokens
  * from the lexer into an Abstract Syntax Tree (AST).
@@ -290,6 +297,16 @@ export default class Parser implements Reader<Token, Tokens> {
    */
   private parseStmtBlock(): ast.Statement[] {
     return this.parseBlock(this.parseStmt)
+  }
+
+  private parseFunctionSignature(): FunctionSignature {
+    this.eat(Tokens.FN)
+    const name     = this.match(Tokens.IDENTIFIER)?.content
+    const generics = this.parseGenericList()
+    const params   = this.parseParamList()
+    const ret      = this.match(Tokens.COLON) && this.parseType()
+
+    return { name, generics, params, ret }
   }
 
   /*** ======= STATEMENT PARSING ======= ***/
@@ -779,22 +796,20 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns 
    */
   private parseExternDecl(start: Position): ast.Extern {
-    this.eats(Tokens.EXTERN, Tokens.FN)
-    const name     = this.eat(Tokens.IDENTIFIER).content
-    const params   = this.parseParamList()
-    const ret      = this.parseTypeAnnotation()
+    const { name, params, ret } = this.parseFunctionSignature()
+
+    if (!name || !ret)
+      return this.syntaxError("The name and return type are mandatory in an extern declaration")
 
     return new ast.Extern(name, params, ret, start, this.Position)
   }
 
   private parseFunctionDecl(start: Position): ast.Function {
-    this.eat(Tokens.FN)
-    const name     = this.eat(Tokens.IDENTIFIER).content
-    const generics = this.parseGenericList()
-    const params   = this.parseParamList()
-    const ret      = this.match(Tokens.COLON) && this.parseType()
-    const body     = this.parseStmtBlock()
+    const { name, generics, params, ret } = this.parseFunctionSignature()
+    if (!name)
+      this.syntaxError("A name is mandatory in a funcion declaration")
 
+    const body = this.parseStmtBlock()
     return new ast.Function(name, generics, params, ret, body, start, this.Position)
   }
 
@@ -892,10 +907,8 @@ export default class Parser implements Reader<Token, Tokens> {
    * @returns Lambda expression AST node
    */
   private parseLambdaExpr(start: Position): ast.Lambda {
-    this.eat(Tokens.FN)
-    const name     = this.match(Tokens.IDENTIFIER)?.content
-    const generics = this.parseGenericList()
-    const body     = this.parseBlock(this.parseStmt)
+    const { name, generics } = this.parseFunctionSignature()
+    const body = this.parseBlock(this.parseStmt)
     return new ast.Lambda(name, generics, body, start, this.Position)
   }
 
